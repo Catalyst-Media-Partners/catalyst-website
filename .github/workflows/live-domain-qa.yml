@@ -1,0 +1,22 @@
+name: Catalyst live domain cutover QA
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-domain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout merchant-approved source
+        uses: actions/checkout@v4
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Cloudflare apex and www HTTPS, exact HTML and assets
+        run: node scripts/verify-live-domains.mjs
