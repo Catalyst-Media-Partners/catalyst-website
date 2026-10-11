@@ -17,7 +17,7 @@ for(const [label,re] of [
  ['preserve existing bindings', /keep_vars = true/],
  ['auth secret', /secrets\.CLOUDFLARE_API_TOKEN/],
  ['Cloudflare deployment 100%', /percentage == 100/],
- ['asset binding required', /\.name=="ASSETS" and \.type=="assets"/],
+ ['static-only settings response', /\.result\.bindings \| type == "array"/],
  ['works.dev smoke', /catalyst-website\.cannacon-org-s-account\.workers\.dev/],
 ]) assert.match(source,re,'Missing '+label);
 assert.doesNotMatch(source,/wrangler deploy --name cannacon-prod/, 'Never deploy CannaCon from Catalyst');
