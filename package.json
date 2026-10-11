@@ -1,0 +1,10 @@
+{
+  "name": "catalyst-media-partners-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "node scripts/verify-merchant-page.mjs",
+    "build": "node build.mjs",
+    "check": "npm run verify && npm run build && node scripts/verify-output.mjs"
+  }
+}
