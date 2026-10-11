@@ -1,0 +1,112 @@
+name: Deploy Catalyst merchant site to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type DEPLOY-CATALYST-SITE to allow a manual re-deployment of the reviewed main commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+concurrency:
+  group: catalyst-site-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirmation == 'DEPLOY-CATALYST-SITE'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout approved source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Allow automatic deployment only after validated owner-merged PR
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          associated=''
+          pr_number=''
+          for attempt in 1 2 3 4 5 6; do
+            associated="$(gh api -H 'Accept: application/vnd.github+json' "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls")"
+            pr_number="$(printf '%s' "$associated" | jq -r --arg sha "$GITHUB_SHA" '[.[] | select(.base.ref=="main" and .merged_at!=null and .merge_commit_sha==$sha)] | first | .number // empty')"
+            if [[ -n "$pr_number" ]]; then break; fi
+            sleep 5
+          done
+          [[ -n "$pr_number" ]] || { echo 'BLOCKED: direct push is not approved for production deployment' >&2; exit 1; }
+          pr="$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}")"
+          merged_by="$(printf '%s' "$pr" | jq -r '.merged_by.login // empty')"
+          [[ "$merged_by" == 'PASS-LH' ]] || { echo "BLOCKED: unauthorized merge actor $merged_by" >&2; exit 1; }
+          head_sha="$(printf '%s' "$pr" | jq -r '.head.sha // empty')"
+          [[ -n "$head_sha" ]] || { echo 'BLOCKED: missing PR commit SHA' >&2; exit 1; }
+          checks="$(gh api -H 'Accept: application/vnd.github+json' "/repos/${GITHUB_REPOSITORY}/commits/${head_sha}/check-runs?per_page=100")"
+          printf '%s' "$checks" | jq -e 'any(.check_runs[]; .name=="validate" and .status=="completed" and .conclusion=="success")' > /dev/null || { echo 'BLOCKED: required PR QA has not passed' >&2; exit 1; }
+          echo "Approved merge #$pr_number by $merged_by and passing PR QA."
+      - name: Assert exact merchant-reviewed website before deploying
+        run: |
+          set -euo pipefail
+          grep -Fxq 'name = "catalyst-website"' wrangler.toml
+          grep -Fxq 'keep_vars = true' wrangler.toml
+          npm run check
+      - name: Verify Cloudflare token and latest approved commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'BLOCKED: GitHub repository secret CLOUDFLARE_API_TOKEN is not configured' >&2; exit 1; }
+          current="$(gh api "/repos/${GITHUB_REPOSITORY}/branches/main" --jq '.commit.sha')"
+          [[ "$current" == "$GITHUB_SHA" ]] || { echo 'BLOCKED: a newer main commit exists' >&2; exit 1; }
+          curl --fail --silent --show-error --max-time 30 --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts" > /tmp/catalyst-workers-before.json
+          jq -e '.success == true' /tmp/catalyst-workers-before.json > /dev/null
+          echo 'Verified Cloudflare API access and exact current GitHub revision.'
+      - name: Publish static files to the independent Catalyst Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.102.0 deploy --name catalyst-website
+      - name: Verify new Worker deployment and uploaded asset binding
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/catalyst-website"
+          curl --fail --silent --show-error --max-time 30 --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$base/deployments" > /tmp/catalyst-deployments.json
+          jq -e '.success == true and (.result.deployments | length > 0) and (.result.deployments[0].versions[0].percentage == 100)' /tmp/catalyst-deployments.json > /dev/null
+          curl --fail --silent --show-error --max-time 30 --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$base/settings" > /tmp/catalyst-worker-settings.json
+          jq -e '.success == true and any(.result.bindings[]; .name=="ASSETS" and .type=="assets")' /tmp/catalyst-worker-settings.json > /dev/null
+          jq -r '"Verified Catalyst production Worker 100% deployment: " + .result.deployments[0].id' /tmp/catalyst-deployments.json
+      - name: Check workers.dev preview without weakening Cloudflare restrictions
+        run: |
+          set -euo pipefail
+          domain='https://catalyst-website.cannacon-org-s-account.workers.dev/'
+          headers='/tmp/catalyst-public-headers.txt'
+          page='/tmp/catalyst-public-page.html'
+          status="$(curl --silent --show-error --location --max-time 35 --dump-header "$headers" --output "$page" --write-out '%{http_code}' "$domain")"
+          if [[ "$status" == '200' ]]; then
+            grep -Fq 'Catalyst Media Partners' "$page"
+            grep -Fq 'Cancellation, transfer and refund policy' "$page"
+            echo 'workers.dev homepage and merchant policy markup verified.'
+          elif [[ "$status" == '403' ]] && grep -Eiq '^server: *cloudflare' "$headers" && grep -Eiq '^cf-ray:' "$headers"; then
+            echo '::warning::Cloudflare WAF restricted this GitHub-hosted runner. Worker API deployment verified; external browser smoke is required.'
+          else
+            echo "ERROR: workers.dev returned HTTP $status" >&2
+            exit 1
+          fi
