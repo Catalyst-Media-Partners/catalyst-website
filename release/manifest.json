@@ -1,0 +1,440 @@
+{
+  "release": "v1b.0",
+  "type": "full-independent-baseline",
+  "created": "2026-10-12",
+  "required_predecessor": null,
+  "source_ancestry": "only INFUSED_Las_Vegas_Exhibitor_Invitation.html; no v1.x imports",
+  "zip_root": "infused_site/",
+  "source_sha256": "d7ae64fd71b3c23f0c9f298fa6d29111ddc895693830d4fad7651d4196fd61bb",
+  "source_copy_preserved": true,
+  "homepage_copy_identical": true,
+  "homepage_visual_parity": [
+    1440,
+    1024,
+    768,
+    390
+  ],
+  "route_count": 14,
+  "subpage_count": 13,
+  "original_images": 21,
+  "development_only": true,
+  "deployment_status": "packaged-not-deployed",
+  "qa_report": "release/QA_REPORT.md",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3239,
+      "sha256": "39ecc0f4b904d36a23935a8ba0f48f4841649b82096b4e90dae4e7660ea51810"
+    },
+    {
+      "path": "build.mjs",
+      "bytes": 3445,
+      "sha256": "db6699282eb8535227f2158f90441aa523e581c8b6476ed88c78b0af11103e19"
+    },
+    {
+      "path": "package.json",
+      "bytes": 266,
+      "sha256": "1beb05d0ae8c7c903eeac8b4a61f512f5fa8ac9b339edd87f771bda5394e9c3b"
+    },
+    {
+      "path": "public/assets/css/site.css",
+      "bytes": 12630,
+      "sha256": "0c8f46a6b36e2b96aa4de43a9664bc0110ccf2cfb1f1cfc0877d593a9e23271e"
+    },
+    {
+      "path": "public/assets/images/brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp",
+      "bytes": 127248,
+      "sha256": "4dc173bd84ae82ac11f631a3e8b162da3143e3c0cb06ac17bd5ad2a54d3f7cbc"
+    },
+    {
+      "path": "public/assets/images/business-professionals-in-discussion-11.webp",
+      "bytes": 57808,
+      "sha256": "1781e49161c082d144c169e311076bcaf888f57c3a2d0c29625eed35abb5aa04"
+    },
+    {
+      "path": "public/assets/images/business-services-professionals-meeting-over-infused-products-17.webp",
+      "bytes": 109162,
+      "sha256": "fe118774cd7045db51a82654d80e474396738ffc646dc14fb9b00d4ee1b5c997"
+    },
+    {
+      "path": "public/assets/images/distribution-and-supply-chain-logistics-03.webp",
+      "bytes": 38532,
+      "sha256": "532b68d0526b318bb6da8cd8e2b51fb44360a36c4bac3f7dcb37787f83a1569b"
+    },
+    {
+      "path": "public/assets/images/extraction-ingredients-and-laboratory-manufacturing-imagery-14.webp",
+      "bytes": 183712,
+      "sha256": "e3ea267a83746bbfc9f72c111ce9bb58d52d562377c33eaa1083de6f5d18d844"
+    },
+    {
+      "path": "public/assets/images/growers-inspecting-outdoor-hemp-cultivation-with-field-equipment-13.webp",
+      "bytes": 146298,
+      "sha256": "e9fdecca8c5897d16a801f846868501a680e338fe35fbbd9b912cccd92c423bf"
+    },
+    {
+      "path": "public/assets/images/hosted-buyer-meeting-12.webp",
+      "bytes": 54970,
+      "sha256": "d28dc834a087d94bf873d6d0840243ac7ef0a2cbc05cefb9fbd834c1a3ca0465"
+    },
+    {
+      "path": "public/assets/images/infused-exhibitors-with-attendees-at-their-show-booth-20.webp",
+      "bytes": 153308,
+      "sha256": "f05726b7dbdb1ad714691d85eb9cfe8ea603d28938b1f99ca958fb4fbe43c792"
+    },
+    {
+      "path": "public/assets/images/infused-logo-00.webp",
+      "bytes": 10118,
+      "sha256": "0e4ef98f2683be15e6d9e00ca37540d77540a5776a8491b35a5224f55b76c542"
+    },
+    {
+      "path": "public/assets/images/ingredient-science-and-laboratory-research-06.webp",
+      "bytes": 33952,
+      "sha256": "df728c43b5736640a170ad2dd1a9ee9838794759de84cf5d2bfbda6541a13e42"
+    },
+    {
+      "path": "public/assets/images/manufacturing-and-co-packing-line-07.webp",
+      "bytes": 36214,
+      "sha256": "046bf8c07fb85f09bf35f9cb64030b2cbe594ba7005e83c9dd2fa3adf4bd9bc2"
+    },
+    {
+      "path": "public/assets/images/outdoor-farming-and-cultivation-05.webp",
+      "bytes": 65140,
+      "sha256": "58243753fe595d4fb7de4eeaecb8646aaaf67707731e1ff6b72650fbe5856c60"
+    },
+    {
+      "path": "public/assets/images/packaged-beverages-and-finished-products-08.webp",
+      "bytes": 35490,
+      "sha256": "bb7106bef989e9b800f3357a1ed9c6168a1e6272f795461130b2629ff5401705"
+    },
+    {
+      "path": "public/assets/images/product-research-and-laboratory-testing-02.webp",
+      "bytes": 27332,
+      "sha256": "9b73e53c7db2e6b43bb88a12f464ba67ae9b7c072390257620fe4fd0e647e811"
+    },
+    {
+      "path": "public/assets/images/professionals-meeting-and-discovering-infused-product-brands-at-a--01.webp",
+      "bytes": 141800,
+      "sha256": "858ccbc3f7bd02d45e034ab93d295e95ad13e63eef938bdc704e2f846ce7a784"
+    },
+    {
+      "path": "public/assets/images/retail-and-wholesale-buyers-meeting-with-an-infused-products-exhib-16.webp",
+      "bytes": 159910,
+      "sha256": "e2e406a4117caf01d3fc6f615be2441ba17ada60920f4a3e670fc92bb21ea249"
+    },
+    {
+      "path": "public/assets/images/retail-merchandising-of-infused-products-10.webp",
+      "bytes": 37820,
+      "sha256": "8b08d6fe9d5ae163d2c3dcb42709f8a8f1db898136bc9236ed83cbaa4f4165cf"
+    },
+    {
+      "path": "public/assets/images/shopper-viewing-packaged-infused-products-on-retail-shelves-15.webp",
+      "bytes": 139704,
+      "sha256": "7223b63856ad0d335cb6508011335b460bfd524b586b13b4734b112c78f8326c"
+    },
+    {
+      "path": "public/assets/images/trade-show-product-discovery-and-buyer-conversation-04.webp",
+      "bytes": 42314,
+      "sha256": "4200d799e9140953b4021afd5930c7231a1e5060ca6fe12319f6a9cc804c2f98"
+    },
+    {
+      "path": "public/assets/images/warehouse-and-logistics-operations-09.webp",
+      "bytes": 48292,
+      "sha256": "3c654a8ed0d545a023baf1cf37e1367fdd1cfe6eb93152f2f36f3d27a31bab10"
+    },
+    {
+      "path": "public/assets/images/welcome-to-las-vegas-sign-and-las-vegas-skyline-19.webp",
+      "bytes": 274200,
+      "sha256": "dab3b20a51a2db846cdef6794af13f1512037191e5ee0a1b4dc71a55bd60cc53"
+    },
+    {
+      "path": "public/buyers/index.html",
+      "bytes": 2911,
+      "sha256": "345fec2ea1d1d61b9f9935994b4ad1d61fec7d11ddf33e082d12d8dafa05d77a"
+    },
+    {
+      "path": "public/contact/index.html",
+      "bytes": 2410,
+      "sha256": "e701f8f761d61f596a52ed9c1877ee4421bf0d59d3fb9feb895b4ffde5650588"
+    },
+    {
+      "path": "public/ecosystem/index.html",
+      "bytes": 4961,
+      "sha256": "e655e531fc7db1122c6b77744d98ae4705596a7f8be0dc5badf5eb71cb165b1c"
+    },
+    {
+      "path": "public/index.html",
+      "bytes": 21532,
+      "sha256": "d06eed1c073f290fc89ca153ad47177007d1e27bece4d3e1ae2dc7c26b04b483"
+    },
+    {
+      "path": "public/make/index.html",
+      "bytes": 2087,
+      "sha256": "739ef6832ef11e6d2fe6ca1e7a5ad30564209562aadc76a7a1accd5c712451a5"
+    },
+    {
+      "path": "public/market/index.html",
+      "bytes": 5001,
+      "sha256": "506a5d1bcd3a20302ae0342348234631755d130cc05d339b599f1667156bd59d"
+    },
+    {
+      "path": "public/move/index.html",
+      "bytes": 2076,
+      "sha256": "2bad4a0f7656c3e9a038d72b0b666848255ba2f257893f4d7ed54a47a3ec0616"
+    },
+    {
+      "path": "public/opportunities/index.html",
+      "bytes": 2842,
+      "sha256": "5d6a1a9c9db1ec137788514c572402b5e7a4da230de4c37714ac817ae81ee2c8"
+    },
+    {
+      "path": "public/package/index.html",
+      "bytes": 2846,
+      "sha256": "1896daf2c9dacf3e6b5a1a00800f1ac3310c7554098bd1865d0d1aaa1d061521"
+    },
+    {
+      "path": "public/robots.txt",
+      "bytes": 26,
+      "sha256": "331ea9090db0c9f6f597bd9840fd5b171830f6e0b3ba1cb24dfa91f0c95aedc1"
+    },
+    {
+      "path": "public/roots/index.html",
+      "bytes": 2914,
+      "sha256": "2e2f605776fea9d19f0f984e89a38690501e921ccf6dedf84667509683cab78c"
+    },
+    {
+      "path": "public/science/index.html",
+      "bytes": 2789,
+      "sha256": "20008830789a6a91d847afe02235145ffc2f649aca22487a1c6df4165a201a4d"
+    },
+    {
+      "path": "public/sell/index.html",
+      "bytes": 2991,
+      "sha256": "462894604296040a62e60bed397837200711a8213cbb8adec935ce4f4a0b617f"
+    },
+    {
+      "path": "public/services/index.html",
+      "bytes": 2876,
+      "sha256": "fa740b45a781b9f77d8390ba53894332f077025a86ecfda7512f77d33182c341"
+    },
+    {
+      "path": "public/why-vegas/index.html",
+      "bytes": 2709,
+      "sha256": "86ae91ffa8d11e17e911f3ac7ac308b387f719f2b56d4d42447b832fea0d7246"
+    },
+    {
+      "path": "release/CHANGELOG.md",
+      "bytes": 1173,
+      "sha256": "db65ea22b8816c863350e6ef9bf8225b6a21eeaaffb09d83bb9e71f6f24e66e8"
+    },
+    {
+      "path": "release/QA_REPORT.md",
+      "bytes": 2177,
+      "sha256": "56e339830fc56c9fc7dde10bdf3a99280f3778d999bce67b2864fda27f200974"
+    },
+    {
+      "path": "scripts/check.mjs",
+      "bytes": 2978,
+      "sha256": "dde4d585f5fbb81903e1137a00cba8abedfbf3bda348e7e2d180bd76cb501087"
+    },
+    {
+      "path": "src/assets/css/site.css",
+      "bytes": 12630,
+      "sha256": "0c8f46a6b36e2b96aa4de43a9664bc0110ccf2cfb1f1cfc0877d593a9e23271e"
+    },
+    {
+      "path": "src/assets/images/brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp",
+      "bytes": 127248,
+      "sha256": "4dc173bd84ae82ac11f631a3e8b162da3143e3c0cb06ac17bd5ad2a54d3f7cbc"
+    },
+    {
+      "path": "src/assets/images/business-professionals-in-discussion-11.webp",
+      "bytes": 57808,
+      "sha256": "1781e49161c082d144c169e311076bcaf888f57c3a2d0c29625eed35abb5aa04"
+    },
+    {
+      "path": "src/assets/images/business-services-professionals-meeting-over-infused-products-17.webp",
+      "bytes": 109162,
+      "sha256": "fe118774cd7045db51a82654d80e474396738ffc646dc14fb9b00d4ee1b5c997"
+    },
+    {
+      "path": "src/assets/images/distribution-and-supply-chain-logistics-03.webp",
+      "bytes": 38532,
+      "sha256": "532b68d0526b318bb6da8cd8e2b51fb44360a36c4bac3f7dcb37787f83a1569b"
+    },
+    {
+      "path": "src/assets/images/extraction-ingredients-and-laboratory-manufacturing-imagery-14.webp",
+      "bytes": 183712,
+      "sha256": "e3ea267a83746bbfc9f72c111ce9bb58d52d562377c33eaa1083de6f5d18d844"
+    },
+    {
+      "path": "src/assets/images/growers-inspecting-outdoor-hemp-cultivation-with-field-equipment-13.webp",
+      "bytes": 146298,
+      "sha256": "e9fdecca8c5897d16a801f846868501a680e338fe35fbbd9b912cccd92c423bf"
+    },
+    {
+      "path": "src/assets/images/hosted-buyer-meeting-12.webp",
+      "bytes": 54970,
+      "sha256": "d28dc834a087d94bf873d6d0840243ac7ef0a2cbc05cefb9fbd834c1a3ca0465"
+    },
+    {
+      "path": "src/assets/images/infused-exhibitors-with-attendees-at-their-show-booth-20.webp",
+      "bytes": 153308,
+      "sha256": "f05726b7dbdb1ad714691d85eb9cfe8ea603d28938b1f99ca958fb4fbe43c792"
+    },
+    {
+      "path": "src/assets/images/infused-logo-00.webp",
+      "bytes": 10118,
+      "sha256": "0e4ef98f2683be15e6d9e00ca37540d77540a5776a8491b35a5224f55b76c542"
+    },
+    {
+      "path": "src/assets/images/ingredient-science-and-laboratory-research-06.webp",
+      "bytes": 33952,
+      "sha256": "df728c43b5736640a170ad2dd1a9ee9838794759de84cf5d2bfbda6541a13e42"
+    },
+    {
+      "path": "src/assets/images/manufacturing-and-co-packing-line-07.webp",
+      "bytes": 36214,
+      "sha256": "046bf8c07fb85f09bf35f9cb64030b2cbe594ba7005e83c9dd2fa3adf4bd9bc2"
+    },
+    {
+      "path": "src/assets/images/outdoor-farming-and-cultivation-05.webp",
+      "bytes": 65140,
+      "sha256": "58243753fe595d4fb7de4eeaecb8646aaaf67707731e1ff6b72650fbe5856c60"
+    },
+    {
+      "path": "src/assets/images/packaged-beverages-and-finished-products-08.webp",
+      "bytes": 35490,
+      "sha256": "bb7106bef989e9b800f3357a1ed9c6168a1e6272f795461130b2629ff5401705"
+    },
+    {
+      "path": "src/assets/images/product-research-and-laboratory-testing-02.webp",
+      "bytes": 27332,
+      "sha256": "9b73e53c7db2e6b43bb88a12f464ba67ae9b7c072390257620fe4fd0e647e811"
+    },
+    {
+      "path": "src/assets/images/professionals-meeting-and-discovering-infused-product-brands-at-a--01.webp",
+      "bytes": 141800,
+      "sha256": "858ccbc3f7bd02d45e034ab93d295e95ad13e63eef938bdc704e2f846ce7a784"
+    },
+    {
+      "path": "src/assets/images/retail-and-wholesale-buyers-meeting-with-an-infused-products-exhib-16.webp",
+      "bytes": 159910,
+      "sha256": "e2e406a4117caf01d3fc6f615be2441ba17ada60920f4a3e670fc92bb21ea249"
+    },
+    {
+      "path": "src/assets/images/retail-merchandising-of-infused-products-10.webp",
+      "bytes": 37820,
+      "sha256": "8b08d6fe9d5ae163d2c3dcb42709f8a8f1db898136bc9236ed83cbaa4f4165cf"
+    },
+    {
+      "path": "src/assets/images/shopper-viewing-packaged-infused-products-on-retail-shelves-15.webp",
+      "bytes": 139704,
+      "sha256": "7223b63856ad0d335cb6508011335b460bfd524b586b13b4734b112c78f8326c"
+    },
+    {
+      "path": "src/assets/images/trade-show-product-discovery-and-buyer-conversation-04.webp",
+      "bytes": 42314,
+      "sha256": "4200d799e9140953b4021afd5930c7231a1e5060ca6fe12319f6a9cc804c2f98"
+    },
+    {
+      "path": "src/assets/images/warehouse-and-logistics-operations-09.webp",
+      "bytes": 48292,
+      "sha256": "3c654a8ed0d545a023baf1cf37e1367fdd1cfe6eb93152f2f36f3d27a31bab10"
+    },
+    {
+      "path": "src/assets/images/welcome-to-las-vegas-sign-and-las-vegas-skyline-19.webp",
+      "bytes": 274200,
+      "sha256": "dab3b20a51a2db846cdef6794af13f1512037191e5ee0a1b4dc71a55bd60cc53"
+    },
+    {
+      "path": "src/components/after.html",
+      "bytes": 200,
+      "sha256": "d1634fb7e55af08806ff00651bd70badf3bfe65d67f149278ba958814d9263b8"
+    },
+    {
+      "path": "src/components/before.html",
+      "bytes": 1267,
+      "sha256": "1b723aed63738678fcc8ed0782234446b8c629ee71f1edb642dbb670ad747e1f"
+    },
+    {
+      "path": "src/reference/INFUSED_Las_Vegas_Exhibitor_Invitation.html",
+      "bytes": 2597031,
+      "sha256": "d7ae64fd71b3c23f0c9f298fa6d29111ddc895693830d4fad7651d4196fd61bb"
+    },
+    {
+      "path": "src/reference/image-manifest.json",
+      "bytes": 5517,
+      "sha256": "3368eef038c9c37e6c191fee3aa9c7a3e81e39ff6d413f106ec478fa7e189ddf"
+    },
+    {
+      "path": "src/sections/buyers.html",
+      "bytes": 1443,
+      "sha256": "5a0713f3ae592558fc2d5094d4938379550675e11a7ce97cafa1f1ed6fa3822e"
+    },
+    {
+      "path": "src/sections/contact.html",
+      "bytes": 956,
+      "sha256": "adedd51541ef9b7786f3aa789dfe58167f9501b2ae97272f6f375aa4b76371b2"
+    },
+    {
+      "path": "src/sections/ecosystem.html",
+      "bytes": 3583,
+      "sha256": "3d43374351a0f9c08f95e5fabb45e8e7ac61ca259f215a5c332d7d09e437e250"
+    },
+    {
+      "path": "src/sections/make.html",
+      "bytes": 632,
+      "sha256": "37585e8e08755e9b33442b8e9025c32e67de461e496f5853f9300755e156b0cf"
+    },
+    {
+      "path": "src/sections/market.html",
+      "bytes": 3536,
+      "sha256": "f9ba3ad8062b6adde5448c8774e7a939fd365f9a9845036caf42e59b7d42f270"
+    },
+    {
+      "path": "src/sections/move.html",
+      "bytes": 632,
+      "sha256": "bcf5518850a02c3fecb8b187538bd72686e7e0cd9c9a32277c201f6930f59fce"
+    },
+    {
+      "path": "src/sections/opportunities.html",
+      "bytes": 1382,
+      "sha256": "a8c7fa5555172f230e9534f4fdbf9e803b99fbcb7b37ccad79f4c1f000af18ac"
+    },
+    {
+      "path": "src/sections/package.html",
+      "bytes": 1390,
+      "sha256": "79e54492fca97c704a0d5232ad0dca1d8eabab85ae84a234de267e08c394d829"
+    },
+    {
+      "path": "src/sections/roots.html",
+      "bytes": 1452,
+      "sha256": "09f148730242a2c43ff1b1c852dad259e2df3ae3aa389dd00a514fd3d86df59a"
+    },
+    {
+      "path": "src/sections/science.html",
+      "bytes": 1328,
+      "sha256": "8aab1af3c5b566fea9363d67caa986a29643bdebbdefd2b2f6f636cee078fa15"
+    },
+    {
+      "path": "src/sections/sell.html",
+      "bytes": 1527,
+      "sha256": "172c3115e496738b94c887526c88924f93f13e6bc20a34c0c6cf5ca9a022b34e"
+    },
+    {
+      "path": "src/sections/services.html",
+      "bytes": 1414,
+      "sha256": "ab0d008cc15f19cef43ecfb950192c51759dddd35076d96cae85ca205882e4fa"
+    },
+    {
+      "path": "src/sections/top.html",
+      "bytes": 1029,
+      "sha256": "4ea73ef29faf5263aab84ab67667db1a0927f077a30a68bba62a6bf77ae7748b"
+    },
+    {
+      "path": "src/sections/why-vegas.html",
+      "bytes": 1264,
+      "sha256": "2e4632f3ec35f0d23f495f564cb9a4b5efd2c19982db142c94578a0013d0bb39"
+    }
+  ]
+}
