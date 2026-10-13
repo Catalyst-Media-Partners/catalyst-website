@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import path from 'node:path';
+const root = 'public/infused-preview';
+const src = readFileSync(`${root}/index.html`, 'utf8');
+assert.match(src, /FROM ROOTS/);
+assert.match(src, /TO RETAIL/);
+assert.match(src, /name="robots" content="noindex, nofollow, noarchive"/);
+const sections = ['market','ecosystem','roots','science','make','package','move','sell','services','buyers','why-vegas','opportunities','contact'];
+for (const section of sections) assert.ok(existsSync(path.join(root, section, 'index.html')), `Missing preview route ${section}`);
+assert.ok(existsSync(path.join(root, 'assets/images/infused-logo-00.webp')));
+assert.ok(existsSync(path.join(root, 'assets/css/site.css')));
+const hdr = readFileSync('public/_headers', 'utf8');
+assert.match(hdr, /\/infused-preview\/\*/);
+assert.match(hdr, /X-Robots-Tag: noindex, nofollow, noarchive/);
+assert.equal(readdirSync(root, { recursive: true, withFileTypes: true }).filter(e => e.isFile()).length, 37);
+console.log('Infused preview: pinned full archive, 14 pages, static assets and noindex headers verified.');

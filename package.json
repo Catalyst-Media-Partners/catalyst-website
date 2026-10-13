@@ -5,6 +5,6 @@
   "scripts": {
     "verify": "node scripts/verify-merchant-page.mjs",
     "build": "node build.mjs",
-    "check": "npm run verify && node scripts/verify-deployment-workflow.mjs && npm run build && node scripts/verify-output.mjs"
+    "check": "npm run verify && node scripts/verify-deployment-workflow.mjs && npm run build && node scripts/verify-output.mjs && node scripts/verify-infused-preview.mjs"
   }
 }
