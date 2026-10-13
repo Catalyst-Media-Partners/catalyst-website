@@ -1,0 +1,83 @@
+name: Deploy standalone INFUSED website
+on:
+  push:
+    branches: [infused-show]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: infused-show-worker-deploy
+  cancel-in-progress: false
+
+jobs:
+  validate-and-deploy:
+    if: github.ref == 'refs/heads/infused-show'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out independent INFUSED branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconstruct approved INFUSED source when bootstrapping
+        run: |
+          set -euo pipefail
+          if [[ ! -f build.mjs ]]; then
+            node bootstrap.mjs
+          fi
+      - name: Build and verify INFUSED content and routing
+        run: |
+          set -euo pipefail
+          npm run build
+          npm run check
+          node scripts/verify-cloudflare.mjs
+          grep -Fxq 'name = "infused-show"' wrangler.toml
+          grep -Fxq 'keep_vars = true' wrangler.toml
+      - name: Save editable source in independent branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [[ -d preview-src/infused-v1b0 && -f build.mjs ]]; then
+            git rm -rq preview-src/infused-v1b0
+            git rm -q bootstrap.mjs
+          fi
+          git add --all
+          if ! git diff --cached --quiet; then
+            git commit -m 'Promote approved INFUSED v1b.0 into editable standalone source'
+            git push origin HEAD:infused-show
+          fi
+      - name: Check scoped Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'Missing Cloudflare token' >&2; exit 1; }
+          curl --fail --silent --show-error --max-time 30 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts" > /tmp/infused-verify-cloudflare.json
+          jq -e '.success == true' /tmp/infused-verify-cloudflare.json >/dev/null
+      - name: Deploy dedicated INFUSED Worker only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.102.0 deploy --name infused-show
+      - name: Verify independent Cloudflare deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          endpoint="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-show/deployments"
+          curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$endpoint" > /tmp/infused-worker-deployment.json
+          jq -e '.success == true and (.result.deployments | length > 0)' /tmp/infused-worker-deployment.json >/dev/null
+          jq -r '.result.deployments[0].id' /tmp/infused-worker-deployment.json
+          echo 'Independent INFUSED Worker deployed; no domain, Catalyst Worker, or DNS changes.'

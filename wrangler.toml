@@ -1,7 +1,11 @@
-name = "catalyst-website"
-compatibility_date = "2026-10-11"
+name = "infused-show"
+compatibility_date = "2026-10-13"
 workers_dev = true
 keep_vars = true
+main = "./src/worker.mjs"
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "404-page"
