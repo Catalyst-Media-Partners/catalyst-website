@@ -10,8 +10,8 @@ const partsDir = 'preview-src/infused-v1b0';
 const parts = readdirSync(partsDir).filter(name => /^part-\d\d\.b64$/.test(name)).sort();
 if (parts.length !== 30) throw new Error(`Expected 30 preview archive parts, got ${parts.length}`);
 for (let i = 0; i < parts.length; i++) if (parts[i] !== `part-${String(i).padStart(2, '0')}.b64`) throw new Error('Archive part missing or out of order');
-const encoded = parts.map(name => readFileSync(path.join(partsDir, name), 'utf8')).join('');
-const bytes = Buffer.from(encoded, 'base64');
+// GitHub stored each transport Base64 segment as decoded binary bytes.
+const bytes = Buffer.concat(parts.map(name => readFileSync(path.join(partsDir, name))));
 if (createHash('sha256').update(bytes).digest('hex') !== archiveHash) throw new Error('Infused source archive hash mismatch: refusing deployment');
 const tmp = mkdtempSync(path.join(tmpdir(), 'infused-preview-'));
 try {
