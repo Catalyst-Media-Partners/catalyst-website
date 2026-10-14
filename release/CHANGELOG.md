@@ -1,3 +1,17 @@
+# v1b.1 - Source-only quality and aesthetic release (2026-10-13)
+
+- Removed the solid black artifact below the navigation logo by cropping the presentation-derived WebP source asset (without changing the logotype/subtitle).
+- Reflowed the existing six mobile navigation links into a fully visible, two-row menu; labels, links and desktop hierarchy remain untouched.
+- Darkened saturated accent-colored **text only** for WCAG AA legibility. Brand accent stripes, borders and card structure unchanged.
+- Added intrinsic image dimensions, decoding hints, lazy-loading where appropriate and hero priority; existing imagery, alt descriptions and order unchanged.
+- Fixed the domain Worker's canonical URL for /index.html aliases; no visible-content change.
+- Removed dead bootstrap code, and removed self-committing CI steps. Existing authorized-actor gate, standalone Worker and Cloudflare account are preserved.
+- Added very-narrow viewport reflow for unusually high zoom levels (256px CSS viewport).
+- Removed generated `public/` from the **source ZIP**. `npm run build` recreates it locally or during deployment.
+- No public text, page order, conversion links, event facts, or section hierarchy changed. See `release/V1B1_AUDIT_CHANGELOG.md`.
+
+---
+
 # v1b.0 - New independent development baseline
 
 - New **full baseline**, with **no required predecessor** and no imported earlier v1.x source.

@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -27,6 +28,10 @@ for (const page of pages) {
   if ((html.match(/<h1\b/g)||[]).length!==1) problems.push(`${file}: expected one h1`);
   if (!html.includes('FROM ROOTS') && file==='index.html') problems.push('Home page copy altered');
   if (html.includes('data:image')) problems.push(`${file}: embedded image remains`);
+  for (const img of html.match(/<img\b[^>]*>/g) ?? []) {
+    if (!/\bwidth="\d+"/.test(img) || !/\bheight="\d+"/.test(img)) problems.push(`${file}: image missing intrinsic dimensions`);
+    if (!/\balt="[^"]*"/.test(img)) problems.push(`${file}: image missing alt attribute`);
+  }
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]));
   const duplicateIds = [...ids].filter(id => [...html.matchAll(/\bid="([^"]+)"/g)].filter(m=>m[1]===id).length>1);
   if (duplicateIds.length) problems.push(`${file}: duplicate IDs ${duplicateIds.join(',')}`);
@@ -42,6 +47,15 @@ for (const page of pages) {
     if (x[0].startsWith('href')) linksChecked++;
     else imagesChecked++;
   }
+}
+// Verify all extracted/optimized image assets against the source inventory.
+const inventory = JSON.parse(await readFile(path.join(root, 'src/reference/image-manifest.json'), 'utf8'));
+for (const image of inventory) {
+  const file = path.join(publicDir, 'assets/images', image.name);
+  try {
+    const bytes = await readFile(file);
+    if (bytes.length !== image.bytes || createHash('sha256').update(bytes).digest('hex') !== image.sha256) problems.push('Image inventory mismatch: ' + image.name);
+  } catch { problems.push('Missing inventoried image: ' + image.name); }
 }
 if (problems.length) { console.error(problems.join('\n')); process.exitCode=1; }
 else console.log(`PASS: ${pages.length} pages; ${linksChecked} internal linked destinations and ${imagesChecked} assets; one H1, preview noindex and no broken local references.`);

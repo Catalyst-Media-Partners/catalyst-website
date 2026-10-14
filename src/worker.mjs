@@ -1,25 +1,65 @@
-/** Standalone INFUSED website. Workers.dev is noindex; the future domain is production. */
-const apex='infused.show', www='www.infused.show';
-const routes=['/','/market/','/ecosystem/','/roots/','/science/','/make/','/package/','/move/','/sell/','/services/','/buyers/','/why-vegas/','/opportunities/','/contact/'];
-const secure=(prod,old)=>{const h=new Headers(old);h.set('X-Content-Type-Options','nosniff');h.set('Referrer-Policy','strict-origin-when-cross-origin');h.set('X-Frame-Options','SAMEORIGIN');if(prod)h.delete('X-Robots-Tag');else h.set('X-Robots-Tag','noindex, nofollow, noarchive');return h;};
-export default {async fetch(request,env){
- const url=new URL(request.url),host=url.hostname.toLowerCase(),prod=host===apex||host===www;
- if(host===www){const next=new URL(request.url);next.hostname=apex;return Response.redirect(next,308);}
- if(url.pathname==='/robots.txt'){const text=prod?'User-agent: *\nAllow: /\nSitemap: https://infused.show/sitemap.xml\n':'User-agent: *\nDisallow: /\n';return new Response(text,{headers:secure(prod,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store'})});}
- if(url.pathname==='/sitemap.xml'){
-  if(!prod)return new Response('Not found',{status:404,headers:secure(false,{'Content-Type':'text/plain'})});
-  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+routes.map(x=>'  <url><loc>https://'+apex+x+'</loc></url>').join('\n')+'\n</urlset>\n';
-  return new Response(xml,{headers:secure(true,{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'public, max-age=3600'})});
- }
- const asset=await env.ASSETS.fetch(request),headers=secure(prod,asset.headers);
- if(!prod&&headers.get('Content-Type')?.includes('text/html'))headers.set('Cache-Control','no-store');
- if(prod&&asset.ok&&headers.get('Content-Type')?.includes('text/html')){
-  let html=await asset.text();
-  html=html.replace('<meta name="robots" content="noindex, nofollow, noarchive">','<meta name="robots" content="index, follow">');
-  let p=url.pathname.endsWith('/index.html')?url.pathname.slice(0,-10):url.pathname;
-  p=p.endsWith('/')?p:p+'/';html=html.replace('</head>','<link rel="canonical" href="https://'+apex+p+'">\n</head>');
-  headers.delete('Content-Length');headers.delete('Content-Encoding');headers.delete('ETag');
-  return new Response(html,{status:asset.status,statusText:asset.statusText,headers});
- }
- return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers});
-}};
+/**
+ * Independent INFUSED site Worker.
+ * On workers.dev, the site is a noindex preview. On the two explicitly approved
+ * future production hostnames, the same static source becomes indexable.
+ * No hostnames or DNS mappings are changed by this Worker.
+ */
+const HOST = 'infused.show';
+const WWW = 'www.infused.show';
+const routes = [
+  '/', '/market/', '/ecosystem/', '/roots/', '/science/', '/make/',
+  '/package/', '/move/', '/sell/', '/services/', '/buyers/',
+  '/why-vegas/', '/opportunities/', '/contact/'
+];
+function headersFor(isProduction, original) {
+  const headers = new Headers(original);
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('X-Frame-Options', 'SAMEORIGIN');
+  if (isProduction) headers.delete('X-Robots-Tag');
+  else headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  return headers;
+}
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const host = url.hostname.toLowerCase();
+    const isProduction = host === HOST || host === WWW;
+    if (host === WWW) {
+      const next = new URL(request.url);
+      next.hostname = HOST;
+      return Response.redirect(next, 308);
+    }
+    if (url.pathname === '/robots.txt') {
+      const rules = isProduction ? 'User-agent: *\nAllow: /\nSitemap: https://infused.show/sitemap.xml\n' : 'User-agent: *\nDisallow: /\n';
+      return new Response(rules, {
+        headers: headersFor(isProduction, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' })
+      });
+    }
+    if (url.pathname === '/sitemap.xml') {
+      if (!isProduction) return new Response('Not found', { status: 404, headers: headersFor(false, { 'Content-Type': 'text/plain' }) });
+      const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+        routes.map(route => `  <url><loc>https://${HOST}${route}</loc></url>`).join('\n') +
+        '\n</urlset>\n';
+      return new Response(xml, { headers: headersFor(true, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }) });
+    }
+    const asset = await env.ASSETS.fetch(request);
+    const headers = headersFor(isProduction, asset.headers);
+    if (!isProduction && headers.get('Content-Type')?.includes('text/html')) headers.set('Cache-Control', 'no-store');
+    if (isProduction && asset.ok && headers.get('Content-Type')?.includes('text/html')) {
+      let html = await asset.text();
+      // Content and visual design stay identical. Only deployment metadata changes.
+      html = html.replace('<meta name="robots" content="noindex, nofollow, noarchive">', '<meta name="robots" content="index, follow">');
+      const cleanPath = url.pathname.replace(/\/index\.html$/, '/');
+      const canonicalPath = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
+      const canonical = `https://${HOST}${canonicalPath}`;
+      html = html.replace('</head>', `<link rel="canonical" href="${canonical}">\n</head>`);
+      headers.delete('Content-Length');
+      headers.delete('Content-Encoding');
+      headers.delete('ETag');
+      return new Response(html, { status: asset.status, statusText: asset.statusText, headers });
+    }
+    return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
+  }
+};

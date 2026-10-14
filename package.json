@@ -1,9 +1,9 @@
 {
   "name": "infused-site",
-  "version": "1.0.0-b0",
+  "version": "1.0.1-b1",
   "private": true,
   "type": "module",
-  "description": "INFUSED original invitation website, independent v1b.0 baseline",
+  "description": "INFUSED original invitation website, independent v1b.1 quality baseline",
   "scripts": {
     "build": "node build.mjs",
     "check": "node scripts/check.mjs"

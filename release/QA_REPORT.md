@@ -1,23 +1,25 @@
-# v1b.0 quality checks
+# v1b.1 QA | No-editorial quality refresh
 
-**Scope:** New independent full development baseline sourced solely from the single supplied invitation HTML. Not a production launch.
+**Source:** independent approved Infused v1b.0, with 14 routes. This release is source-only and does not change public copy, navigation targets or section order.
 
-| Check | Result |
-| --- | --- |
-| Source provenance | Original HTML preserved byte-for-byte (SHA-256 d7ae64fd71b3c23f0c9f298fa6d29111ddc895693830d4fad7651d4196fd61bb) |
-| Homepage copy | 7,352 visible body characters identical to original |
-| Visual similarity | Pixel-identical at 1440, 1024, 768, 390px (Chromium in-memory rendering) |
-| Content/asset integrity | 12 original sections and all 21 original embedded WebP assets preserved |
-| Subpages | 13, each using only original section/card content |
-| Browser responsive checks | 40 route/viewport renders (1440/1024/768/390/320), plus 512/360/300px reflow checks |
-| Overflow | No document-level horizontal overflow detected at 1440/1024/768/512/390/360/320/300px |
-| Navigation | 14 total routes, 144 internal references, 53 local assets checks, original external links retained |
-| Keyboard | Mobile last navigation item can receive focus and scroll into view |
-| Syntax/structural | `npm run build` and `npm run check` passed; one H1 per generated page; no duplicate IDs; preview robots present |
-| HTTP | Python static server returned 200 for all 14 routes, CSS and image, under both Live Server root conventions |
-| JavaScript | None required by the original source or added here; zero page script errors |
-| Clean extraction | Rebuilt generated public tree compared against archive baseline during packaging |
+## Passed
 
-**Limitations:** Chromium was tested through in-memory browser rendering. Automated browser navigation to localhost is restricted in this environment; static local HTTP responses and resolution of all internal links were verified separately. No independent WCAG 2.2 AA audit, market claims verification, image rights audit or live checkout/form test was performed.
+- Source content comparison against approved v1b.0, 14 HTML pages: normalized rendered body text exact match; anchor URLs exact match; alt text exact match; DOM tag order exact match; one H1 per page.
+- Original embedded HTML reference unchanged, SHA-256 `d7ae64fd71b3c23f0c9f298fa6d29111ddc895693830d4fad7651d4196fd61bb`.
+- Logo image cropped from 540 × 167 to 535 × 146 pixels; solid black lower strip removed. Purple subtitle and Infused logotype retained.
+- Accented category heading and market-number text contrast check: all assessed text colors at least 5.52:1 against white using the specified `color-mix` rule; brand accents preserved in borders and bars.
+- Source-generated HTML renders in in-memory Chromium at 1440, 1024, 768, 390, 320 and 256 CSS pixels across all 14 pages (84 combinations), with no document-level horizontal overflow, broken images, or JavaScript errors. All six navigation links appear in the viewport; no hidden horizontal mobile menu scroll.
+- 14 HTTP 200 route responses from locally started static server, plus CSS and logo asset HTTP 200. Chromium direct local-navigation URL access is restricted by the execution environment, so its route QA used in-memory rendering and Python HTTP separately.
+- `npm run build`, `npm run check`, `node scripts/verify-cloudflare.mjs` pass, including canonical URLs, preview noindex, sitemap and WWW redirect checks.
+- Intrinsic width/height and alt text present for all HTML images, and WebP asset inventory digests match source.
+- Source-only ZIP extraction into clean parent directory, `npm run build`, and byte-for-byte comparison of all generated `public/` files pass. No `public/`, `node_modules`, `.env` or `.dev.vars` in the archive.
 
-**Pre-production decisions:** Confirm market claims and event/program specifics, image permissions, the external CannaCon exhibitor request and Map Dynamics registration URLs, legal/privacy requirements and event dates. Preview must remain `noindex` until production approval.
+## Not claimed
+
+- Independent complete WCAG 2.2 AA audit, Safari/WebKit or Firefox rendering, comprehensive external-link verification, market-claim fact checking, image licensing audit, real paid checkout, end-to-end registration, and public Workers.dev browser QA are outside this cosmetic update.
+- The external exhibitor request still leads to CannaCon and the floor map still leads to Map Dynamics, exactly as in the user-approved source.
+- The domain and DNS cutover are not part of this release. No changes to Catalyst/CannaCon DNS or Workers.
+
+## Visual evidence
+
+The QA runner generated local screenshots at 1440, 390, and 320 (home), 1440 and 390 (ecosystem) and 390 (market). These are kept as development QA, not published as website assets.

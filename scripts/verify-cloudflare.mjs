@@ -1,24 +1,41 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 import worker from '../src/worker.mjs';
-const config=readFileSync('wrangler.toml','utf8');
-for(const setting of ['name = "infused-show"','keep_vars = true','main = "./src/worker.mjs"','directory = "./public"','binding = "ASSETS"','run_worker_first = true'])assert.ok(config.includes(setting),'Missing '+setting);
-const sampleHTML=readFileSync('public/index.html','utf8');
-const test=(host,path='/')=>worker.fetch(new Request('https://'+host+path),{ASSETS:{fetch:async()=>new Response(sampleHTML,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'orig'}})}});
-const preview=await test('infused-show.cannacon-org-s-account.workers.dev');
-assert.equal(preview.headers.get('X-Robots-Tag'),'noindex, nofollow, noarchive');
-assert.ok((await preview.text()).includes('noindex, nofollow, noarchive'));
-const prod=await test('infused.show');
-assert.equal(prod.headers.get('X-Robots-Tag'),null);
-const html=await prod.text();
-assert.ok(html.includes('index, follow'));
-assert.ok(html.includes('https://infused.show/'));
-assert.ok(html.includes('FROM ROOTS'));
-const www=await test('www.infused.show');
-assert.equal(www.status,308);
-assert.equal(www.headers.get('Location'),'https://infused.show/');
-const site=await test('infused.show','/sitemap.xml');
-assert.equal((await site.text()).match(/<url>/g).length,14);
-const robots=await test('infused-show.cannacon-org-s-account.workers.dev','/robots.txt');
-assert.ok((await robots.text()).includes('Disallow: /'));
-console.log('PASS: Cloudflare Worker preview and future cutover behavior.');
+
+const config = readFileSync('wrangler.toml', 'utf8');
+for (const expected of [
+  'name = "infused-show"', 'workers_dev = true', 'keep_vars = true',
+  'main = "./src/worker.mjs"', 'directory = "./public"',
+  'binding = "ASSETS"', 'run_worker_first = true'
+]) assert.ok(config.includes(expected), `Missing Cloudflare contract: ${expected}`);
+const orig = readFileSync('public/index.html', 'utf8');
+const sample = async (hostname, pathname = '/') => worker.fetch(
+  new Request(`https://${hostname}${pathname}`),
+  { ASSETS: { fetch: async () => new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} }) } }
+);
+const preview = await sample('infused-show.cannacon-org-s-account.workers.dev');
+const previewHTML = await preview.text();
+assert.equal(preview.headers.get('x-robots-tag'), 'noindex, nofollow, noarchive');
+assert.ok(previewHTML.includes('<meta name="robots" content="noindex, nofollow, noarchive">'));
+assert.ok(!previewHTML.includes('<link rel="canonical" href="https://infused.show/">'));
+const rootRobots = await sample('infused-show.cannacon-org-s-account.workers.dev', '/robots.txt');
+assert.ok((await rootRobots.text()).includes('Disallow: /'));
+const prod = await sample('infused.show');
+const prodHTML = await prod.text();
+assert.equal(prod.headers.get('x-robots-tag'), null);
+assert.ok(prodHTML.includes('<meta name="robots" content="index, follow">'));
+assert.ok(prodHTML.includes('<link rel="canonical" href="https://infused.show/">'));
+assert.ok(prodHTML.includes('FROM ROOTS'));
+const indexedHome = await sample('infused.show', '/index.html');
+assert.ok((await indexedHome.text()).includes('<link rel="canonical" href="https://infused.show/">'));
+const indexedSubpage = await sample('infused.show', '/market/index.html');
+assert.ok((await indexedSubpage.text()).includes('<link rel="canonical" href="https://infused.show/market/">'));
+const www = await sample('www.infused.show');
+assert.equal(www.status, 308);
+assert.equal(www.headers.get('location'), 'https://infused.show/');
+const sitemap = await sample('infused.show','/sitemap.xml');
+assert.equal(sitemap.status, 200);
+assert.equal((await sitemap.text()).match(/<url>/g).length, 14);
+const productionRobots = await sample('infused.show','/robots.txt');
+assert.ok((await productionRobots.text()).includes('Allow: /'));
+console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect behavior');
