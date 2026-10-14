@@ -1,3 +1,13 @@
+# v1b.2 - Verified legacy URL handoff (2026-10-14)
+
+- Added seven permanent redirects for verified pre-migration WordPress entry routes; no public copy, imagery, 14 approved pages or existing destination paths changed.
+- Preserved query strings through those redirects, including campaign attribution parameters.
+- Added redirect checks without changing the existing Workers.dev noindex, production canonicals, sitemap, www redirect or Cloudflare bindings.
+- Updated domain-cutover documentation from verified registrar DNS and live deployment state.
+- Outstanding before complete legacy retirement: review the old WordPress-specific privacy policy, recover or replace the linked hosted-buyer PDF, and verify legacy forms / marketing inbound links not listed in the site navigation.
+
+---
+
 # v1b.1 - Source-only quality and aesthetic release (2026-10-13)
 
 - Removed the solid black artifact below the navigation logo by cropping the presentation-derived WebP source asset (without changing the logotype/subtitle).

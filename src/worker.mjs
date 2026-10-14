@@ -6,6 +6,17 @@
  */
 const HOST = 'infused.show';
 const WWW = 'www.infused.show';
+// Only verified legacy WordPress entry routes. Do not invent a privacy policy,
+// speaker form, or hosted-buyer application to replace missing content.
+const LEGACY_REDIRECTS = Object.freeze({
+  '/getting-started': '/',
+  '/event/las-vegas-2027': '/',
+  '/exhibit': '/opportunities/',
+  '/exhibitor-hub': '/opportunities/',
+  '/become-an-exhibitor': '/contact/',
+  '/become-a-speaker': '/contact/',
+  '/become-a-sponsor': '/opportunities/'
+});
 const routes = [
   '/', '/market/', '/ecosystem/', '/roots/', '/science/', '/make/',
   '/package/', '/move/', '/sell/', '/services/', '/buyers/',
@@ -29,6 +40,13 @@ export default {
       const next = new URL(request.url);
       next.hostname = HOST;
       return Response.redirect(next, 308);
+    }
+    const legacyKey = url.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+    const legacyDestination = LEGACY_REDIRECTS[legacyKey];
+    if (legacyDestination) {
+      const next = new URL(legacyDestination, url);
+      next.search = url.search;
+      return Response.redirect(next.toString(), 301);
     }
     if (url.pathname === '/robots.txt') {
       const rules = isProduction ? 'User-agent: *\nAllow: /\nSitemap: https://infused.show/sitemap.xml\n' : 'User-agent: *\nDisallow: /\n';

@@ -1,39 +1,68 @@
-# INFUSED.show | Cutover readiness (2026-10-13)
+# infused.show standalone hosting cutover | verified 2026-10-14
 
-**Approved site:** independent INFUSED v1b.0, 14 pages, source SHA-256 archive `cc1afa9cfc6f233cb6aab725db5d6ddf236bf639f82327e37721f338162a0c04`.
+## Deployment source of truth
 
-**Source:** GitHub branch `infused-show` in `Catalyst-Media-Partners/catalyst-website`. `main` and Catalyst Worker remain unchanged. Generated `public/` is recreated by `npm run build`.
+- GitHub: `Catalyst-Media-Partners/catalyst-website`, independent branch `infused-show`. Do NOT merge this into Catalyst `main` or deploy to Catalyst's Worker.
+- Infused release: v1b.2 migration hardening, preserving all 14 approved v1b.1 pages and their public content, images and links.
+- Build: `npm run build` regenerates ignored `public/`; `npm run check`; `node scripts/verify-cloudflare.mjs`.
+- GitHub Actions: `.github/workflows/deploy-infused.yml`; push to `infused-show` with authorized repository actor deploys ONLY Worker `infused-show` in Cloudflare account `Catalyst_Media_Partners`.
+- Cloudflare Worker: `infused-show` with Workers static assets, `keep_vars = true`, and unchanged account binding.
+- Preview: `https://infused-show.cannacon-org-s-account.workers.dev/`. Preview host disallows indexing.
+- Production hostnames already assigned as custom Worker domains: `infused.show` and `www.infused.show`; www issues a 308 redirect to the apex. The Worker serves production-only canonical links, a 14-URL sitemap, and allow-indexing robots metadata upon receiving the production hostname.
 
-**Deployed preview:** https://infused-show.cannacon-org-s-account.workers.dev/  
-**Worker:** `infused-show`, Cloudflare account `Catalyst_Media_Partners`. Deployed by the branch's GitHub Actions workflow. Preview host is noindex/nofollow/noarchive.
+## GoDaddy DNS cutover
 
-## Already configured in Cloudflare
+The Cloudflare zone `infused.show` is **pending** until the registrar delegates to its assigned nameservers:
 
-- Zone `infused.show` created in the Catalyst account; status **pending** until registrar delegation.
-- Cloudflare assigned nameservers `lorna.ns.cloudflare.com` and `luke.ns.cloudflare.com`.
-- Previous observed nameservers are `ns63.domaincontrol.com` and `ns64.domaincontrol.com`.
-- Worker Custom Domains attached to `infused.show` **and** `www.infused.show`, enabled; Cloudflare created the proxied originless AAAA entries automatically.
-- Worker returns 308 redirect from www to the apex. On the approved apex hostname, it switches preview `noindex` metadata to production canonical/indexable metadata and serves a generated 14-URL sitemap/robots rules.
-- Universal SSL is enabled and zone TLS mode is full. Domain certificates have identifiers, but cannot be treated as valid until zone activation and real HTTPS tests.
+    lorna.ns.cloudflare.com
+    luke.ns.cloudflare.com
 
-## Scanned legacy DNS and staging
+Currently published nameservers (public DNS):
 
-Cloudflare's asynchronous DNS scan found six legacy records: two website A records pointing to old hosting, plus `_acme-challenge`, `_domainconnect`, `_dmarc` and `pay.infused.show`. The four **non-web** records were copied into the pending zone without changing their values or proxy settings. The old website A records were NOT copied because they conflict with the staged Worker originless routing. The current pending zone therefore contains six DNS records: two Worker AAAA entries plus the four preserved non-web records.
+    ns63.domaincontrol.com
+    ns64.domaincontrol.com
 
-No MX, SPF, or DKIM records were found in the automatic scan. **That does not prove they do not exist.** The registrar's authoritative DNS export and email requirements must be checked before any nameserver change. DNSSEC DS records at the registrar must also be reviewed.
+On GoDaddy: Domain Portfolio > `infused.show` > DNS > Nameservers > I'll use my own nameservers > enter the TWO Cloudflare values above > Save > Continue. Identity confirmation or two-factor verification may be required. Do not change A, AAAA or NS DNS-record rows individually instead of the registrar's actual nameserver delegation.
 
-## Remaining actions (registrar/DNS handoff)
+Before saving, export the complete GoDaddy authoritative DNS record set, and confirm domain renewal/ownership. The public DNS and Cloudflare rescan on 2026-10-14 returned the legacy website at `159.65.170.238`, no apex MX, no apex TXT and no parent-zone DS records. These findings do not prove that no undocumented subdomain or email integration exists. Confirm the registrar's complete list and any domain-level forwarding settings.
 
-1. Obtain authorized control of the `infused.show` registrar account.
-2. Export ALL authoritative DNS records and verify mail, third-party services, subdomains and DNSSEC. Reconcile any missing records in Cloudflare; do not assume Cloudflare's automated scan is exhaustive.
-3. Check that the existing legacy site and required integrations can safely be retired or redirected.
-4. Once the pending zone is complete, update ONLY the registrar's nameserver delegation to `lorna.ns.cloudflare.com` and `luke.ns.cloudflare.com`.
-5. Wait for zone activation and SSL certificate issuance. Verify HTTPS at both apex and www; confirm www redirects to apex.
-6. Test all 14 routes, CSS/images, form and ticket destinations, metadata, mobile behavior, and external inquiry links on `infused.show`. Confirm facts, imagery permission, privacy and accessibility checks before marketing launch.
-7. Monitor mail delivery, 404s, crawler indexing and error rates. Do not disable old hosting until final verification.
+**Cloudflare staged zone records:** two proxy-enabled Worker AAAA placeholders at apex and www; the original `_acme-challenge` CNAME, `_domainconnect` CNAME, `_dmarc` TXT, and `pay` CNAME all preserved. Public queries verified that the three CNAMEs and DMARC TXT value match the original registrar records. The two old origin A records are intentionally NOT copied because the Worker handles apex and www. Existing payment subdomain `pay.infused.show` points to `paylinks.commerce.godaddy.com` (DNS-only) and must not be removed without approval.
 
-**Never change `catalystmediapartners.com` or `cannacon.org` production DNS, Worker, or GitHub main branch as part of this cutover.**
+## Verified legacy URL redirects (release v1b.2)
 
-## Rollback
+All redirects preserve URL query parameters:
 
-Maintain the registrar DNS export, former hosting settings, and v1b.0 full ZIP. Roll Worker code back by deploying an earlier `infused-show` commit. If nameserver rollback is required, restore the previous complete DNS zone and validate mail/HTTPS before changing delegation.
+| Former WordPress URL | New site destination |
+| --- | --- |
+| `/getting-started/` | `/` |
+| `/event/las-vegas-2027/` | `/` |
+| `/exhibit/` | `/opportunities/` |
+| `/exhibitor-hub/` | `/opportunities/` |
+| `/become-an-exhibitor/` | `/contact/` |
+| `/become-a-speaker/` | `/contact/` |
+| `/become-a-sponsor/` | `/opportunities/` |
+
+These are legacy fallbacks, not new content claims or new speaker/sponsor application forms. Current conversion actions on the approved site continue to use the existing CannaCon exhibitor request and Map Dynamics URLs.
+
+## Open migration decisions
+
+1. **Privacy policy:** The former `/privacy-policy/` is a WordPress-specific 2025-edited policy (mentions comments, Gravatar, WordPress login cookies and form retention), not an accurate policy for this new low-dependency site. It has NOT been copied or redirected. Have the correct owner approve replacement privacy content, then add an appropriate `/privacy-policy/` route. Do not silently reuse stale legal language.
+2. **Legacy hosted-buyer PDF:** The previous homepage advertised `/wp-content/uploads/INFUSED_Hosted_Buyer_Clickable_Form_15_Meetings.pdf`. The new site does not host this document. Confirm whether it still needs to be publicly accessible; if yes, obtain the approved source and preserve the filename/path or provide a verified redirect before retiring old hosting.
+3. **Old event-page anchors:** Inbound links to `#schedule`, `#speakers`, `#tickets` etc. will redirect to the general homepage; the approved site has no equivalent independently confirmed schedules or ticket flow. Validate marketing links before sending traffic.
+4. The legacy WordPress provider should remain available for rollback until DNS, TLS, routing, outbound flows and privacy obligations are verified. Do not cancel the old hosting on the same day as the nameserver change.
+
+## After registrar nameserver switch
+
+1. Confirm public `NS` delegation to both and only the assigned Cloudflare nameservers.
+2. Confirm Cloudflare zone transitions from **pending** to **active**. If still pending after propagation, use the zone's **Check nameservers now** control. Recheck any registrar DS records if needed.
+3. Confirm universal SSL certificate issuance. Test `https://infused.show/` and `https://www.infused.show/` over HTTPS; www must redirect to apex with 308.
+4. Test all 14 HTML routes, 21 image assets and CSS, header, ecosystem categories, mobile and desktop navigation, contact CTA and floor-map links.
+5. Test the seven legacy redirects, old URL UTM propagation, `robots.txt`, `sitemap.xml`, canonical tags, preview noindex and production indexing metadata.
+6. Confirm `pay.infused.show`, third-party services, email requirements, and domain renewal access remain correct.
+7. Monitor 404s, conversions, mail and TLS for at least 24 hours before decommissioning WordPress.
+
+## Recovery
+
+Keep the old GoDaddy DNS export, current legacy origin address, and source ZIP. Roll back a Worker code regression by redeploying the previous `infused-show` GitHub commit. If the entire DNS cutover must be reversed, restore the full former authoritative GoDaddy DNS records and its nameserver delegation, allow DNS caching to expire, and retest HTTPS, mail and payments. Cloudflare and the domain registrar are separate: nameserver change does NOT transfer registration away from GoDaddy.
+
+Do not store credentials in the repository, upload them to Cloudflare, paste them into CI, or disclose them in deployment notes. Enable MFA and review delegated business access to the GoDaddy domain account after the change.

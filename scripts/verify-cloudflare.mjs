@@ -38,4 +38,25 @@ assert.equal(sitemap.status, 200);
 assert.equal((await sitemap.text()).match(/<url>/g).length, 14);
 const productionRobots = await sample('infused.show','/robots.txt');
 assert.ok((await productionRobots.text()).includes('Allow: /'));
+const legacyRedirects = [
+  ['/getting-started/', '/'],
+  ['/event/las-vegas-2027/', '/'],
+  ['/exhibit/', '/opportunities/'],
+  ['/exhibitor-hub/', '/opportunities/'],
+  ['/become-an-exhibitor/', '/contact/'],
+  ['/become-a-speaker/', '/contact/'],
+  ['/become-a-sponsor/', '/opportunities/']
+];
+for (const [legacyPath, destination] of legacyRedirects) {
+  const legacy = await sample('infused.show', legacyPath);
+  assert.equal(legacy.status, 301, 'Legacy redirect missing for ' + legacyPath);
+  assert.equal(legacy.headers.get('location'), 'https://infused.show' + destination);
+}
+const oldCampaign = await sample('infused.show', '/become-an-exhibitor/?utm_source=legacy');
+assert.equal(oldCampaign.headers.get('location'), 'https://infused.show/contact/?utm_source=legacy');
+const oldPreview = await sample('infused-show.cannacon-org-s-account.workers.dev', '/exhibitor-hub/');
+assert.equal(oldPreview.status, 301);
+assert.ok(oldPreview.headers.get('location').endsWith('/opportunities/'));
+const unsupportedLegal = await sample('infused.show', '/privacy-policy/');
+assert.notEqual(unsupportedLegal.status, 301, 'Do not silently repurpose the old privacy policy');
 console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect behavior');

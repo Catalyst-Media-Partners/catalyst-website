@@ -1,9 +1,9 @@
 {
-  "release": "v1b.1",
+  "release": "v1b.2",
   "type": "full-independent-source-baseline",
-  "created": "2026-10-13",
+  "created": "2026-10-14",
   "required_predecessor": null,
-  "supersedes": "v1b.0",
+  "supersedes": "v1b.1",
   "zip_root": "infused_site/",
   "generated_public_in_archive": false,
   "build_command": "npm run build",
@@ -15,7 +15,7 @@
   "copy_changed": false,
   "page_structure_changed": false,
   "source_invitation_sha256": "d7ae64fd71b3c23f0c9f298fa6d29111ddc895693830d4fad7651d4196fd61bb",
-  "qa_report": "release/QA_REPORT.md",
+  "qa_report": "release/CUTOVER_QA.md",
   "audit_log": "release/V1B1_AUDIT_CHANGELOG.md",
   "files": [
     {
@@ -40,18 +40,23 @@
     },
     {
       "path": "docs/DOMAIN_CUTOVER.md",
-      "bytes": 2843,
-      "sha256": "278a4b21a82c44f684c9dbef40cadcfdec5635db4f8eeecb68780b36f09b7be2"
+      "bytes": 6492,
+      "sha256": "8825bc5422d58f2a1dfe5c93ccccd982484708383d3febcb4395c44858919a47"
     },
     {
       "path": "package.json",
       "bytes": 274,
-      "sha256": "82875e043f2561954f5cf2a1323262a3eff74315255c5fb58661235a0fdd659e"
+      "sha256": "da31cb433f533814d9c4cc4eea493ad37dce3be1a89b99ad868a7f30c3498c39"
     },
     {
       "path": "release/CHANGELOG.md",
-      "bytes": 2421,
-      "sha256": "8aa247931d0cb1925d55fe927101d351d6398e04d6795625cd40bddea124fa02"
+      "bytes": 3210,
+      "sha256": "d7f695d6e38356a8bc2b3b6770a9992d36cba28cd50e2ed17511fc13ddc4b1b9"
+    },
+    {
+      "path": "release/CUTOVER_QA.md",
+      "bytes": 1599,
+      "sha256": "a9bfc94c9087474c75f8e50064ca79daeed504d349e9ecdb5e66cb08d2e79357"
     },
     {
       "path": "release/QA_REPORT.md",
@@ -75,8 +80,8 @@
     },
     {
       "path": "scripts/verify-cloudflare.mjs",
-      "bytes": 2577,
-      "sha256": "d497658b76f59a15c31277e67b9997deaccb152eb40094b55b77736c17ec9966"
+      "bytes": 3746,
+      "sha256": "835b12abd7d3e7017464ecc1895d1733075543cd013ce3d8073b3090190d18b4"
     },
     {
       "path": "src/assets/css/site.css",
@@ -280,8 +285,8 @@
     },
     {
       "path": "src/worker.mjs",
-      "bytes": 3404,
-      "sha256": "bc543d421cf956e0b7685b4589cec17e7d5f62ac3f0084da355ca409f04113fb"
+      "bytes": 4158,
+      "sha256": "c4488c15a7593650667f889b27582f26bfd26bf5caba3c53e711e9e0426a2935"
     },
     {
       "path": "wrangler.toml",
@@ -289,5 +294,7 @@
       "sha256": "7c93c7b5f6b28439497ece2a370cf71c26530930e1c68c5e9ccfa84f8346492b"
     }
   ],
-  "notes": "All 14 pages and media generated from real source. Source-only ZIP intentionally excludes generated public/. One source logo asset cropped, image inventory updated. GitHub infused-show branch handles Cloudflare build/deploy."
+  "notes": "Original v1b.1 14-page public build unchanged byte-for-byte. Worker-only seven legacy redirects, updated migration QA and DNS cutover docs. Source archive excludes generated public and secrets.",
+  "cutover_document": "docs/DOMAIN_CUTOVER.md",
+  "legacy_redirects": 7
 }
