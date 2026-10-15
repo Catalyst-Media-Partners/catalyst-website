@@ -1,3 +1,10 @@
+# v1b.3 - INFUSED-specific contact form (2026-10-14)
+
+- Replaced the CannaCon exhibitor-request destination in the shared INFUSED contact CTA with the new INFUSED Jotform.
+- Updated only the CTA label to “Contact the INFUSED Team”; existing surrounding copy, images, layout, primary navigation, floor-map link and 14 routes remain unchanged.
+- Form: https://form.jotform.com/262867873887079. Notification delivery and live submissions require form-owner verification.
+- No registrar DNS, Cloudflare domain switch, Catalyst Worker or CannaCon form changes.
+
 # v1b.2 - Verified legacy URL handoff (2026-10-14)
 
 - Added seven permanent redirects for verified pre-migration WordPress entry routes; no public copy, imagery, 14 approved pages or existing destination paths changed.
