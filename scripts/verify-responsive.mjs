@@ -33,6 +33,12 @@ try {
         const hero = document.querySelector('.hero');
         const copy = document.querySelector('.hero-copy');
         const image = document.querySelector('.hero-image');
+        const reference = document.querySelector('#market .container');
+        const referenceStyle = reference ? getComputedStyle(reference) : null;
+        const copyKicker = document.querySelector('.hero-copy > .kicker');
+        const referenceRect = rect(reference);
+        const referenceInnerLeft = referenceRect ? referenceRect.left + parseFloat(referenceStyle.paddingLeft) : null;
+        const referenceInnerRight = referenceRect ? referenceRect.right - parseFloat(referenceStyle.paddingRight) : null;
         const content = copy ? [
           ...copy.children,
           ...copy.querySelectorAll('h1 span, .hero-buttons .btn, .hero-event-date strong, .hero-event-date span')
@@ -41,6 +47,7 @@ try {
           viewport: window.innerWidth,
           documentWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
           hero: rect(hero), copy: rect(copy), image: rect(image),
+          reference: referenceRect, referenceInnerLeft, referenceInnerRight, copyKicker: rect(copyKicker),
           content
         };
       });
@@ -49,7 +56,14 @@ try {
       assert.ok(layout.documentWidth <= width + 1,
         context + ' at ' + width + 'px: horizontal document overflow (' + layout.documentWidth + 'px)');
       if (route.inspectHero) {
-        assert.ok(layout.hero && layout.copy && layout.image, 'Homepage hero is missing');
+        assert.ok(layout.hero && layout.copy && layout.image && layout.reference && layout.copyKicker,
+          'Homepage hero or shared container missing');
+        const aligned = (a, b, label) => assert.ok(Math.abs(a - b) <= 2,
+          context + ' at ' + width + 'px: ' + label + ' does not align to site container (' + a + ' vs ' + b + ')');
+        aligned(layout.hero.left, layout.reference.left, 'hero outer left');
+        aligned(layout.hero.right, layout.reference.right, 'hero outer right');
+        aligned(layout.copyKicker.left, layout.referenceInnerLeft, 'hero copy left');
+        aligned(layout.image.right, layout.referenceInnerRight, 'hero image right');
         const sideBySide = width > 1120;
         if (sideBySide) {
           assert.ok(layout.copy.right <= layout.image.left + 1,
