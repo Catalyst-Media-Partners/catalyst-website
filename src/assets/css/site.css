@@ -141,3 +141,16 @@ p{color:var(--muted)}
 }
 /* Extra-narrow/zoomed reflow: keep long section headlines inside the viewport. */
 @media(max-width:300px){h2,.subpage .section h1{font-size:26px;overflow-wrap:anywhere}}
+
+/* LV27 self-service booth purchasing: scoped additions to the original site design. */
+.hero-event-date{display:flex;flex-direction:column;gap:3px;margin:16px 0 0;font-size:14px;line-height:1.45;color:var(--ink)}
+.hero-event-date strong{font-size:18px;letter-spacing:.01em;color:var(--purple)}
+.hero-event-date span{font-weight:650;color:var(--muted)}
+.booking-prompt{display:flex;flex-wrap:wrap;gap:22px;align-items:center;justify-content:space-between;margin-top:34px;padding:26px;border:1px solid var(--line);border-radius:15px;background:#fbf9fc}
+.booking-prompt-copy{flex:1 1 380px}
+.booking-prompt-date,.cta-event-date{font-weight:850;color:var(--purple)!important;font-size:15px!important}
+.booking-prompt h3{font-size:24px;margin:7px 0 12px}
+.booking-prompt p{margin-bottom:10px}
+.booking-prompt-note{font-size:13px;color:var(--muted);margin-bottom:0!important}
+.booking-prompt .btn{flex-shrink:0;max-width:100%;text-align:center}
+@media(max-width:520px){.booking-prompt{padding:19px}.booking-prompt .btn{width:100%}.hero-event-date strong{font-size:16px}}

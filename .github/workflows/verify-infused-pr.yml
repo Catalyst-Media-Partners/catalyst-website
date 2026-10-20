@@ -1,0 +1,25 @@
+name: INFUSED website pull-request validation
+
+on:
+  pull_request:
+    branches: [infused-show]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out candidate site source
+        uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build all INFUSED site pages
+        run: npm run build
+      - name: Validate navigation, pricing, event details and assets
+        run: npm run check
+      - name: Verify INFUSED-only Worker and routing contract
+        run: node scripts/verify-cloudflare.mjs

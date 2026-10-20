@@ -48,6 +48,27 @@ for (const page of pages) {
     else imagesChecked++;
   }
 }
+
+const lvPurchaseUrl = 'https://shows.map-dynamics.com/infusedlv2027/?register';
+for (const page of pages) {
+  const html = await readFile(page, 'utf8');
+  const file = path.relative(publicDir, page);
+  if (!html.includes('href="' + lvPurchaseUrl + '"')) problems.push(file + ': no direct LV booth purchase URL');
+  if (!html.includes('data-cta-position="navigation"')) problems.push(file + ': no navigation purchase CTA');
+  if (!html.includes('May 13–14, 2027')) problems.push(file + ': missing show dates');
+  if (!html.includes('Las Vegas Convention Center')) problems.push(file + ': missing venue');
+}
+const home = await readFile(path.join(publicDir, 'index.html'), 'utf8');
+const opportunities = await readFile(path.join(publicDir, 'opportunities/index.html'), 'utf8');
+const contact = await readFile(path.join(publicDir, 'contact/index.html'), 'utf8');
+if (!home.includes('data-cta-position="hero"')) problems.push('Home: missing primary purchase CTA');
+if (!home.includes('data-cta-position="opportunities"')) problems.push('Home: missing opportunities purchase CTA');
+if (!home.includes('data-cta-position="contact"')) problems.push('Home: missing contact purchase CTA');
+if (!opportunities.includes('data-cta-position="opportunities"')) problems.push('Opportunities: missing booth purchase CTA');
+if (!opportunities.includes('10×10 inline booths start at $3,000')) problems.push('Opportunities: missing verified starting price');
+if (!contact.includes('data-cta-position="contact"')) problems.push('Contact: missing direct purchase CTA');
+if (!contact.includes('https://form.jotform.com/262867873887079')) problems.push('Contact: Jotform assistance missing');
+
 // Verify all extracted/optimized image assets against the source inventory.
 const inventory = JSON.parse(await readFile(path.join(root, 'src/reference/image-manifest.json'), 'utf8'));
 for (const image of inventory) {
