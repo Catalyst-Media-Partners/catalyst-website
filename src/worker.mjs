@@ -96,7 +96,12 @@ async function boothClick(request, env, url, isProduction) {
       input.utm.utm_source,input.utm.utm_medium,input.utm.utm_campaign,
       input.utm.utm_content,input.utm.utm_term
     ).run();
-    return checkoutRedirect(url, clickId, input.utm);
+    // Do not alter Map D's validated checkout URL until vendor compatibility
+    // for extra campaign/click parameters has been demonstrated.
+    const forwardVendorToken = env.MAPD_CLICK_ID_FORWARD_ENABLED === 'true';
+    return forwardVendorToken
+      ? checkoutRedirect(url, clickId, input.utm)
+      : checkoutRedirect(url);
   } catch {
     // Checkout availability takes precedence over analytics availability.
     // Do not issue a seemingly attributable token when the write failed.
