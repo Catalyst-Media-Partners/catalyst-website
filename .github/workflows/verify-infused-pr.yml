@@ -21,5 +21,10 @@ jobs:
         run: npm run build
       - name: Validate navigation, pricing, event details and assets
         run: npm run check
+      - name: Verify responsive layout at 320px through 2560px in Chromium
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install chromium
+          node scripts/verify-responsive.mjs
       - name: Verify INFUSED-only Worker and routing contract
         run: node scripts/verify-cloudflare.mjs
