@@ -1,0 +1,26 @@
+name: LV27 first-party click production smoke
+
+on:
+  push:
+    branches:
+      - qa/lv27-live-click-smoke-20261020
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify live CTA redirect without completing checkout
+        run: |
+          set -euo pipefail
+          url='https://infused.show/go/booth?position=hero&page=%2F&utm_source=qa_internal&utm_medium=smoke&utm_campaign=lv27_tracking_probe_20261020'
+          status="$(curl --silent --show-error --max-time 30 --max-redirs 0 --dump-header /tmp/lv27-click-headers.txt --output /dev/null --write-out '%{http_code}' "$url")"
+          [[ "$status" == '302' ]] || { echo "Unexpected live CTA HTTP status: $status" >&2; exit 1; }
+          destination="$(grep -i '^location:' /tmp/lv27-click-headers.txt | head -n 1 | sed 's/^[Ll]ocation:[[:space:]]*//;s/\r$//')"
+          [[ "$destination" == 'https://shows.map-dynamics.com/infusedlv2027/?register' ]] || {
+            echo 'Live CTA did not preserve the vendor-approved canonical Map D URL' >&2
+            exit 1
+          }
+          echo 'PASS: Production CTA accepts a tagged click and preserves Map D original checkout URL.'
