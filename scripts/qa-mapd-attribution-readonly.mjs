@@ -46,7 +46,8 @@ try {
  const body=await res.text();let j;try{j=JSON.parse(body)}catch{}
  const paths=Object.keys(j?.paths||{});
  results.push({label:'public_modern_api_spec',status:res.status,hasSpec:paths.length>0,pathCount:paths.length,
-   orderPaths:paths.filter(p=>/order|check.?out|form|question|registr|sale/i.test(p)).slice(0,60)});
+   orderPaths:paths.filter(p=>/order|check.?out|form|question|registr|sale/i.test(p)).slice(0,60),
+   allPaths:paths.slice(0,40)});
 }catch(e){results.push({label:'public_modern_api_spec',error:String(e).slice(0,180)});}
 console.log('MAPD_ATTRIBUTION_READONLY_PROBE '+JSON.stringify(results));
 if(results.some(x=>x.label==='tagged' && x.err)) process.exitCode=1;
