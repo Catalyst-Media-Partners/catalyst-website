@@ -31,11 +31,93 @@ function headersFor(isProduction, original) {
   else headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   return headers;
 }
+// First-party checkout handoff for the LV27 exhibitor funnel.
+// This only records an anonymous CTA click; it NEVER attributes an order
+// without independent vendor confirmation of this exact click_id.
+const LV27_CHECKOUT = 'https://shows.map-dynamics.com/infusedlv2027/?register';
+const UTM_KEYS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+const CTA_POSITIONS = new Set(['hero','navigation','opportunities','contact']);
+const TOKEN_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._~-]{0,95}$/;
+const HOST_PATTERN = /^[a-z0-9](?:[a-z0-9.-]{0,118}[a-z0-9])?$/;
+
+function vettedToken(value) {
+  if (typeof value !== 'string' || !TOKEN_PATTERN.test(value)) return null;
+  return value;
+}
+function trackingInput(url) {
+  const params = url.searchParams;
+  const rawPosition = params.get('position');
+  const requestedPath = params.get('page');
+  const knownPath = routes.includes(requestedPath) ? requestedPath : '/';
+  const rawHost = (params.get('referrer_host') || '').toLowerCase();
+  const referrerHost = HOST_PATTERN.test(rawHost) && !['infused.show','www.infused.show'].includes(rawHost)
+    ? rawHost : null;
+  const utm = Object.fromEntries(UTM_KEYS.map(key => [key, vettedToken(params.get(key))]));
+  return {
+    position: CTA_POSITIONS.has(rawPosition) ? rawPosition : 'other',
+    page: knownPath,
+    referrerHost,
+    utm
+  };
+}
+function checkoutRedirect(url, clickId = null, utm = {}) {
+  const destination = new URL(LV27_CHECKOUT);
+  if (clickId) {
+    destination.searchParams.set('catalyst_click_id', clickId);
+    for (const key of UTM_KEYS) if (utm[key]) destination.searchParams.set(key, utm[key]);
+  }
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Location': destination.href,
+      'Cache-Control': 'no-store',
+      'Referrer-Policy': 'no-referrer',
+      'X-Robots-Tag': 'noindex, nofollow, noarchive',
+      'X-Content-Type-Options': 'nosniff'
+    }
+  });
+}
+async function boothClick(request, env, url, isProduction) {
+  if (request.method !== 'GET') {
+    return new Response('Method not allowed', {status:405,headers:{'Allow':'GET'}});
+  }
+  // The preview must never insert synthetic clicks into production D1.
+  if (!isProduction || !env.AUDIENCE_DB) return checkoutRedirect(url);
+  const input = trackingInput(url);
+  const clickId = crypto.randomUUID();
+  try {
+    await env.AUDIENCE_DB.prepare(
+      'INSERT INTO web_acquisition_clicks_v1 ' +
+      '(click_id,market_key,site_host,entry_path,cta_position,referrer_host,' +
+      'utm_source,utm_medium,utm_campaign,utm_content,utm_term) ' +
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+    ).bind(
+      clickId,'LV27','infused.show',input.page,input.position,input.referrerHost,
+      input.utm.utm_source,input.utm.utm_medium,input.utm.utm_campaign,
+      input.utm.utm_content,input.utm.utm_term
+    ).run();
+    // Do not alter Map D's validated checkout URL until vendor compatibility
+    // for extra campaign/click parameters has been demonstrated.
+    const forwardVendorToken = env.MAPD_CLICK_ID_FORWARD_ENABLED === 'true';
+    return forwardVendorToken
+      ? checkoutRedirect(url, clickId, input.utm)
+      : checkoutRedirect(url);
+  } catch {
+    // Checkout availability takes precedence over analytics availability.
+    // Do not issue a seemingly attributable token when the write failed.
+    console.warn('lv27_click_tracking_unavailable');
+    return checkoutRedirect(url);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
     const isProduction = host === HOST || host === WWW;
+    if (url.pathname === '/go/booth' || url.pathname === '/go/booth/') {
+      return boothClick(request, env, url, isProduction);
+    }
     if (host === WWW) {
       const next = new URL(request.url);
       next.hostname = HOST;

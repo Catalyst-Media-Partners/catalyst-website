@@ -8,6 +8,8 @@ for (const expected of [
   'main = "./src/worker.mjs"', 'directory = "./public"',
   'binding = "ASSETS"', 'run_worker_first = true'
 ]) assert.ok(config.includes(expected), `Missing Cloudflare contract: ${expected}`);
+assert.match(config, /binding = "AUDIENCE_DB"/);
+assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
 const orig = readFileSync('public/index.html', 'utf8');
 const sample = async (hostname, pathname = '/') => worker.fetch(
   new Request(`https://${hostname}${pathname}`),
@@ -59,4 +61,74 @@ assert.equal(oldPreview.status, 301);
 assert.ok(oldPreview.headers.get('location').endsWith('/opportunities/'));
 const unsupportedLegal = await sample('infused.show', '/privacy-policy/');
 assert.notEqual(unsupportedLegal.status, 301, 'Do not silently repurpose the old privacy policy');
-console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect behavior');
+
+// Fixed-destination, non-PII click handoff: production D1 write is one event,
+// not an inferred customer, exhibitor, purchase, or marketing permission.
+const recorded = [];
+const clickDb = {
+  prepare(sql) {
+    assert.match(sql, /^INSERT INTO web_acquisition_clicks_v1/);
+    return {
+      bind(...values) {
+        return { async run() { recorded.push(values); return { success: true }; } };
+      }
+    };
+  }
+};
+const tracked = await worker.fetch(new Request(
+  'https://infused.show/go/booth?position=hero&page=%2Fopportunities%2F' +
+  '&utm_source=catalyst&utm_medium=email&utm_campaign=lv27-suppliers' +
+  '&utm_content=variant_a&referrer_host=www.google.com&redirect=https%3A%2F%2Fevil.invalid'
+), { AUDIENCE_DB: clickDb, MAPD_CLICK_ID_FORWARD_ENABLED: 'true' });
+assert.equal(tracked.status,302);
+assert.equal(tracked.headers.get('cache-control'),'no-store');
+assert.equal(tracked.headers.get('set-cookie'),null);
+const checkout = new URL(tracked.headers.get('location'));
+assert.equal(checkout.origin,'https://shows.map-dynamics.com');
+assert.equal(checkout.pathname,'/infusedlv2027/');
+assert.ok(checkout.searchParams.has('register'));
+assert.match(checkout.searchParams.get('catalyst_click_id'),/^[a-f0-9-]{36}$/);
+assert.equal(checkout.searchParams.get('utm_campaign'),'lv27-suppliers');
+assert.equal(checkout.searchParams.get('utm_source'),'catalyst');
+assert.equal(checkout.searchParams.has('redirect'),false);
+assert.equal(checkout.searchParams.has('referrer_host'),false);
+assert.equal(recorded.length,1);
+assert.equal(recorded[0][0],checkout.searchParams.get('catalyst_click_id'));
+assert.deepEqual(recorded[0].slice(1,6),['LV27','infused.show','/opportunities/','hero','www.google.com']);
+assert.equal(recorded[0][6],'catalyst');
+assert.equal(recorded[0][8],'lv27-suppliers');
+const malformed = await worker.fetch(new Request(
+  'https://infused.show/go/booth?position=invalid&page=%2F%2Fevil.invalid' +
+  '&utm_campaign=customer%40email.invalid&utm_source=catalyst'
+), {AUDIENCE_DB:clickDb});
+assert.equal(malformed.status,302);
+assert.equal(recorded.length,2);
+assert.deepEqual(recorded[1].slice(3,5),['/','other']);
+assert.equal(recorded[1][8],null);
+const previewClick = await worker.fetch(new Request(
+  'https://infused-show.cannacon-org-s-account.workers.dev/go/booth?utm_campaign=preview'
+), {AUDIENCE_DB:clickDb});
+assert.equal(previewClick.status,302);
+assert.equal(recorded.length,2);
+assert.ok(!new URL(previewClick.headers.get('location')).searchParams.has('catalyst_click_id'));
+const failedDb = { prepare() { return {bind() {return {async run() {throw Error('qa forced unavailable');}};}}; } };
+const dbFailure = await worker.fetch(new Request('https://infused.show/go/booth'),{AUDIENCE_DB:failedDb});
+assert.equal(dbFailure.status,302);
+assert.equal(new URL(dbFailure.headers.get('location')).origin,'https://shows.map-dynamics.com');
+assert.ok(!new URL(dbFailure.headers.get('location')).searchParams.has('catalyst_click_id'));
+const safeDefault = await worker.fetch(new Request(
+  'https://infused.show/go/booth?utm_source=catalyst&utm_campaign=lv27-suppliers'
+), {AUDIENCE_DB:clickDb});
+assert.equal(safeDefault.status,302);
+assert.equal(recorded.length,3);
+const originalMapd = new URL(safeDefault.headers.get('location'));
+assert.equal(originalMapd.origin,'https://shows.map-dynamics.com');
+assert.ok(originalMapd.searchParams.has('register'));
+assert.equal(originalMapd.searchParams.has('catalyst_click_id'),false);
+assert.equal(originalMapd.searchParams.has('utm_campaign'),false);
+const invalidMethod = await worker.fetch(new Request('https://infused.show/go/booth',{method:'POST'}),{AUDIENCE_DB:clickDb});
+assert.equal(invalidMethod.status,405);
+assert.equal(recorded.length,3);
+assert.ok(orig.includes('cta-attribution.js'), 'Every page must load the no-cookie attribution enhancement');
+
+console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect and anonymous CTA tracking behavior');
