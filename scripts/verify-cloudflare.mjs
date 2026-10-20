@@ -79,7 +79,7 @@ const tracked = await worker.fetch(new Request(
   'https://infused.show/go/booth?position=hero&page=%2Fopportunities%2F' +
   '&utm_source=catalyst&utm_medium=email&utm_campaign=lv27-suppliers' +
   '&utm_content=variant_a&referrer_host=www.google.com&redirect=https%3A%2F%2Fevil.invalid'
-), { AUDIENCE_DB: clickDb });
+), { AUDIENCE_DB: clickDb, MAPD_CLICK_ID_FORWARD_ENABLED: 'true' });
 assert.equal(tracked.status,302);
 assert.equal(tracked.headers.get('cache-control'),'no-store');
 assert.equal(tracked.headers.get('set-cookie'),null);
@@ -116,9 +116,19 @@ const dbFailure = await worker.fetch(new Request('https://infused.show/go/booth'
 assert.equal(dbFailure.status,302);
 assert.equal(new URL(dbFailure.headers.get('location')).origin,'https://shows.map-dynamics.com');
 assert.ok(!new URL(dbFailure.headers.get('location')).searchParams.has('catalyst_click_id'));
+const safeDefault = await worker.fetch(new Request(
+  'https://infused.show/go/booth?utm_source=catalyst&utm_campaign=lv27-suppliers'
+), {AUDIENCE_DB:clickDb});
+assert.equal(safeDefault.status,302);
+assert.equal(recorded.length,3);
+const originalMapd = new URL(safeDefault.headers.get('location'));
+assert.equal(originalMapd.origin,'https://shows.map-dynamics.com');
+assert.ok(originalMapd.searchParams.has('register'));
+assert.equal(originalMapd.searchParams.has('catalyst_click_id'),false);
+assert.equal(originalMapd.searchParams.has('utm_campaign'),false);
 const invalidMethod = await worker.fetch(new Request('https://infused.show/go/booth',{method:'POST'}),{AUDIENCE_DB:clickDb});
 assert.equal(invalidMethod.status,405);
-assert.equal(recorded.length,2);
+assert.equal(recorded.length,3);
 assert.ok(orig.includes('cta-attribution.js'), 'Every page must load the no-cookie attribution enhancement');
 
 console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect and anonymous CTA tracking behavior');
