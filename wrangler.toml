@@ -9,3 +9,9 @@ directory = "./public"
 binding = "ASSETS"
 run_worker_first = true
 not_found_handling = "404-page"
+
+# Only the /go/booth handler may write anonymous CTA telemetry.
+[[d1_databases]]
+binding = "AUDIENCE_DB"
+database_name = "catalyst-audience-prod"
+database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"
