@@ -7,7 +7,7 @@ A fixed first-party `/go/booth` route records a sanitized, anonymous click in th
 - This captures **booth CTA clicks, not paid purchases or unique visitors**.
 - No email, contact ID, full referrer URL, IP address, user agent or fingerprint is stored.
 - Campaign parameters are untrusted claims and cannot establish buyer identity, sales attribution or marketing permission.
-- On production hosts, a successful D1 write creates a random, opaque `catalyst_click_id`; that ID and sanitized campaign tags are forwarded to Map D through the existing `?register` link.
+- On production hosts, a successful D1 write creates a random, opaque click ID. **By default, Map D receives its original URL unchanged.** Forwarding the ID and sanitized UTM tags is implemented but feature-gated by `MAPD_CLICK_ID_FORWARD_ENABLED=true`, pending a vendor checkout-compatibility test.
 - **Map D persistence of `catalyst_click_id` into its orders is not verified**. No conversion-to-click joins may be claimed or automatically inferred. Verify the downstream field before implementing verified order attribution.
 - On preview hosts, when D1 is absent, or when logging fails, visitors retain the original purchase URL without a tracking token.
 - No inventory, payment, discount, checkout pricing or consent settings are changed.
