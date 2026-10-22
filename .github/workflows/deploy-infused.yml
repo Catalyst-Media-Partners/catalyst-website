@@ -30,6 +30,7 @@ jobs:
           set -euo pipefail
           npm run build
           npm run check
+          npm run test:w02
           node scripts/verify-cloudflare.mjs
           grep -Fxq 'name = "infused-show"' wrangler.toml
           grep -Fxq 'keep_vars = true' wrangler.toml

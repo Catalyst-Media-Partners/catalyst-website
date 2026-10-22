@@ -1,0 +1,23 @@
+<section class="hero notify-hero" id="top" aria-labelledby="ticket-hero-title">
+  <div class="hero-copy">
+    <span class="kicker">INFUSED Las Vegas</span>
+    <h1 id="ticket-hero-title"><span>TICKETS</span><span>ON-SALE SOON</span></h1>
+    <div class="hero-promise">MAY 13–14, 2027 · LAS VEGAS CONVENTION CENTER</div>
+    <p class="hero-description">Get notified when tickets go on sale.</p>
+    <p class="hero-industries">Join the INFUSED ticket list. We'll send a verification link to your email, then notify you when registration opens.</p>
+    <form class="notify-form" id="ticket-notify-form" action="/tickets/api/subscribe" method="post" novalidate>
+      <label for="notify-email">Email address</label>
+      <input class="notify-input" id="notify-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@company.com" aria-describedby="notify-hint" required>
+      <p class="notify-hint" id="notify-hint">Use an address you can access. We'll verify your inbox before sending ticket announcements.</p>
+      <!-- TURNSTILE_WIDGET -->
+      <button class="btn btn-primary" id="notify-submit" type="submit">Notify Me →</button>
+      <p id="notify-result" class="notify-result" role="status" aria-live="polite" hidden></p>
+    </form>
+    <div class="notify-promo">
+      <strong>25% EARLY-BIRD TICKET OFFER</strong>
+      <p>Verify your email to qualify for the 25% early-bird offer when INFUSED tickets become available. No purchase is made today.</p>
+    </div>
+    <p class="notify-hint">By selecting Notify Me, you request a verification message. Once verified, you can unsubscribe at any time.</p>
+  </div>
+  <img class="hero-image" src="{{BASE}}assets/images/professionals-meeting-and-discovering-infused-product-brands-at-a--01.webp" alt="Professionals meeting and discovering infused product brands at a trade show" width="1280" height="1229" decoding="async" fetchpriority="high">
+</section>

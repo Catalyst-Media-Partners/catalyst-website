@@ -1,0 +1,31 @@
+/* W02 review additions. The shared INFUSED CSS, classes, tokens and components remain unchanged. */
+/* Introduced exclusively for email capture and confirmation state. */
+.notify-hero h1 { font-size:clamp(38px,4.25vw,66px); line-height:1; }
+.notify-hero h1 span { white-space:normal; }
+.notify-hero .hero-copy { min-width:0; }
+.notify-hero .hero-description { margin-bottom:19px; }
+.notify-form { width:100%;max-width:475px;margin:5px 0 10px; }
+.notify-form label { display:block;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px;color:var(--ink); }
+.notify-input { display:block;width:100%;min-height:55px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--page);color:var(--ink);font:inherit;font-size:16px; }
+.notify-input:focus-visible { outline:3px solid var(--purple);outline-offset:2px; }
+.notify-form .btn { border:0;min-height:52px;cursor:pointer;margin-top:12px;width:100%; }
+.notify-form .btn:focus-visible { outline:3px solid var(--purple);outline-offset:4px; }
+.notify-form .btn:disabled { opacity:.6;cursor:not-allowed; }
+.notify-promo { max-width:475px;border-left:4px solid var(--pink);background:var(--cloud);padding:15px 17px;margin:14px 0 0;border-radius:0 8px 8px 0; }
+.notify-promo strong { color:var(--purple); }
+.notify-promo p { font-size:13px;margin:3px 0 0;line-height:1.55; }
+.notify-hint { font-size:12px;line-height:1.55;margin:9px 0 0;max-width:475px; }
+.notify-result { max-width:475px;width:100%;background:var(--cloud);padding:13px 15px;border-left:4px solid var(--pink);border-radius:0 8px 8px 0;margin-top:10px;color:var(--ink);font-size:14px; }
+.notify-result.error { border-left-color:#a12853; }
+.notify-state-section { min-height:calc(100svh - 175px);display:flex;align-items:center; }
+.notify-state-content { max-width:775px; }
+.notify-state-content h1 { font-size:clamp(38px,5vw,64px);line-height:1.06;font-weight:950;letter-spacing:-.05em;margin:18px 0; }
+.notify-state-content .section-lead { max-width:660px; }
+.notify-state-content .hero-promise { margin:0 0 8px; }
+.notify-state-content .hero-buttons { margin-top:25px; }
+.notify-state-content .notify-promo { margin-top:22px; }
+.notify-unsubscribe-panel { display:grid;gap:15px;max-width:520px;margin:20px 0; }
+.notify-unsubscribe-panel .btn { width:max-content;border:0;cursor:pointer; }
+@media(max-width:780px){.notify-hero .hero-copy{padding:48px 24px 45px}.notify-hero h1{font-size:clamp(36px,7vw,60px)}.notify-state-section{min-height:auto;padding:70px 0}}
+@media(max-width:520px){.notify-hero h1{font-size:clamp(34px,9vw,46px)}.notify-hero .hero-image{height:310px}.notify-state-section{padding:58px 0}.notify-state-content h1{font-size:39px}}
+@media(max-width:320px){.notify-hero h1{font-size:32px}}

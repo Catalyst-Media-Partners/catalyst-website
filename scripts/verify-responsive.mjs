@@ -9,7 +9,8 @@ const widths = [320, 375, 414, 520, 768, 780, 781, 960, 1060, 1120, 1121, 1280, 
 const routes = [
   {path: '', inspectHero: true},
   {path: 'opportunities', inspectHero: false},
-  {path: 'contact', inspectHero: false}
+  {path: 'contact', inspectHero: false},
+  {path: 'tickets', inspectHero: false}
 ];
 
 const browser = await chromium.launch({
@@ -90,7 +91,7 @@ try {
       checked++;
     }
   }
-  console.log('PASS: ' + checked + ' responsive Chromium viewport checks across homepage, opportunities and contact (320px to 2560px).');
+  console.log('PASS: ' + checked + ' responsive Chromium viewport checks across homepage, opportunities, contact and tickets (320px to 2560px).');
 } finally {
   await browser.close();
 }

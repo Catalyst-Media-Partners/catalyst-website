@@ -1,3 +1,4 @@
+import ticketNotifications from './tickets/notifications.mjs';
 /**
  * Independent INFUSED site Worker.
  * On workers.dev, the site is a noindex preview. On the two explicitly approved
@@ -20,7 +21,7 @@ const LEGACY_REDIRECTS = Object.freeze({
 const routes = [
   '/', '/market/', '/ecosystem/', '/roots/', '/science/', '/make/',
   '/package/', '/move/', '/sell/', '/services/', '/buyers/',
-  '/why-vegas/', '/opportunities/', '/contact/'
+  '/why-vegas/', '/opportunities/', '/contact/', '/tickets/'
 ];
 function headersFor(isProduction, original) {
   const headers = new Headers(original);
@@ -122,6 +123,35 @@ export default {
       const next = new URL(request.url);
       next.hostname = HOST;
       return Response.redirect(next, 308);
+    }
+
+    // W02: ticket interest, confirmation and unsubscribe, isolated from booth checkout.
+    if (url.pathname === '/tickets' || url.pathname.startsWith('/tickets/')) {
+      const configReady = isProduction && env.INFUSED_NOTIFY_ENABLED === 'true' &&
+        env.AUDIENCE_DB && env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY &&
+        env.RATE_SALT && env.MAILING_ADDRESS && env.AWS_SES_REGION &&
+        env.AWS_SES_ACCESS_KEY_ID && env.AWS_SES_SECRET_ACCESS_KEY;
+      let ready = Boolean(configReady);
+      if (ready && url.pathname === '/tickets/') {
+        try { await env.AUDIENCE_DB.prepare('SELECT email FROM ticket_notify_subscribers LIMIT 1').first(); }
+        catch { ready = false; }
+      }
+      const notifyEnv = {
+        ...env, DB: env.AUDIENCE_DB, IS_PRODUCTION: isProduction,
+        INFUSED_NOTIFY_ENABLED: ready ? 'true' : 'false'
+      };
+      const response = await ticketNotifications.fetch(request, notifyEnv);
+      if (isProduction && url.pathname === '/tickets/' && response.ok &&
+          response.headers.get('Content-Type')?.includes('text/html')) {
+        const html = (await response.text())
+          .replace('<meta name="robots" content="noindex, nofollow, noarchive">',
+            '<meta name="robots" content="index, follow">')
+          .replace('</head>', '<link rel="canonical" href="https://infused.show/tickets/">\n</head>');
+        const headers = headersFor(true, response.headers);
+        headers.delete('Content-Length'); headers.delete('Content-Encoding'); headers.delete('ETag');
+        return new Response(html, {status: response.status, headers});
+      }
+      return response;
     }
     const legacyKey = url.pathname.toLowerCase().replace(/\/+$/, '') || '/';
     const legacyDestination = LEGACY_REDIRECTS[legacyKey];

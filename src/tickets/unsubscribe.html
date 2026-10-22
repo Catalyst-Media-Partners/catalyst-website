@@ -1,0 +1,9 @@
+<section class="section soft notify-state-section" id="top"><div class="container notify-state-content">
+<span class="kicker">INFUSED Las Vegas · Email preferences</span>
+<h1>STOP TICKET NOTIFICATIONS?</h1>
+<p class="section-lead">You can remove your email from the INFUSED ticket notification list at any time.</p>
+<form class="notify-unsubscribe-panel" method="post" action="/tickets/api/unsubscribe">
+  <input type="hidden" name="token" value="{{UNSUBSCRIBE_TOKEN}}">
+  <button class="btn btn-primary" type="submit">Unsubscribe →</button>
+  <a class="btn btn-secondary" href="{{BASE}}">Keep me subscribed</a>
+</form></div></section>
