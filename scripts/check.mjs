@@ -15,7 +15,7 @@ async function walk(dir) {
   }
 }
 await walk(publicDir);
-const expected = ['/','/market/','/ecosystem/','/roots/','/science/','/make/','/package/','/move/','/sell/','/services/','/buyers/','/why-vegas/','/opportunities/','/contact/'];
+const expected = ['/','/market/','/ecosystem/','/roots/','/science/','/make/','/package/','/move/','/sell/','/services/','/buyers/','/why-vegas/','/opportunities/','/contact/','/tickets/','/tickets/verified/','/tickets/unsubscribe/','/tickets/unsubscribed/'];
 const found = new Set(pages.map(p=>'/'+path.relative(publicDir,path.dirname(p)).replaceAll(path.sep,'/')+'/').map(p=>p==='//'?'/':p));
 for (const route of expected) if (!found.has(route)) problems.push('Missing route '+route);
 if (pages.length!==expected.length) problems.push(`Unexpected page count ${pages.length}`);
@@ -50,7 +50,7 @@ for (const page of pages) {
 }
 
 const lvPurchaseUrl = 'https://shows.map-dynamics.com/infusedlv2027/?register';
-for (const page of pages) {
+for (const page of pages.filter(page => !path.relative(publicDir,page).startsWith('tickets/'))) {
   const html = await readFile(page, 'utf8');
   const file = path.relative(publicDir, page);
   if (!html.includes('href="' + lvPurchaseUrl + '"')) problems.push(file + ': no direct LV booth purchase URL');
@@ -78,5 +78,11 @@ for (const image of inventory) {
     if (bytes.length !== image.bytes || createHash('sha256').update(bytes).digest('hex') !== image.sha256) problems.push('Image inventory mismatch: ' + image.name);
   } catch { problems.push('Missing inventoried image: ' + image.name); }
 }
+const ticketPage = await readFile(path.join(publicDir,'tickets/index.html'),'utf8');
+const verifiedPage = await readFile(path.join(publicDir,'tickets/verified/index.html'),'utf8');
+if (!ticketPage.includes('TICKETS') || !ticketPage.includes('ON-SALE SOON') || !ticketPage.includes('id="ticket-notify-form"')) problems.push('W02 ticket notification entry missing');
+if (!verifiedPage.includes("YOU'RE VERIFIED") || verifiedPage.includes('hero-promise')) problems.push('W02 approved verification message or CTA changed');
+
 if (problems.length) { console.error(problems.join('\n')); process.exitCode=1; }
 else console.log(`PASS: ${pages.length} pages; ${linksChecked} internal linked destinations and ${imagesChecked} assets; one H1, preview noindex and no broken local references.`);
+

@@ -21,6 +21,8 @@ jobs:
         run: npm run build
       - name: Validate navigation, pricing, event details and assets
         run: npm run check
+      - name: Test INFUSED ticket notification, verification and unsubscribe with mock email
+        run: npm run test:w02
       - name: Verify responsive layout at 320px through 2560px in Chromium
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1

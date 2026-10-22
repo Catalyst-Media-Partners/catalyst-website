@@ -6,6 +6,7 @@
   "description": "INFUSED original invitation website, independent v1b.1 quality baseline",
   "scripts": {
     "build": "node build.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "test:w02": "node --test tests/w02-notify.test.mjs"
   }
 }

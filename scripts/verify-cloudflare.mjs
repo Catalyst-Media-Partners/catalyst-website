@@ -37,7 +37,7 @@ assert.equal(www.status, 308);
 assert.equal(www.headers.get('location'), 'https://infused.show/');
 const sitemap = await sample('infused.show','/sitemap.xml');
 assert.equal(sitemap.status, 200);
-assert.equal((await sitemap.text()).match(/<url>/g).length, 14);
+assert.equal((await sitemap.text()).match(/<url>/g).length, 15);
 const productionRobots = await sample('infused.show','/robots.txt');
 assert.ok((await productionRobots.text()).includes('Allow: /'));
 const legacyRedirects = [
