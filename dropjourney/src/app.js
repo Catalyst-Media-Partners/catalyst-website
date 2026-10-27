@@ -281,7 +281,7 @@
   document.addEventListener('pointermove',e=>{
     if(reduced()||transitioning||!e.isPrimary||$('#buyer-dialog').open)return;
     if(e.pointerType==='touch'&&e.buttons===0)return;
-    if(e.target.closest('.site-nav,.buyer-dialog'))return;
+    if(e.target instanceof Element && e.target.closest('.site-nav,.buyer-dialog'))return;
     const x=e.clientX,y=e.clientY;
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     const now=performance.now();
