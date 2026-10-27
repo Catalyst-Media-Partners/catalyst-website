@@ -1,0 +1,142 @@
+{
+  "captured_utc": "2026-10-27",
+  "source": "LIVE_PUBLIC_MARKDOWN_FROM_CLOUDFLARE_BROWSER_RENDERING",
+  "production_git_commit": "891e895913b6432162b4aa27fd49df6cc918fdbe",
+  "routes": [
+    {
+      "path": "/",
+      "url": "https://infused.show/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "71cee264b575b99202c8a62573b8354b2a8e2f4ce4cf5b796a29f533a8f2eebd",
+      "content": "---\ntitle: \"INFUSED Las Vegas — Exhibitor Invitation\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2F)\n\nINFUSED Las Vegas\n\n**May 13–14, 2027**Las Vegas Convention Center · Las Vegas, Nevada\n\n# FROM ROOTSTO RETAIL\n\nSHELF SPACE • DISTRIBUTION • BUYER MEETINGS • PARTNERSHIPS\n\nThe national business event for the entire infused-products ecosystem.\n\nFarming • genetics • extraction • ingredients • equipment • manufacturing • packaging • distribution • retail • capital\n\n[Select & Purchase a Booth ↗](https://infused.show/go/booth?position=hero&page=%2F) [Explore Exhibit Options →](https://infused.show/opportunities/)\n\n![Professionals meeting and discovering infused product brands at a trade show](https://infused.show/assets/images/professionals-meeting-and-discovering-infused-product-brands --- TRUNCATED --- 12,900 chars",
+      "errors": []
+    },
+    {
+      "path": "/market/",
+      "url": "https://infused.show/market/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "13396ac84c214d1485f4b3c447be23e5a606788bd2234b38e2a7e324a689d2ee",
+      "content": "---\ntitle: \"THE INFUSED PRODUCTS OPPORTUNITY IS MASSIVE | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fmarket%2F)\n\nIndustry Statistics\n\n# THE INFUSED PRODUCTS OPPORTUNITY IS MASSIVE\n\nINFUSED connects brands, ingredients, formulation, packaging, distribution and retail across several of the fastest-growing infused-product sectors.\n\n![Product research and laboratory testing](https://infused.show/assets/images/product-research-and-laboratory-testing-02.webp)![Distribution and supply chain logistics](https://infused.show/assets/images/distribution-and-supply-chain-logistics-03.webp)![Trade show product discovery and buyer conversation](https://infused.show/assets/images/trade-show-product-discovery-and-buyer-conversation-04.webp)\n\nFunctional Drinks\n\n$164.7B\n\n2025 glob --- TRUNCATED --- 2,780 chars",
+      "errors": []
+    },
+    {
+      "path": "/ecosystem/",
+      "url": "https://infused.show/ecosystem/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "914c369c062660409e213d0837fb2519e3a740b5a15d4f7bcfc1cc9f95de4899",
+      "content": "---\ntitle: \"THE FULL VALUE STREAM | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fecosystem%2F)\n\nFrom Roots to Retail\n\n# THE FULL VALUE STREAM\n\nEight connected ways to do business at INFUSED. Select a category to explore its role in the ecosystem.\n\n[![Outdoor farming and cultivation](https://infused.show/assets/images/outdoor-farming-and-cultivation-05.webp) ROOTS ↗ Hemp, mushrooms, botanicals, genetics and cultivation inputs](https://infused.show/roots/) [![Ingredient science and laboratory research](https://infused.show/assets/images/ingredient-science-and-laboratory-research-06.webp) SCIENCE ↗ Extraction, ingredient research, laboratories and testing](https://infused.show/science/) [![Manufacturing and co-packing line](https://infused.show/assets/images/manufacturing-an --- TRUNCATED --- 2,771 chars",
+      "errors": []
+    },
+    {
+      "path": "/roots/",
+      "url": "https://infused.show/roots/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "64d04626f30fcba29905f6a9fc7e2e3cfb242ce05c61f17b8f5759d8553b3d38",
+      "content": "---\ntitle: \"IT STARTS WITH FARMING AND GENETICS | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Froots%2F)\n\n![Growers inspecting outdoor hemp cultivation with field equipment](https://infused.show/assets/images/growers-inspecting-outdoor-hemp-cultivation-with-field-equipment-13.webp)\n\nRoots\n\n# IT STARTS WITH FARMING AND GENETICS\n\nINFUSED begins in the field: genetics, biomass quality, farm technology and equipment that moves supply at scale.\n\n### Outdoor farming\n\nField production, biomass, irrigation, agronomy and crop quality.\n\n### Genetics + breeding\n\nVariety selection, seed stock, clone programs and trait development.\n\n### Specialized tractors\n\nHarvesters, tractors, trailers, field implements and farm automation.\n\n### Grow inputs\n\nSoil, nutrients, pest ma --- TRUNCATED --- 1,657 chars",
+      "errors": []
+    },
+    {
+      "path": "/science/",
+      "url": "https://infused.show/science/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "4f883738d56d22e8351dfc10dd7939c25bea60dd46579fc477ff08dc1c65aea7",
+      "content": "---\ntitle: \"SCIENCE TURNS PLANTS INTO PRODUCTS | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fscience%2F)\n\n![Extraction, ingredients and laboratory manufacturing imagery](https://infused.show/assets/images/extraction-ingredients-and-laboratory-manufacturing-imagery-14.webp)\n\nScience + Manufacturing\n\n# SCIENCE TURNS PLANTS INTO PRODUCTS\n\nExtraction, ingredients, formulation and manufacturing partners help brands create consistent, scalable, shelf-ready infused products.\n\n### Extraction + refinement\n\nDistillate, isolates, minor cannabinoids and terpenes.\n\n### Ingredients + formulation\n\nFlavors, emulsions, sweeteners and functional botanicals.\n\n### Production + co-packing\n\nDosing, mixing, bottling and private label.\n\n### Testing + quality\n\nPotency, stabili --- TRUNCATED --- 1,569 chars",
+      "errors": []
+    },
+    {
+      "path": "/make/",
+      "url": "https://infused.show/make/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "1ea29851a169631dcd61dbc0e309203e9354ce57a017e8eccb9b46744b691719",
+      "content": "---\ntitle: \"Production + co-packing | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fmake%2F)\n\nScience + Manufacturing\n\n# Production + co-packing\n\nExtraction, ingredients, formulation and manufacturing partners help brands create consistent, scalable, shelf-ready infused products.\n\n### Production + co-packing\n\nDosing, mixing, bottling and private label.\n\n[← Back to all categories](https://infused.show/ecosystem/)\n\nINFUSED Las Vegas | May 13–14, 2027 · Las Vegas Convention Center | From Roots to Retail [Back to top ↑](#main)",
+      "errors": []
+    },
+    {
+      "path": "/package/",
+      "url": "https://infused.show/package/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "1b7df225b2654a4a68e994c780b53577cd80b293ae35e7fb770cc4f04b9832c3",
+      "content": "---\ntitle: \"THE CORNERSTONE OF COMPLIANCE | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fpackage%2F)\n\n![Shopper viewing packaged infused products on retail shelves](https://infused.show/assets/images/shopper-viewing-packaged-infused-products-on-retail-shelves-15.webp)\n\nPackaging + Labeling\n\n# THE CORNERSTONE OF COMPLIANCE\n\nPackaging, labeling, compliance and retail integration — the companies that ensure product integrity and make retail execution easier.\n\n### Packaging\n\nCans, bottles, pouches, jars, cartons, child-resistant formats and display-ready packaging.\n\n### Labeling\n\nCompliance, QR codes, batch IDs, warning statements and claims support.\n\n### Retail technology\n\nPOS, payments, inventory, menu boards, merchandising and category management.\n\n### Com --- TRUNCATED --- 1,636 chars",
+      "errors": []
+    },
+    {
+      "path": "/move/",
+      "url": "https://infused.show/move/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "de129251c8b0f2cb2e708a4b169c16f2aaeebf328318b5387b6fc792530a6e84",
+      "content": "---\ntitle: \"Distribution | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fmove%2F)\n\nMarket + Retail\n\n# Distribution\n\nBuyers need finished products, but they also need distribution, merchandising, logistics and channel partners.\n\n### Distribution\n\nBrokers, wholesalers, beverage distributors, logistics, fulfillment and route-to-market partners.\n\n[← Back to all categories](https://infused.show/ecosystem/)\n\nINFUSED Las Vegas | May 13–14, 2027 · Las Vegas Convention Center | From Roots to Retail [Back to top ↑](#main)",
+      "errors": []
+    },
+    {
+      "path": "/sell/",
+      "url": "https://infused.show/sell/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "feaad36ef32e442ed038e1aff76ecec8b7fa7b89da5d65eead3c008fe4b84314",
+      "content": "---\ntitle: \"RETAIL REQUIRES MORE THAN JUST BRANDS | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fsell%2F)\n\n![Retail and wholesale buyers meeting with an infused-products exhibitor](https://infused.show/assets/images/retail-and-wholesale-buyers-meeting-with-an-infused-products-exhib-16.webp)\n\nMarket + Retail\n\n# RETAIL REQUIRES MORE THAN JUST BRANDS\n\nBuyers need finished products, but they also need distribution, merchandising, logistics and channel partners.\n\n### Cannabis retail\n\nDispensaries, MSOs, category buyers, purchasing teams and vendor onboarding.\n\n### Beverage + C-store\n\nFunctional beverage, hemp-derived drinks, specialty retail and emerging channel buyers.\n\n### Hospitality + venues\n\nRestaurants, lounges, events, entertainment and experience-driven --- TRUNCATED --- 1,729 chars",
+      "errors": []
+    },
+    {
+      "path": "/services/",
+      "url": "https://infused.show/services/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "67dc819a81dbc0d7028bfc9aa63bd89753540e43a9763145146b2d6d7ef7df7d",
+      "content": "---\ntitle: \"THE BUSINESS SERVICES LAYER MATTERS | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fservices%2F)\n\n![Business services professionals meeting over infused products](https://infused.show/assets/images/business-services-professionals-meeting-over-infused-products-17.webp)\n\nBusiness Services\n\n# THE BUSINESS SERVICES LAYER MATTERS\n\nBanking, consulting, insurance and capital partners help infused companies grow, comply, protect and scale.\n\n### Banking + payments\n\nBusiness banking, compliant payments, merchant services, cash management and lending.\n\n### Consulting\n\nLicensing, market entry, operations, product strategy, regulatory roadmaps and growth.\n\n### Insurance\n\nProduct liability, crop, property, workers comp, D&O, event and distribution coverage.\n\n --- TRUNCATED --- 1,650 chars",
+      "errors": []
+    },
+    {
+      "path": "/buyers/",
+      "url": "https://infused.show/buyers/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "233317a84eb5cfa4d7813bba4cc4e18cf46fab133a530a3974bef59ec69804de",
+      "content": "---\ntitle: \"DIRECT ACCESS TO CRITICAL DECISION MAKERS | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fbuyers%2F)\n\n![Brand representative in a hosted buyer discussion at a booth](https://infused.show/assets/images/brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp)\n\nHosted Buyers\n\n# DIRECT ACCESS TO CRITICAL DECISION MAKERS\n\nThe INFUSED hosted buyers bring business leaders together to form key partnerships that match their category.\n\n### Retail buyers\n\nNew products, shelf placement, vendor onboarding and category expansion.\n\n### Distributors + brokers\n\nRoutes to new regions, portfolio fit and wholesale relationships.\n\n### Supply-chain partners\n\nIngredients, co-packers, packaging, labels, logistics and manufacturing.\n\n### Capital + services\n --- TRUNCATED --- 1,654 chars",
+      "errors": []
+    },
+    {
+      "path": "/why-vegas/",
+      "url": "https://infused.show/why-vegas/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "698ff27e7792b3da108147cedd4f8dbfceaabe51802448e3f398f731447759b6",
+      "content": "---\ntitle: \"WHY VEGAS…? | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fwhy-vegas%2F)\n\n![Welcome to Las Vegas sign and Las Vegas skyline](https://infused.show/assets/images/welcome-to-las-vegas-sign-and-las-vegas-skyline-19.webp)\n\nThe Destination\n\n# WHY VEGAS…?\n\nNo place encourages exploration of novel experiences more than Vegas… locally, or world-wide.\n\n### Destination energy\n\nA city built for business travel, hospitality, events and memorable meetings.\n\n### National reach\n\nA neutral hub for West Coast, Southwest and multi-state supplier/buyer conversations.\n\n### Hospitality adjacency\n\nInfused products are integral to hospitality. Novel experience is core to the story.\n\n### Launch environment\n\nThe setting makes products, interviews, demos and brand mom --- TRUNCATED --- 1,495 chars",
+      "errors": []
+    },
+    {
+      "path": "/opportunities/",
+      "url": "https://infused.show/opportunities/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "47c2cd7db73d0686f8c41d6b41cd806798b2d0efc067067afcd69ea9121be51a",
+      "content": "---\ntitle: \"EXHIBITOR OPPORTUNITIES | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fopportunities%2F)\n\nWays to Participate\n\n# EXHIBITOR OPPORTUNITIES\n\nWhether you are new to showing or deeply experienced… looking to establish yourself or just starting out… INFUSED offerings can be tailored to ensure maximum reach.\n\n### Exhibit space\n\nAnchor your presence on the show floor and meet prospects in your category.\n\n### Product showcase\n\nPut a launch, line extension, hero SKU or technical solution in the spotlight.\n\n### Buyer access\n\nCreate targeted meeting opportunities around your sales priorities.\n\n### Sponsorship\n\nOwn a visible touchpoint beyond the booth.\n\n### Content + media\n\nSupport launch visibility with previews, interviews and post-show follow-up.\n --- TRUNCATED --- 2,016 chars",
+      "errors": []
+    },
+    {
+      "path": "/contact/",
+      "url": "https://infused.show/contact/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "0a18c491559bfc5fb10616fcbfd2e77449d5a77435b6772e0dfa117c0579036c",
+      "content": "---\ntitle: \"INTERESTED IN INFUSED? | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2Fcontact%2F)\n\n![INFUSED exhibitors with attendees at their show booth](https://infused.show/assets/images/infused-exhibitors-with-attendees-at-their-show-booth-20.webp)\n\nNext Steps\n\n# INTERESTED IN INFUSED?\n\nMay 13–14, 2027 · Las Vegas Convention Center\n\nBrowse available booth locations, review pricing and complete your purchase online. Need help with sponsorships, larger footprints or an individual question? Our team can assist.\n\n[Select & Purchase Your Booth ↗](https://infused.show/go/booth?position=contact&page=%2Fcontact%2F) [Questions? Contact the INFUSED Team ↗](https://form.jotform.com/262867873887079)\n\nWe Will See You In Vegas!\n\nINFUSED Las Vegas | May 13–14, 2027 · Las Vegas --- TRUNCATED --- 1,439 chars",
+      "errors": []
+    },
+    {
+      "path": "/tickets/",
+      "url": "https://infused.show/tickets/",
+      "status": 200,
+      "ok": true,
+      "markdown_sha256": "16110bc3fc8291118d736b3fb914c612f7e3f99b3d1cbd792c053a3d072ca8a2",
+      "content": "---\ntitle: \"Tickets On-Sale Soon | INFUSED Las Vegas\"\nmeta:\n  description: \"INFUSED Las Vegas returns May 13–14, 2027 at the Las Vegas Convention Center. Explore exhibit space and the full infused-products ecosystem, from roots to retail.\"\n---\n\n[Skip to content](#main)\n\n[![INFUSED](https://infused.show/assets/images/infused-logo-00.webp)](https://infused.show/)\n\n[Market Size](https://infused.show/market/) [The Ecosystem](https://infused.show/ecosystem/) [Hosted Buyers](https://infused.show/buyers/) [Why Vegas](https://infused.show/why-vegas/) [Exhibit Options](https://infused.show/opportunities/) [Reserve a Booth ↗](https://infused.show/go/booth?position=navigation&page=%2F)\n\nINFUSED Las Vegas\n\n# TICKETSON-SALE SOON\n\nMAY 13–14, 2027 · LAS VEGAS CONVENTION CENTER\n\nGet notified when tickets go on sale.\n\nJoin the INFUSED ticket list. We'll send a verification link to your email, then notify you when registration opens.\n\nEmail address\n\nUse an address you can access. We'll verify your inbox before sending ticket announcements.\n\nTicket notification registration is not yet active.\n\nNotify Me →\n\n**25% EARLY-BIRD TICKET OFFER**\n\nVerify your email to qualify for the 25% early-bird offer when INFUSED tickets become available. No purchase is made today.\n\nBy selecting Notify Me, you request a verification message. Once verified, you can unsubscribe at any t --- TRUNCATED --- 1,674 chars",
+      "errors": []
+    }
+  ]
+}
