@@ -23,7 +23,10 @@
 - `npm run build`, `npm run check`, `node scripts/qa_s03.mjs`, `node --check` on modified JS.
 - `python scripts/visual_qa.py`: representative 16-page image/interaction checks.
 - `python scripts/qa_s03_smoke.py`: **60 checks** across 320, 360, 390, 768, 1024, 1440px and 16 routes; no clipping, horizontal scrollable metric/card containers or overlapping tiles; canvas pixel tests and no-JS fallback tests passed. No personal data was used in buyer wizard tests.
-- After deployment: live Cloudflare 16-route status, source version, HTTP `X-Robots-Tag`, four story history + focus tests, production Worker integrity verification (actual receipt to be completed).
+- **Live Cloudflare browser acceptance:** All 16/16 URLs loaded at 390px with `2.1.0-s03`, exactly one H1, no forms, no horizontal overflow and `noindex` metadata. The twelve tested homepage and Market page layouts at 320, 360, 390, 768, 1024 and 1440px showed zero metric/selector overflow, collisions or offscreen cards.
+- **History:** `#why → #who → #when → Back → Back → Forward` returned the expected stages with `utm_source` intact and no duplicate history entries. Detail pages link to their relevant chapter; sponsor anchor exists on Opportunities.
+- **Water:** Live Canvas rendered three-ring hover and click ripple on both homepage and Market detail; the homepage droplet rebound was active. A frame-timing defect that could generate a non-finite click radius on detail pages was fixed and protected by static + browser pageerror smoke checks.
+- **Safety:** HTTP `X-Robots-Tag` verified noindex on previews and 404s; unknown/suffix/API routes fail closed. Cloudflare confirms distinct preview Worker and unchanged production Worker, with only `ASSETS` bound to the preview. Final deployment IDs and the GitHub Actions run are tracked in the sprint PR acceptance receipt.
 
 ## Protected scope
 

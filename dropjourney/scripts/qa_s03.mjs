@@ -22,6 +22,11 @@ for(const route of routes){
   }
   if(id==='home'){
     assert.match(html,/href="\/dropjourneytest\/opportunities\/#sponsorship"/, 'Sponsor path missing');
+    const nav=html.match(/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/)?.[0]||'';
+    for(const route of ['/opportunities/','/tickets/','/buyers/','/opportunities/#sponsorship','/contact/']){
+      assert.ok(nav.includes(`href="/dropjourneytest${route}"`),`Homepage direct navigation missing ${route}`);
+    }
+    assert.ok(!nav.includes('Return to current INFUSED site'),'Legacy prototype menu copy must be removed');
     assert.match(html,/history\.pushState/, 'Chapter history not pushed');
     assert.match(html,/window\.addEventListener\('popstate'/, 'Popstate missing');
     assert.match(html,/function drawHover/, 'v1.5 water hover missing');

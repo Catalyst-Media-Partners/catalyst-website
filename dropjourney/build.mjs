@@ -111,6 +111,11 @@ function cleanHome(html){
  // A complete static destination menu is also available with JavaScript disabled.
  html=html.replace('</main>',`${noScriptNav()}</main>`);
  html=html.replace(/<button id="motion-optin"[^>]*>[\s\S]*?<\/button>/,'');
+ // The homepage and subpages share the same five direct-purpose links.
+ // Replace the legacy menu, including its broken "Tickets" return link.
+ const homeNav=`<nav class="site-nav" id="site-nav" aria-label="Explore INFUSED" hidden><p class="menu-kicker">Choose your direction</p>${links().map(([key,label])=>`<a href="${menuHref(key)}">${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}</nav>`;
+ if(!/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/.test(html))throw Error('Homepage navigation markup missing');
+ html=html.replace(/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/,homeNav);
  html=html.replaceAll('<title>INFUSED | Follow the Drop | Experience Prototype</title>','<title>INFUSED Las Vegas | From Roots to Retail</title>');
  html=html.replaceAll('name="dropjourney-prototype-version" content="1.5.0"','name="dropjourney-site-version" content="2.1.0-s03"');
  html=html.replaceAll('An interactive, five-chapter preview of INFUSED Las Vegas: From Roots to Retail.','INFUSED Las Vegas. The national business event for the entire infused-products ecosystem.');
