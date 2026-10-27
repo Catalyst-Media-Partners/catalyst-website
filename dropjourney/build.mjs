@@ -105,6 +105,10 @@ function cleanHome(html){
  html=html.replaceAll('An interactive, five-chapter preview of INFUSED Las Vegas: From Roots to Retail.','INFUSED Las Vegas. The national business event for the entire infused-products ecosystem.');
 
  html=html.replace('<!-- TURNSTILE_WIDGET -->','');
+ // No native FORM in an unconnected prototype: a disabled browser scripting
+ // environment must not be able to POST any visitor-entered buyer details.
+ if(!/<form class="buyer-form" id="buyer-form"[^>]*>/.test(html)) throw Error('Expected buyer profile scaffold missing');
+ html=html.replace(/<form class="buyer-form" id="buyer-form"[^>]*>/,'<div class="buyer-form" id="buyer-form">').replace('</form>','</div>');
  return html;
 }
 async function write(rel,content){const file=path.join(output,rel);await mkdir(path.dirname(file),{recursive:true});await writeFile(file,content,'utf8');}
@@ -115,9 +119,11 @@ await write('assets/site.css',css);
 await write('assets/site.js',js);
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
 let home=cleanHome(await load('src/index.html'));
+const safeScript=scriptOriginal.replace('form.elements.namedItem(name)', 'form.querySelector(\`[name="\${name}"]\`)');
+if(safeScript===scriptOriginal)throw Error('Buyer field lookup compatibility patch missing');
 home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
   .replaceAll('{{S02_OVERRIDES}}',()=>styleOverrides)
-  .replaceAll('{{ORIGINAL_JS}}',()=>scriptOriginal);
+  .replaceAll('{{ORIGINAL_JS}}',()=>safeScript);
 await write('index.html',home);
 for(const route of catalog)await write(`${route.id}/index.html`,await detailPage(route));
 await write('buyers/apply/index.html',await applicationPage());
