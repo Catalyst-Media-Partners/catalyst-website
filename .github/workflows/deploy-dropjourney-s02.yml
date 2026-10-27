@@ -52,7 +52,7 @@ jobs:
           node --check dropjourney/src/site.js
           node dropjourney/build.mjs
           node dropjourney/scripts/qa.mjs
-      - name: Verify Cloudflare preview route and record production deployment
+      - name: Record production deployment before isolated Worker update
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
@@ -60,8 +60,6 @@ jobs:
           set -euo pipefail
           [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'Cloudflare token not configured'; exit 1; }
           auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
-          curl -fsS -H "$auth" 'https://api.cloudflare.com/client/v4/zones/251d958ac0f54911bafdbd86606b542f/workers/routes' >/tmp/dj_routes.json
-          jq -e '.success and any(.result[]; .pattern=="infused.show/dropjourneytest*" and .script=="infused-dropjourneytest")' /tmp/dj_routes.json
           curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-show/deployments" >/tmp/dj_before.json
           jq -r '.result.deployments[0].id' /tmp/dj_before.json >/tmp/dj_prod_id
       - name: Deploy ONLY the namespaced Cloudflare preview Worker
