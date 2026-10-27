@@ -119,7 +119,7 @@ await write('assets/site.css',css);
 await write('assets/site.js',js);
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
 let home=cleanHome(await load('src/index.html'));
-const safeScript=scriptOriginal.replace('form.elements.namedItem(name)', 'form.querySelector(\`[name="\${name}"]\`)');
+const safeScript=scriptOriginal.replace('form.elements.namedItem(name)', 'form.querySelector(`[name="${name}"]`)');
 if(safeScript===scriptOriginal)throw Error('Buyer field lookup compatibility patch missing');
 home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
   .replaceAll('{{S02_OVERRIDES}}',()=>styleOverrides)
