@@ -45,4 +45,5 @@ assert.doesNotMatch(worker,/AUDIENCE_DB|STRIPE_|d1_databases/,'No production bin
 const js=await get('src/site.js');
 assert.match(js,/const alpha=\.18/,'Three-ring hover optics missing');
 assert.match(js,/alpha=\.42/,'Click disturbance missing');
+assert.match(js,/Math\.max\(0,t-click\.t\)/,'Click wave time must be clamped; negative frame age creates NaN geometry');
 console.log(`PASS DJ-S03: ${routes.length} noindex pages, five-task navigation, history, 2D water, responsive metric grids, no-JS safety and isolated Worker`);

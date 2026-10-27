@@ -48,6 +48,7 @@ return {doc:h.scrollWidth-innerWidth,tiles:tiles.length,overlaps,overflow,offscr
  # Canvas smoke for user reported regression.
  for route in ['','market']:
   pg=b.new_page(viewport={'width':1024,'height':768})
+  water_errors=[];pg.on('pageerror',lambda error:water_errors.append(str(error)))
   pg.set_content(prepare(route),wait_until='domcontentloaded')
   if not route:
    pg.locator('#enter-drop').click(force=True);pg.wait_for_timeout(1050)
@@ -55,7 +56,7 @@ return {doc:h.scrollWidth-innerWidth,tiles:tiles.length,overlaps,overflow,offscr
   m=pg.evaluate('''()=>{const c=document.querySelector('#liquid-canvas,.dj-water'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let a=0,b=0;for(let i=3;i<d.length;i+=4){if(d[i]>4)a++;if(d[i]>14)b++;}return {a,b,visibility:getComputedStyle(c).visibility};}''')
   pg.mouse.click(380,320);pg.wait_for_timeout(130)
   n=pg.evaluate('''()=>{const c=document.querySelector('#liquid-canvas,.dj-water'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>14)n++;return n;}''')
-  records.append({'route':route or '/','water':{'hover':m,'click':n},'errors':[] if m['a']>25 and n>25 else ['water not visibly painted']})
+  records.append({'route':route or '/','water':{'hover':m,'click':n},'errors':([*water_errors] if water_errors else [])+([] if m['a']>25 and n>25 else ['water not visibly painted'])})
   pg.close()
  for route in ['','market']:
   pg=b.new_page(viewport={'width':390,'height':844},java_script_enabled=False)
