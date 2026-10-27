@@ -89,7 +89,7 @@
     $('#previous').disabled = i===0;
     const last = i===chapters.length-1;
     $('#next').innerHTML = last ? 'BACK TO BEGINNING <span aria-hidden="true">↺</span>' : 'NEXT CHAPTER <span aria-hidden="true">→</span>';
-    $('#drop-action').textContent = last ? 'TOUCH THE DROP TO RESTART' : 'TOUCH THE DROP TO CONTINUE';
+    $('#drop-action').textContent = last ? 'BACK TO THE BEGINNING' : 'NEXT / ' + chapters[i+1].toUpperCase();
     drop.setAttribute('aria-label',last?'Restart the five-chapter journey':`Continue to chapter ${chapters[i+1]}`);
     // The droplet remains visually steady between chapters; water moves instead.
     drop.classList.remove('is-shifting');

@@ -69,38 +69,10 @@
 .journey-drop:hover .drop-inner,.journey-drop:focus-visible .drop-inner{
   transform:scale(1.018) rotate(0);filter:brightness(1.035);
 }
-/* Keep the prototype version stamp unobtrusive and outside the story. */
-#motion-optin[hidden]{display:none!important}
-.motion-optin{
-  position:fixed;z-index:90;bottom:82px;left:50%;transform:translateX(-50%);
-  border:1px solid rgba(190,252,112,.75);background:#befc70;color:#0a1513;
-  border-radius:99px;padding:12px 19px;font-size:11px;font-weight:850;
-  box-shadow:0 9px 28px rgba(0,0,0,.35);white-space:nowrap;
-}
-body:not(.intro-mode) .motion-optin{bottom:auto;top:85px;right:20px;left:auto;transform:none}
-body.intro-mode::after{
-  content:'WATER MOTION / V1.5';position:fixed;bottom:7px;left:50%;transform:translateX(-50%);
-  z-index:46;pointer-events:none;white-space:nowrap;
-  background:rgba(6,12,15,.65);border:1px solid rgba(185,252,112,.12);
-  border-radius:99px;padding:5px 10px;color:#b6d8a5;
-  font:700 9px/1.2 Inter,Arial,sans-serif;letter-spacing:.14em;
-}
+/* Respect the visitor's system motion preference without an activation control. */
 @media (prefers-reduced-motion: reduce){
   .liquid-veil,.liquid-canvas{display:none!important}
   .is-dissolving .threshold,.is-dissolving .experience,
   .is-revealing .threshold,.is-revealing .experience,
   .is-splashing .drop-shell,.is-splashing .drop-inner{animation:none!important}
-  body.intro-mode::after{content:'MOTION REDUCED / V1.5'}
-  body.intro-mode.motion-opt-in::after{content:'WATER MOTION / V1.5'}
-  body.motion-opt-in .liquid-veil,body.motion-opt-in .liquid-canvas{display:block!important}
-  body.motion-opt-in.is-transitioning .liquid-veil{animation:waterVeil 1000ms ease-in-out both!important}
-  body.motion-opt-in.is-dissolving .threshold,body.motion-opt-in.is-dissolving .experience{
-    animation:liquidOut 460ms cubic-bezier(.42,.06,.66,1) both!important;
-  }
-  body.motion-opt-in.is-revealing .threshold,body.motion-opt-in.is-revealing .experience{
-    animation:liquidIn 540ms cubic-bezier(.16,.64,.26,1) both!important;
-  }
-  body.motion-opt-in .is-splashing .drop-shell,body.motion-opt-in .is-splashing .drop-inner{
-    animation:dropSettle 470ms cubic-bezier(.2,.7,.2,1) both!important;
-  }
 }
