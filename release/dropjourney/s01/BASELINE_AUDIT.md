@@ -13,10 +13,11 @@ Source-of-truth correction: GitHub and Cloudflare are the ONLY official developm
 | Production deployment | Cloudflare Worker `infused-show`, version `f69bd0ee-3ad0-4bbb-8bc9-d756a70bfb2a`, deployment `c79682ae-15cf-420e-88d9-6dc7e8a6558e`, 100% since 2026-10-22T21:05:29Z |
 | Redesign development | GitHub branch `dj/s01-trusted-baseline-20261027`, based on the exact production commit, with review in PR #14 |
 | Water-motion visual baseline | Cloudflare Worker `infused-dropjourneytest`, current tested v1.5, deployment `24db0bfa-e369-43d0-b17f-9acb3e078cc7` |
+| Editable v1.5 prototype source | GitHub `dropjourney/src/` on branch `dj/s01-trusted-baseline-20261027`, source hashes documented in `dropjourney/README.md` |
 | Preview URL | https://infused.show/dropjourneytest |
 | Preview route | Cloudflare zone pattern `infused.show/dropjourneytest*`, attached only to `infused-dropjourneytest` |
 
-**Git commit SHA is the rollback/source reference.** A separate manually archived source ZIP is not necessary, nor is an archive in another service a sprint acceptance criterion. Deployed Worker version and deployment IDs provide the runtime rollback reference. The GitHub SHA and matching successful CI establish the code baseline; the standalone prototype Worker must also be represented as GitHub-controlled source before further design deployment.
+**Git commit SHA is the rollback/source reference.** A separate manually archived source ZIP is not necessary, nor is an archive in another service a sprint acceptance criterion. Deployed Worker version and deployment IDs provide the runtime rollback reference. The GitHub SHA and matching successful CI establish the production code baseline. The deployed v1.5 prototype front-end sources have also been recovered from Cloudflare and committed as `dropjourney/src/index.html`, `dropjourney/src/styles.css`, and `dropjourney/src/app.js`. All three match the verified local source SHA-256 and Git blob hashes. Build/QA tooling for the namespaced multipage preview is an S02 work item.
 
 ## Production routes and parity boundary
 
@@ -65,6 +66,6 @@ No commit to production `infused-show`. No Cloudflare, DNS, commerce, D1, email,
 ## Next execution
 
 1. Keep S01 evidence in GitHub and track open decisions in GitHub issues/PRs, not elsewhere.
-2. Capture the v1.5 creative prototype in **GitHub** as a source-level reference; its deployed Cloudflare Worker is not itself adequate version control.
-3. DJ-S02 derives the visual system from the locked current production commit and the existing v1.5 prototype, without redesign-driven changes to primary site routes.
-4. DJ-S03 builds namespaced multipage routes and cross-page navigation. Ensure CI builds and tests the exact preview output before Cloudflare test Worker deployment.
+2. **Completed:** Capture the exact deployed v1.5 creative prototype editable HTML/CSS/JS into `dropjourney/src/` on the isolated S01 GitHub branch. See `dropjourney/README.md` for three verified SHA-256 values.
+3. DJ-S02 adds deterministic build/QA scripts and derives the visual system from the locked production GitHub commit and the current GitHub-controlled v1.5 prototype without changing primary site routes.
+4. DJ-S03 builds namespaced multipage routes and cross-page navigation. Ensure GitHub CI builds and tests the exact preview output before Cloudflare test Worker deployment.
