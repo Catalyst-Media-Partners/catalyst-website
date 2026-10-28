@@ -88,9 +88,9 @@
     $('.keyboard-hint span').textContent = `${String(i+1).padStart(2,'0')} / 05`;
     $('#previous').disabled = i===0;
     const last = i===chapters.length-1;
-    $('#next').innerHTML = last ? 'BACK TO BEGINNING <span aria-hidden="true">↺</span>' : 'NEXT CHAPTER <span aria-hidden="true">→</span>';
-    $('#drop-action').textContent = last ? 'BACK TO THE BEGINNING' : 'NEXT / ' + chapters[i+1].toUpperCase();
-    drop.setAttribute('aria-label',last?'Restart the five-chapter journey':`Continue to chapter ${chapters[i+1]}`);
+    $('#next').innerHTML = last ? 'EXPLORE OPTIONS <span aria-hidden="true">&#8599;</span>' : 'NEXT CHAPTER <span aria-hidden="true">→</span>';
+    $('#drop-action').textContent = last ? 'EXPLORE YOUR OPTIONS' : 'NEXT / ' + chapters[i+1].toUpperCase();
+    drop.setAttribute('aria-label',last?'Explore ways to participate in INFUSED':`Continue to chapter ${chapters[i+1]}`);
     // The droplet remains visually steady between chapters; water moves instead.
     drop.classList.remove('is-shifting');
     closeNav();
@@ -365,8 +365,13 @@
     },transitionDuration);
   }
   function next(event,fromDrop=false){
+    if(active==='what'){
+      // The final chapter is a conversion choice, not an automatic story loop.
+      location.assign('/dropjourneytest/opportunities/');
+      return;
+    }
     const i=chapters.indexOf(active);
-    const target=i===chapters.length-1?null:chapters[i+1]||'why';
+    const target=chapters[i+1]||'why';
     goTo(target,event,{splash:fromDrop,originControl:fromDrop?drop:null});
   }
   function previous(event){const i=chapters.indexOf(active);if(i>0)goTo(chapters[i-1],event);}
