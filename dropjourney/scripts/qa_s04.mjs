@@ -17,7 +17,8 @@ for(const id of routes){
  assert.match(html,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,id+' not current');
  assert.match(html,/<meta name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,id+' preview indexing enabled');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,id+' H1 count');
- if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,id+' native form missing');else assert.doesNotMatch(html,/<form\b/,id+' unexpected form');
+ if(id==='tickets')assert.match(html,/class="dj-ticket-notify-form"/,id+' simple email form missing');
+ else if(['buyers/apply','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,id+' inquiry form missing');else assert.doesNotMatch(html,/<form\b/,id+' unexpected form');
  assert.doesNotMatch(html,/id="motion-optin"/,id+' motion activation control');
  assert.ok(html.includes('/dropjourneytest/'),id+' not namespaced');
 }
