@@ -193,6 +193,7 @@ async function write(rel,content){const file=path.join(output,rel);await mkdir(p
 await rm(path.join(root,'dist'),{recursive:true,force:true});
 await mkdir(path.join(output,'assets','images'),{recursive:true});
 for(const name of (await readdir(path.join(source,'assets','images'))).filter(s=>/\.(webp|png|jpe?g|svg)$/i.test(s))) await copyFile(path.join(source,'assets','images',name),path.join(output,'assets','images',name));
+await copyFile(brandPath,path.join(output,'assets','images',brandFilename));
 await write('assets/site.css',css);
 await write('assets/site.js',js);
  await write('assets/intake.js',await load('src/intake.js'));
