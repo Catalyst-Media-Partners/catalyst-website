@@ -24,7 +24,7 @@ export default {
     headers.set('X-Robots-Tag',ROBOTS);
     headers.set('X-Content-Type-Options','nosniff');
     headers.set('Referrer-Policy','strict-origin-when-cross-origin');
-    headers.set('X-DropJourney-Version','2.2.0-s04');
+    headers.set('X-DropJourney-Version','2.3.0-s05');
     if(headers.get('Content-Type')?.includes('text/html')){
       headers.set('Cache-Control','no-store');
       headers.delete('ETag');

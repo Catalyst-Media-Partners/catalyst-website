@@ -14,7 +14,7 @@ const script=await read('src/app.js');
 const worker=await read('worker.mjs');
 for(const id of routes){
  const html=await read('dist/dropjourneytest/'+(id?id+'/':'')+'index.html');
- assert.match(html,/name="dropjourney-site-version" content="2\.2\.0-s04"/,id+' not current');
+ assert.match(html,/name="dropjourney-site-version" content="2\.3\.0-s05"/,id+' not current');
  assert.match(html,/<meta name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,id+' preview indexing enabled');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,id+' H1 count');
  assert.doesNotMatch(html,/<form\b/,id+' native form could submit personal data');
@@ -33,7 +33,7 @@ for(const id of ['intro','stage']){
 assert.equal((home.match(/class="drop-svg/g)||[]).length,2,'Two matching 3D SVG instances');
 assert.equal((home.match(/class="market-point"/g)||[]).length,3,'Homepage should be curated to three figures');
 const market=await read('dist/dropjourneytest/market/index.html');
-assert.equal((market.match(/class="stat"/g)||[]).length,5,'Full market must retain all original five estimates');
+assert.equal((market.match(/class="dj-evidence" role="listitem"/g)||[]).length,5,'Full market must retain all original five estimates');
 assert.match(home,/Separate, overlapping market estimates/,'Context for market figures must remain truthful');
 assert.match(home,/href="\/dropjourneytest\/tickets\/"/,'Attendance link should exist');
 assert.match(styles,/\.drop-glyph\{display:none!important\}/,'Visible abstract symbol hides droplet shading');
@@ -45,5 +45,5 @@ assert.match(script,/function drawClick/,'Retain click wave');
 assert.match(script,/BACK TO THE BEGINNING/,'Chapter drop label must be understated');
 assert.doesNotMatch(home,/AN INTERACTIVE PREVIEW|MOTION REDUCED \/ V1\.5/,'Prototype disclaimers remain');
 assert.ok(!worker.includes('AUDIENCE_DB')&&!worker.includes('STRIPE_'),'Worker remains isolated');
-assert.ok(worker.includes('2.2.0-s04')&&worker.includes("noindex, nofollow, noarchive"));
+assert.ok(worker.includes('2.3.0-s05')&&worker.includes("noindex, nofollow, noarchive"));
 console.log(`PASS DJ-S04: ${routes.length} pages, shared 3D SVG drop, 3 curated metrics / 5 sourced totals, navigation, water physics and protected preview boundaries`);
