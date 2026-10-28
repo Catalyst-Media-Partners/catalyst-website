@@ -52,7 +52,7 @@
       "theme": "light",
       "eyebrow": "INFUSED / LAS VEGAS",
       "headline": ["DISCOVER", "WHAT'S NEXT."],
-      "lead": "Explore the INFUSED event experience and attendance information. Ticket notifications are not accepting requests yet.",
+      "lead": "Explore the INFUSED event experience and attendance information. You may request event attendance updates; tickets are not yet on sale.",
       "action": "View attendance details",
       "destination": "/dropjourneytest/tickets/",
       "secondary": "Discover why Las Vegas",

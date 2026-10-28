@@ -29,13 +29,11 @@ assert.match(opp,/class="dj-offers-grid"/);
 const apply=await read('dist/dropjourneytest/buyers/apply/index.html');
 assert.match(apply,/class="dj-apply-photo"/,'Guided buyer page needs a relevant visual');
 assert.doesNotMatch(apply,/<form\b/);
-for(const [name,page] of [['homepage',home],['buyer profile',apply]]){
- assert.match(page,/class="buyer-handoff"/,name+' must offer a next step after profile review');
- assert.match(page,/class="buyer-contact-link" href="\/dropjourneytest\/contact\/" target="_blank" rel="noopener noreferrer"/,name+' must link only to existing contact route');
- assert.match(page,/Your answers are not automatically transferred or submitted/,name+' must disclose handoff limitation');
- assert.match(page,/id="buyer-copy"/,name+' must retain local explicit copy');
-}
-assert.doesNotMatch(apply,/<form\b|fetch\(|sendBeacon\(/i,'Preview must not submit or transmit buyer information');
+assert.doesNotMatch(home,/id="buyer-dialog"|data-open-buyer/,'Homepage must not retain dead-end buyer modal');
+assert.match(apply,/data-intake-type="hosted-buyer"/,'Hosted Buyer route needs real request');
+assert.match(apply,/href="https:\/\/form\.jotform\.com\/263005621560043"/,'Wrong buyer form');
+assert.match(apply,/noopener noreferrer/,'External intake window needs isolation');
+assert.doesNotMatch(apply,/<form\b|id="buyer-form"|fetch\(|sendBeacon\(/i,'Preview does not accept or transmit PII');
 assert.match(css,/\.dj-sector-adjacent/);
 assert.match(css,/\.dj-offers-visual/);
 const opportunities=await read('dist/dropjourneytest/opportunities/index.html');

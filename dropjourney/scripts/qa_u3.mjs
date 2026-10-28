@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const read=p=>readFile(path.join(root,p),'utf8');
+const home=await read('dist/dropjourneytest/index.html');
+const buyer=await read('dist/dropjourneytest/buyers/index.html');
+const apply=await read('dist/dropjourneytest/buyers/apply/index.html');
+const tickets=await read('dist/dropjourneytest/tickets/index.html');
+const app=await read('src/app.js');
+for(const [name,page] of [['home',home],['buyer',buyer],['buyer request',apply],['tickets',tickets]]){
+ assert.doesNotMatch(page,/<form\b/,'No first-party PII form in '+name);
+}
+assert.doesNotMatch(home,/id="buyer-form"|id="buyer-dialog"|data-open-buyer/,'Legacy 6-step dead-end remains on homepage');
+assert.doesNotMatch(app,/buyer-form|buyer-dialog/,'Legacy modal scripts still loaded');
+assert.match(home,/href="\/dropjourneytest\/buyers\/apply\/"/,'Direct buyer request from WHO');
+assert.match(buyer,/Request Hosted Buyer access/,'Buyer page CTA must be truthful');
+assert.match(apply,/href="https:\/\/form\.jotform\.com\/263005621560043"/,'Buyer Jotform destination');
+assert.match(tickets,/href="https:\/\/form\.jotform\.com\/263005581843052"/,'Attendee Jotform destination');
+assert.match(apply,/referrerpolicy="no-referrer"/,'Buyer external form privacy');
+assert.match(tickets,/referrerpolicy="no-referrer"/,'Attendance external form privacy');
+assert.match(apply,/Submitting does not confirm hosted-buyer eligibility/,'Buyer disclaimers');
+assert.match(tickets,/Tickets are not yet on sale/,'Ticket state');
+assert.match(tickets,/does not reserve or purchase a ticket/,'No implied tickets');
+assert.match(apply,/class="dj-apply-photo"/,'Buyer imagery preserved');
+assert.match(tickets,/25% EARLY-BIRD TICKET OFFER/,'Original published offer disclosure preserved');
+assert.doesNotMatch(tickets,/href="https:\/\/form\.jotform\.com\/262665252358059"/,'Never reuse CannaCon ticket registration');
+assert.doesNotMatch(apply,/href="https:\/\/form\.jotform\.com\/262642521146048"/,'Never reuse CannaCon hosted buyer form');
+console.log('PASS DJ-U3: buyer/attendee requests use distinct consent-based hosted forms, preview cannot store PII, ticket claims honest');

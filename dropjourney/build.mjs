@@ -118,17 +118,24 @@ async function detailPage(route){
  `<div class="dj-source-section">${content}</div></div>${route.id==='opportunities'?'':related(route)}</main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
 }
 function applicationPage(){
- // Reuse the exact guided buyer question/answer sequence from the existing test prototype.
- return load('src/index.html').then(html=>{
-   const form=html.match(/<form class="buyer-form" id="buyer-form"[\s\S]*?<\/form>/)?.[0];
-   if(!form)throw Error('Missing trusted buyer application form');
-   // Preview wizard is a DIV, not a form. Without JavaScript, no native POST or GET
-   // can transmit a user's typed contact information by accident.
-   const safe=form.replace(/<form class="buyer-form" id="buyer-form"[^>]*>/,'<div class="buyer-form" id="buyer-form">').replace(/<\/form>$/,'</div>').replaceAll('—',' - ');
-   return head('Hosted Buyer Profile','INFUSED Hosted Buyers: share your sourcing priorities through a six-step guided profile preview.')+
-   `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${noScriptNav()}${introNav({num:'02',chapter:'WHO',label:'Buyer profile',next:'buyers'})}<main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual"><div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / BUYER PROFILE</span><h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Source smarter. Meet the right suppliers. Build a meeting schedule around what you are actually looking to buy.</p><p class="dj-status-note">Preview only. Information entered here is not submitted or stored.</p></div><figure class="dj-apply-photo"><img src="${imagesRoot}brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing products and sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure></section><div class="dj-wizard"><div class="dj-wizard-meter"><span id="buyer-current">01 / 06</span><div role="progressbar" id="buyer-meter" aria-label="Buyer profile progress" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><span id="buyer-meter-fill"></span></div><span>ROLE · SOURCING · PRIORITIES · COMPANY · CONTACT · REVIEW</span></div>${safe}</div></main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
- });
+ const buyerForm='https://form.jotform.com/263005621560043';
+ return Promise.resolve(
+  head('Hosted Buyer Request','Request Hosted Buyer consideration for INFUSED Las Vegas. Qualified requests are reviewed; meetings are not guaranteed.')+
+  `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${noScriptNav()}${introNav({num:'02',chapter:'WHO',label:'Buyer request',next:'buyers'})}
+  <main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual">
+    <div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / MAKE A REQUEST</span><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>
+      <h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1>
+      <p>Tell the INFUSED team what your company sources and which business connections matter. Requests are reviewed; submitting does not confirm hosted-buyer eligibility, benefits or meetings.</p>
+      <div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${buyerForm}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" data-intake-type="hosted-buyer">Submit a Hosted Buyer request <span aria-hidden="true">↗</span></a><a class="dj-btn dj-btn-quiet" href="${href('buyers')}">About Hosted Buyers <span aria-hidden="true">↗</span></a></div>
+      <p class="dj-intake-privacy">The request opens in a separate Jotform page. Contact details and sourcing needs are entered there, not on this preview site. An optional marketing opt-in is separate from consent to be contacted about your request.</p>
+    </div>
+    <figure class="dj-apply-photo"><img src="${imagesRoot}brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing products and sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure>
+  </section>
+  <section class="dj-secure-intake" aria-label="Buyer request process"><h2>What happens next?</h2><div class="dj-intake-steps"><p><strong>1 · Share priorities</strong> Complete the secure Hosted Buyer request on Jotform.</p><p><strong>2 · Team review</strong> The INFUSED team reviews the information and may follow up.</p><p><strong>3 · Confirmation</strong> A submitted request is not an approved application or confirmed meeting.</p></div></section>
+  </main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`
+ );
 }
+
 function cleanHome(html){
  if(!html.includes('{{DROP_ART_INTRO}}')||!html.includes('{{DROP_ART_STAGE}}'))throw Error('Missing shared droplet source markers');
  html=html.replaceAll('{{DROP_ART_INTRO}}',dropArt('intro')).replaceAll('{{DROP_ART_STAGE}}',dropArt('stage'));
@@ -138,6 +145,7 @@ function cleanHome(html){
  html=html.replaceAll('href="https://infused.show/"','href="'+BASE+'"');
  html=html.replaceAll('aria-label="INFUSED original website"','aria-label="INFUSED journey home"');
  for(const id of ['market','ecosystem','roots','science','make','package','move','sell','services','buyers','why-vegas','opportunities','contact','tickets']) html=html.replaceAll(`href="/${id}/"`,`href="${href(id)}"`);
+ html=html.replaceAll('href="/buyers/apply/"','href="'+href('buyers/apply')+'"');
  html=html.replaceAll('https://shows.map-dynamics.com/infusedlv2027/?register=', 'https://infused.show/go/booth?position=hero&amp;page=%2F');
  html=html.replaceAll('AN INTERACTIVE PREVIEW / 01—05','WHERE CATEGORIES CONNECT');
  html=html.replaceAll('A GUIDED PROFILE PREVIEW','HOSTED BUYERS / PROFILE');
@@ -178,9 +186,9 @@ function cleanHome(html){
  html=html.replace(lockup,`<div class="date-lockup"><strong>${monthName.toUpperCase()}<span>${startDate.day}–${endDate.day}</span></strong><div><span>${startDate.year}</span><span>${esc(event.venue.toUpperCase())}</span></div></div>`);
  html=html.replace(location,match=>match.replace(/<strong>[^<]*<\/strong>/,`<strong>${esc(event.venue)}</strong>`).replace(/(<\/strong><span>)[^<]*(<\/span>)/,(_,a,z)=>a+esc(event.city)+z));
  html=html.replace('<!-- TURNSTILE_WIDGET -->','');
- // A no-script browser must never post buyer contact information.
- if(!/<form class="buyer-form" id="buyer-form"[^>]*>/.test(html))throw Error('Expected buyer profile scaffold');
- html=html.replace(/<form class="buyer-form" id="buyer-form"[^>]*>/,'<div class="buyer-form" id="buyer-form">').replace('</form>','</div>');
+ // Buyer inquiries now use the dedicated Jotform hosted form. No PII collection
+ // or obsolete six-step modal remains in the preview homepage.
+ if(/id="buyer-dialog"|id="buyer-form"|data-open-buyer/.test(html))throw Error('DJ-U3 obsolete homepage buyer wizard remains');
  return html;
 }
 async function write(rel,content){const file=path.join(output,rel);await mkdir(path.dirname(file),{recursive:true});await writeFile(file,content,'utf8');}
@@ -192,8 +200,7 @@ await write('assets/site.js',js);
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
 const combinedHomeStyles=styleOverrides+'\n'+(await load('src/finish.css'));
 let home=cleanHome(await load('src/index.html'));
-const safeScript=scriptOriginal.replace('form.elements.namedItem(name)', 'form.querySelector(`[name="${name}"]`)');
-if(safeScript===scriptOriginal)throw Error('Buyer compatibility patch missing');
+const safeScript=scriptOriginal;
 home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
   .replaceAll('{{S02_OVERRIDES}}',()=>combinedHomeStyles)
   .replaceAll('{{ORIGINAL_JS}}',()=>safeScript);

@@ -69,6 +69,7 @@ jobs:
           node dropjourney/scripts/qa_u0_inventory.mjs
           node dropjourney/scripts/qa_u1.mjs
           node dropjourney/scripts/qa_u2.mjs
+          node dropjourney/scripts/qa_u3.mjs
       - name: Archive U0 structured route inventory
         uses: actions/upload-artifact@v4
         with:

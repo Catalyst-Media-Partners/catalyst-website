@@ -204,7 +204,7 @@
     ctx.lineWidth=1.35;ctx.stroke();
   }
   function drawHover(now){
-    if(!hoverRipple||transitioning||$('#buyer-dialog').open)return false;
+    if(!hoverRipple||transitioning)return false;
     const h=hoverRipple;
     const age=now-h.movedAt;
     if(age>HOVER_LIFE)return false;
@@ -279,9 +279,9 @@
   // Passive pointer listening preserves native scrolling. Touch-drag also
   // produces a gentle surface displacement without locking the gesture.
   document.addEventListener('pointermove',e=>{
-    if(reduced()||transitioning||!e.isPrimary||$('#buyer-dialog').open)return;
+    if(reduced()||transitioning||!e.isPrimary)return;
     if(e.pointerType==='touch'&&e.buttons===0)return;
-    if(e.target instanceof Element && e.target.closest('.site-nav,.buyer-dialog'))return;
+    if(e.target instanceof Element && e.target.closest('.site-nav'))return;
     const x=e.clientX,y=e.clientY;
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     const now=performance.now();
@@ -394,86 +394,9 @@
   navigation.addEventListener('focusout',event=>{if(!navigation.contains(event.relatedTarget)&&event.relatedTarget!==navTrigger)closeNav();});
   document.addEventListener('click',event=>{if(!navigation.hidden&&!navigation.contains(event.target)&&!navTrigger.contains(event.target))closeNav();});
   $('#skip').addEventListener('click',event=>{if(introView.hidden)return;event.preventDefault();goTo('why',event);});
-  const dialog = $('#buyer-dialog');
-  const form = $('#buyer-form');
-  let buyerStep = 0;
-  const buyerSteps = $$('.buyer-step',dialog);
-  const buyerLabels = ['Role','Sourcing','Priorities','Company','Contact','Review'];
-  function hideBuyerError(){const error=$('#buyer-error');error.hidden=true;error.textContent='';}
-  function displayBuyerError(message,focusTarget) {
-    const error=$('#buyer-error');error.textContent=message;error.hidden=false;
-    if(focusTarget)focusTarget.focus({preventScroll:false});else error.scrollIntoView({block:'nearest'});
-  }
-  function formField(name){return form.elements.namedItem(name);}
-  const formVal = name => (formField(name)?.value||'').trim();
-  const checkedValues = name => $$(`input[name="${name}"]:checked`,form).map(el=>el.value);
-  function validateBuyerStep(index) {
-    hideBuyerError();
-    if(index===0){
-      if(checkedValues('buyer_role').length===0)return displayBuyerError('Choose the buyer role closest to yours.',$('input[name="buyer_role"]',form)),false;
-      if(!formField('buyer_confirm').checked)return displayBuyerError('Confirm that your work includes sourcing, purchasing, distribution, or category development.',formField('buyer_confirm')),false;
-    }
-    if(index===1&&checkedValues('sourcing_categories').length===0)return displayBuyerError('Choose at least one sourcing category.',$('input[name="sourcing_categories"]',form)),false;
-    if(index===2&&!formVal('products_sought'))return displayBuyerError('Describe the products or capabilities you are looking for.',formField('products_sought')),false;
-    if(index===3&&!formVal('company_name'))return displayBuyerError('Enter your company name.',formField('company_name')),false;
-    if(index===4){
-      for(const name of ['contact_name','title','email','phone']){if(!formVal(name))return displayBuyerError('Complete the required contact details.',formField(name)),false;}
-      const email=formField('email');if(!email.validity.valid)return displayBuyerError('Enter a valid business email.',email),false;
-      if(formVal('phone').replace(/\D/g,'').length<7)return displayBuyerError('Enter a valid contact phone number.',formField('phone')),false;
-    }
-    return true;
-  }
-  function buyerSummaryFields(){return [
-    ['Buyer role',checkedValues('buyer_role').join(', ')],
-    ['Sourcing categories',checkedValues('sourcing_categories').join(', ')],
-    ['Specific priorities',formVal('products_sought')],
-    ['Preferred suppliers',formVal('preferred_suppliers')||'Not specified'],
-    ['Sourcing challenges',formVal('sourcing_challenges')||'Not specified'],
-    ['Company',formVal('company_name')],
-    ['Operating footprint',formVal('operating_footprint')||'Not specified'],
-    ['Contact',formVal('contact_name')],
-    ['Role / title',formVal('title')],
-    ['Business email',formVal('email')],
-    ['Phone',formVal('phone')]
-  ];}
-  function renderBuyerSummary(){const review=$('#buyer-review');review.replaceChildren();for(const [label,value] of buyerSummaryFields()){
-    const row=document.createElement('div');row.className='review-row';
-    const dt=document.createElement('dt');dt.textContent=label;
-    const dd=document.createElement('dd');dd.textContent=value;
-    row.append(dt,dd);review.append(row);
-  }}
-  function setBuyerStep(index,{focus=true}={}){
-    if(index<0||index>=buyerSteps.length)return;
-    buyerStep=index;hideBuyerError();buyerSteps.forEach((step,i)=>{step.hidden=i!==index;});
-    const count=index+1;
-    $('#buyer-current').textContent=`${String(count).padStart(2,'0')} / 06`;
-    $('#buyer-meter').setAttribute('aria-valuenow',String(count));
-    $('#buyer-meter-fill').style.width=`${count/6*100}%`;
-    $('#buyer-prev').disabled=index===0;
-    $('#buyer-forward').hidden=index===5;
-    $('#buyer-copy').hidden=index!==5;
-    if(index===5)renderBuyerSummary();
-    dialog.scrollTop=0;
-    if(focus){const heading=$('h3',buyerSteps[index]);heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});}
-  }
-  function openBuyer(){closeNav();if(!dialog.open)dialog.showModal();document.body.classList.add('dialog-open');setBuyerStep(buyerStep,{focus:true});}
-  $$('.buyer-step').forEach(s=>{s.addEventListener('change',hideBuyerError);s.addEventListener('input',hideBuyerError);});
-  $$('[data-open-buyer]').forEach(button=>button.addEventListener('click',openBuyer));
-  $('#close-buyer').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('close',()=>{document.body.classList.remove('dialog-open');$('#buyer-status').textContent='';});
-  dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
-  $('#buyer-prev').addEventListener('click',()=>setBuyerStep(buyerStep-1));
-  $('#buyer-forward').addEventListener('click',()=>{if(validateBuyerStep(buyerStep))setBuyerStep(buyerStep+1);});
-  form.addEventListener('submit',e=>{e.preventDefault();$('#buyer-status').textContent='This is a non-submitting preview. Your information has not been sent.';});
-  $('#buyer-copy').addEventListener('click',async()=>{
-    const data=buyerSummaryFields().map(([label,val])=>`${label}: ${val}`).join('\n');
-    const text=`INFUSED Las Vegas | Hosted Buyer Profile Draft\n\n${data}\n\nPreview only: not submitted.`;
-    try{await navigator.clipboard.writeText(text);$('#buyer-status').textContent='Draft copied to your clipboard. No application has been submitted.';}
-    catch(_){$('#buyer-status').textContent='Clipboard unavailable here. Select and copy the information above. No application has been submitted.';}
-  });
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'){if(!navigation.hidden){closeNav();navTrigger.focus();}return;}
-    if(dialog.open||e.altKey||e.ctrlKey||e.metaKey||!active)return;
+    if(e.altKey||e.ctrlKey||e.metaKey||!active)return;
     const target=e.target;
     if(target.closest('input,textarea,select,[contenteditable="true"]'))return;
     if(e.key==='ArrowRight'){e.preventDefault();next(null);}

@@ -34,8 +34,8 @@ for(const route of routes){
     assert.ok(!html.includes('motionButton.hidden'), 'S03 must not require hidden activation button');
   }
   if(id==='opportunities')assert.match(html,/id="sponsorship"/, 'Sponsor target missing');
-  if(id==='tickets')assert.match(html,/Ticket notifications are not accepting requests yet/, 'Tickets disabled state must be truthful');
-  if(id==='buyers/apply')assert.ok(html.includes('id="buyer-form"')&&!html.includes('<form'),'Buyer wizard must be inert');
+  if(id==='tickets')assert.match(html,/Tickets are not yet on sale/, 'Tickets not-on-sale state must be truthful');
+  if(id==='buyers/apply')assert.ok(html.includes('data-intake-type="hosted-buyer"')&&!html.includes('<form'),'Buyer request requires approved external handoff, never local PII form');
 }
 const homeCss=await get('src/home.css');
 assert.match(homeCss,/\.market-scroll\{display:grid/,'Market metrics grid must be responsive');

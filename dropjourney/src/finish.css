@@ -94,3 +94,15 @@ body[data-stage=what] .final-role-links a:focus-visible{outline:3px solid #f9a2c
  .dj-offers-page .dj-more-pathways{padding:16px}
  .dj-offers-page .dj-offers-booking{padding:20px}
 }
+
+/* DJ-U3: real intake handoffs, not a duplicated non-submitting wizard. */
+body[data-stage=who] a.small-pill{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px;white-space:normal;text-align:center}
+.dj-app-intro .dj-topic-actions{margin:24px 0}
+.dj-app-intro .dj-topic-actions a{max-width:100%;text-align:center}
+.dj-apply .dj-intake-privacy{font-size:12px;line-height:1.5;color:var(--dj-muted);max-width:65ch;margin-top:16px}
+.dj-secure-intake{max-width:1100px;margin:clamp(20px,4vw,50px) auto 80px;padding:clamp(20px,3vw,35px);border:1px solid var(--dj-edge);border-radius:18px}
+.dj-secure-intake h2{font-size:clamp(22px,3vw,32px);margin:0 0 14px}
+.dj-intake-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dj-intake-steps p{font-size:13px;line-height:1.5;margin:0;max-width:42ch}
+.dj-intake-steps strong{display:block;color:var(--dj-acid);margin-bottom:7px}
+@media(max-width:720px){.dj-intake-steps{grid-template-columns:1fr}.dj-secure-intake{margin-top:15px;padding:20px}}
