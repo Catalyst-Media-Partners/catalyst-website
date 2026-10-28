@@ -1,0 +1,83 @@
+name: INFUSED Drop Journey isolated preview build and deployment
+
+on:
+  push:
+    branches: [dj/s02-dropjourney-site-20261027]
+    paths:
+      - 'dropjourney/**'
+      - 'src/**'
+      - '.github/workflows/deploy-dropjourney-s02.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infused-dropjourneytest-preview
+  cancel-in-progress: false
+
+jobs:
+  validate-and-publish-preview:
+    if: github.ref == 'refs/heads/dj/s02-dropjourney-site-20261027' && github.repository == 'Catalyst-Media-Partners/catalyst-website'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source without credential persistence
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure deployment is isolated to the already authorized test Worker
+        run: |
+          set -euo pipefail
+          grep -Fxq 'name = "infused-dropjourneytest"' dropjourney/wrangler.toml
+          grep -Fxq 'workers_dev = false' dropjourney/wrangler.toml
+          grep -Fxq 'keep_vars = true' dropjourney/wrangler.toml
+          ! grep -Eq 'AUDIENCE_DB|database_id|infused-show"' dropjourney/wrangler.toml
+          ! grep -Eq 'infused-show"|AUDIENCE_DB|STRIPE_' dropjourney/worker.mjs
+      - name: Validate existing production build without changing its deployment
+        run: |
+          set -euo pipefail
+          npm run build
+          npm run check
+          npm run test:w02
+          node scripts/verify-cloudflare.mjs
+      - name: Build every preview page from the canonical INFUSED source
+        run: |
+          set -euo pipefail
+          node --check dropjourney/worker.mjs
+          node --check dropjourney/build.mjs
+          node --check dropjourney/src/site.js
+          node dropjourney/build.mjs
+          node dropjourney/scripts/qa.mjs
+      - name: Record production deployment before isolated Worker update
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'Cloudflare token not configured'; exit 1; }
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-show/deployments" >/tmp/dj_before.json
+          jq -r '.result.deployments[0].id' /tmp/dj_before.json >/tmp/dj_prod_id
+      - name: Deploy ONLY the namespaced Cloudflare preview Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.102.0 deploy --config dropjourney/wrangler.toml
+      - name: Verify test Worker is deployed and production Worker untouched
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-dropjourneytest/deployments" >/tmp/dj_after.json
+          jq -e '.success and (.result.deployments|length>0)' /tmp/dj_after.json
+          curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-show/deployments" >/tmp/dj_production_after.json
+          test "$(cat /tmp/dj_prod_id)" = "$(jq -r '.result.deployments[0].id' /tmp/dj_production_after.json)"
+          echo 'INFUSED production Worker deployment unchanged; isolated preview Worker deployed.'

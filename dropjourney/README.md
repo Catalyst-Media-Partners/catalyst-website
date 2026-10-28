@@ -1,31 +1,40 @@
-# INFUSED Drop Journey | Source checkpoint v1.5.0
+# INFUSED Drop Journey | S02 multipage test site
 
-This directory captures the **editable front-end sources of the live isolated Drop Journey prototype**, extracted from the deployed `infused-dropjourneytest` Cloudflare Worker on 2026-10-27.
+**Preview only:** `https://infused.show/dropjourneytest/`
 
-## Authoritative split
+S02 establishes a coherent design and interaction system for a *complete second INFUSED site* in the public but unlisted `/dropjourneytest/` namespace. It does not change the published INFUSED homepage or its protected services.
 
-- **GitHub:** Version-controlled editable source and QA changes. Production INFUSED source lives on this repository's `infused-show` branch. The `dj/s01-trusted-baseline-20261027` branch is isolated, reviewed in PR #14, and does **not** deploy production.
-- **Cloudflare:** Actual live runtime/version/route evidence and preview Worker. The production Worker is `infused-show`; the redesign prototype Worker is `infused-dropjourneytest`. Do not deploy to or modify production as part of this source capture.
-- The source zip or artifacts in other file stores are **not** authoritative and must not be used as release gates.
+## Source of truth
+- **GitHub:** `Catalyst-Media-Partners/catalyst-website`. Production `infused-show` branch and exact Oct 22 baseline `891e895913b6432162b4aa27fd49df6cc918fdbe` remain unchanged.
+- **GitHub development:** `dj/s02-dropjourney-site-20261027`, stacked on `dj/s01-trusted-baseline-20261027` until accepted. Every S02 editable source file, test and workflow lives here.
+- **Cloudflare:** independent Worker `infused-dropjourneytest`, existing zone route `infused.show/dropjourneytest*` only. The existing `infused-show` Worker continues to serve `/` and all production services.
+- **No Google Drive** or secondary release archives are part of version control or sprint acceptance.
 
-## Verified source provenance
+## What is built
+The journey homepage (Why, Who, When, Where, What); matching editorial styles on the 14 production subpage equivalents; a six-step buyer profile preview at `/dropjourneytest/buyers/apply/`. **16 HTML pages** total, **21 approved-source media files**, shared header/footer/menu, preserved market sources, original copy and contact conversion actions, and light native-Canvas water interactions. Routes include Market, Ecosystem, Roots, Science, Make, Package, Move, Sell, Services, Buyers, Why Vegas, Opportunities, Contact, and Tickets.
 
-The following files were reconstructed from Cloudflare's deployed v1.5.0 bundled HTML, then compared byte-for-byte through hashes against the previously tested local source copies:
+## Commands
+No framework. Node 22 required; no install necessary for build and structural checks.
+```
+node dropjourney/build.mjs
+node dropjourney/scripts/qa.mjs
+```
+Generated assets: `dropjourney/dist/dropjourneytest/`. Do not edit generated files. Local Python/Chromium visual checks are separate; `scripts/visual_qa.py` is QA tooling only, not a build dependency.
 
-| File | SHA-256 |
-| --- | --- |
-| `src/index.html` | `4e361a7d5b37349ab8967de1e68652058f25e64866829aee98e679f3d87468ab` |
-| `src/styles.css` | `b387f65061a239b64dcfd0855681a66917a1e9f2ef7bf25d4b13dfccaa59460d` |
-| `src/app.js` | `f0908d4dc465efd281660c793e75d262c32e101b15f3a518d314c9181353e9f9` |
+## Environment and protected flows
+The original `src/sections/` and `src/assets/images/` are read at build time, so this preview is regenerated from the current production-source branch rather than duplicating facts in hand-authored HTML. The homepage preserves the editable v1.5 source interaction with 3 coupled water rings; `src/home.css` removes prototype-only interface clutter.
 
-Expected HTML template placeholders: `{{STYLES}}` and `{{SCRIPT}}`. The current Cloudflare Worker was built by embedding the CSS/JS into the HTML and serving it on `/dropjourneytest` and `/dropjourneytest/`; it delegates other paths to the existing origin.
+- All navigational links, logo and chapter destinations resolve beneath `/dropjourneytest/`.
+- The official `/go/booth` production endpoint remains the commerce exit where used. No checkout or D1/Stripe code is copied into the preview Worker.
+- Buyer information is **not transmitted or stored**. The guided profile is a client-only preview using a `div`, not a native form, and can copy a locally assembled draft upon explicit click.
+- Preview ticket interest does not accept submissions. Live ticket verification/unsubscribe APIs remain on the existing production Worker and are not exposed or cloned under the preview path.
+- All preview HTML is `noindex, nofollow, noarchive` in metadata **and** by Worker headers. Do not list it in production sitemap. Anyone knowing the URL can view the preview; **noindex is not access control**. A separately authorized Cloudflare Access policy would be required for genuine restricted access.
+- A dedicated GitHub workflow runs source QA and deploys **only** `infused-dropjourneytest` from this specific development branch, preserving the current production Worker deployment ID.
 
-Live reference: https://infused.show/dropjourneytest
+## Visual/interaction QA
+- Structural: all 16 pages, 21 images, no doubled route prefixes, one H1, privacy and Worker isolation checks.
+- Representative browser passes: 1440, 1024, 768 and 390 CSS px; home chapter transitions, nav menu including Escape, buyer profile selection, page overflow and image loading.
+- Follow-on S03-S10 acceptance covers page-by-page copy parity, complete focus/accessibility audit, real third-party commerce end-to-end and final editorial/content approvals. The S02 pass does not authorize production cutover.
 
-Cloudflare test deployment: `24db0bfa-e369-43d0-b17f-9acb3e078cc7`, deployed 2026-10-27T18:30:10Z. Runtime version `1.5.0`.
-
-## Source-level build follow-on
-
-S02 should add the original dependency-free build/QA scripts and a namespaced multipage design system **within this directory**, preserving existing production source. Never treat generated `public/` as editable source. Before the next preview deployment, reproduce the current Worker output and compare layout, behavior, and protected routes.
-
-This checkpoint is **not** a production release and makes no changes to Cloudflare routing, domain configuration, secrets, payments, forms, or the `infused-show` branch.
+## Rollback
+Cloudflare retains prior `infused-dropjourneytest` Worker version IDs. Roll back that Worker only; leave the production `infused-show` Worker, host bindings and DNS untouched. The GitHub development branch tracks every S02 update.

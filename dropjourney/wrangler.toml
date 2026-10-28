@@ -1,0 +1,11 @@
+name = "infused-dropjourneytest"
+main = "./worker.mjs"
+compatibility_date = "2026-10-26"
+workers_dev = false
+keep_vars = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "404-page"

@@ -1,0 +1,19 @@
+/* S02 intentional simplification of the original three-ring prototype. */
+body.intro-mode::after{display:none!important;content:none!important}
+.motion-optin{display:none!important}
+.keyboard-hint{display:none!important}
+.chapter-aside{display:none!important}
+.chapter-layout{grid-template-columns:minmax(0,1.3fr) minmax(220px,.78fr);gap:clamp(25px,5vw,85px);position:relative;isolation:isolate}
+.chapter-layout:before{content:"";position:absolute;inset:-25px 0 0 23%;z-index:-1;background:var(--chapter-photo) center/cover no-repeat;mask-image:linear-gradient(90deg,transparent,black 45%,transparent);opacity:.115;pointer-events:none;filter:saturate(.7)}
+body[data-stage=why]{--chapter-photo:url('/dropjourneytest/assets/images/trade-show-product-discovery-and-buyer-conversation-04.webp')}
+body[data-stage=who]{--chapter-photo:url('/dropjourneytest/assets/images/hosted-buyer-meeting-12.webp')}
+body[data-stage=when]{--chapter-photo:url('/dropjourneytest/assets/images/professionals-meeting-and-discovering-infused-product-brands-at-a--01.webp')}
+body[data-stage=where]{--chapter-photo:url('/dropjourneytest/assets/images/welcome-to-las-vegas-sign-and-las-vegas-skyline-19.webp')}
+body[data-stage=what]{--chapter-photo:url('/dropjourneytest/assets/images/infused-exhibitors-with-attendees-at-their-show-booth-20.webp')}
+.chapter-visual{isolation:isolate}.experience-top{border:0;padding-bottom:0}.experience-overline .live-indicator{opacity:.45}.chapter-nav{margin-top:8px}.chapter-panel h2{font-size:clamp(43px,5.3vw,92px)}.chapter-panel>p:not(.chapter-lead){font-size:15px}.chapter-details{margin-top:29px}.stage-bottom{margin-top:20px}.threshold-message{font-size:clamp(13px,1.55vw,16px)}.threshold-topline{opacity:.65}.threshold-center .threshold-sub{margin-bottom:18px}.threshold-center .droplet-wrap{height:210px}.threshold-footer{font-size:10px}
+.site-nav{max-height:calc(100dvh - 105px);overflow:auto}
+.threshold-footer .plain-link{min-height:44px}.top-reserve{min-height:44px}.topbar .brand{min-height:44px;display:flex;align-items:center}
+@media(max-width:1100px){.chapter-layout{grid-template-columns:minmax(0,1fr) minmax(180px,.62fr)}.chapter-panel h2{font-size:clamp(42px,5.2vw,76px)}}
+@media(max-width:720px){.chapter-layout{grid-template-columns:1fr}.chapter-layout:before{inset:20% 0 0;opacity:.085}.chapter-visual{order:2}.chapter-copy{order:1}.chapter-panel h2{font-size:clamp(42px,10vw,62px)}.stage-bottom{margin-top:10px}.threshold-topline{font-size:9px}.threshold-footer{gap:10px}.threshold-footer>span:first-child{display:none}.topbar .brand img{width:115px}}
+@media(max-width:390px){.threshold-footer{font-size:9px}.threshold-footer>a{font-size:9px}.chapter-layout{min-height:auto}}
+@media(prefers-reduced-motion:reduce){.chapter-layout:before{opacity:.03}}
