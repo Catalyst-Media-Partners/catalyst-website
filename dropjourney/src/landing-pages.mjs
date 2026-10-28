@@ -35,7 +35,7 @@ export function renderLander({offer,config,logo,art,css,js}){
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <style>${css}</style></head><body class="lander" data-theme="${offer.theme}" data-campaign="${offer.id}">
 <a class="skip" href="#main">Skip to campaign</a>
-<header class="lander-header"><span class="logo-frame"><img class="lander-logo" alt="INFUSED" src="${logo}" width="500" height="146"></span><span class="lander-eyebrow">LAS VEGAS / FROM ROOTS TO RETAIL</span></header>
+<header class="lander-header"><span class="logo-frame"><img class="lander-logo" alt="INFUSED" src="${logo}" width="1588" height="358"></span><span class="lander-eyebrow">LAS VEGAS / FROM ROOTS TO RETAIL</span></header>
 <main class="lander-main" id="main"><div class="lander-copy"><p class="lander-eyebrow">${safe(offer.eyebrow)}</p>
 <h1>${heading}</h1><p class="lander-lead">${safe(offer.lead)}</p>
 <div class="lander-actions"><a class="lander-cta" href="${safe(dest)}" data-offer-link data-primary="true">${safe(offer.action)} <span aria-hidden="true">&#8599;</span></a>
