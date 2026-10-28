@@ -4,39 +4,37 @@ import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const read=p=>readFile(path.join(root,p),'utf8');
-
-// SHA-256 from the actual preview brand PNG, compared visually against
-// Adobe Illustrator's INFUSED LOGOS MASTERS.pdf (CannaCon Drive)
-// and INFUSED LOGOS.pdf (Catalyst Drive). Do not silently substitute
-// the production invitation lockup: that asset includes sales-campaign copy.
-const EXPECTED='6e34f242567f4af804ea57fb096ac9fa141d22c6a15e54123b2c68f65c319ed6';
+const file='infused-wordmark-shaded-web-hd.png';
+const shaExpected='bd29ef66ed28f94005043e6e4dae0f3ba48781ac5413f038d9dba9d8df12e7ff';
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const srcAsset=await readFile(path.join(root,'src','assets','images',file));
+const distAsset=await readFile(path.join(root,'dist','dropjourneytest','assets','images',file));
+assert.equal(sha(srcAsset),shaExpected,'Approved source logo binary changed');
+assert.equal(sha(distAsset),shaExpected,'Compiled logo does not match its approved master');
+assert.equal(srcAsset.length,38858,'Expected high-resolution transparent PNG source');
+const original=await readFile(path.join(root,'src','index.html'),'utf8');
+assert.equal((original.match(new RegExp('assets/images/'+file,'g'))||[]).length,2,'Both homepage logo instances must reference the approved asset');
+assert.doesNotMatch(original,/data:image\/png;base64/i,'Do not reintroduce 500x113 inline homepage wordmark');
 const pages=['','market','ecosystem','roots','science','make','package','move','sell','services','buyers','why-vegas','opportunities','contact','tickets','buyers/apply'];
 const landers=['','discover','exhibit','buyers','sponsor','attend'];
-const hash=base64=>crypto.createHash('sha256').update(Buffer.from(base64,'base64')).digest('hex');
-let occurrences=0;
-async function verify(label,p){
- const html=await read(p);
- const logos=[];
- for(const m of html.matchAll(/<img\b[^>]*>/g)){
-   const tag=m[0],alt=tag.match(/\balt="([^"]*)"/)?.[1]||'';
-   if(!/^INFUSED(?: Las Vegas)?$/i.test(alt))continue;
-   const src=tag.match(/\bsrc="([^"]*)"/)?.[1]||'';
-   assert.ok(src.startsWith('data:image/png;base64,'),label+': official logo unexpectedly replaced with another image, SVG, URL or campaign-specific lockup');
-   const payload=src.slice('data:image/png;base64,'.length);
-   assert.equal(hash(payload),EXPECTED,label+': INFUSED wordmark pixels differ from reviewed logo source');
-   logos.push(alt);
+let instances=0;
+for(const id of pages){
+ const html=await readFile(path.join(root,'dist','dropjourneytest',id,'index.html'),'utf8');
+ const tags=[...html.matchAll(/<img\b[^>]*>/g)].map(m=>m[0]).filter(t=>/\balt="INFUSED(?: Las Vegas)?"/i.test(t));
+ assert.ok(tags.length>=1,(id||'home')+': no site logo found');
+ for(const tag of tags){
+  const href=tag.match(/\bsrc="([^"]*)"/)?.[1];
+  assert.ok(href==='assets/images/'+file||href==='/dropjourneytest/assets/images/'+file,(id||'home')+': unexpected or unapproved INFUSED logo '+String(href).slice(0,80));
+  instances++;
  }
- assert.ok(logos.length>=1,label+': no official INFUSED logo found');
- occurrences+=logos.length;
- return logos;
 }
-const src=await read('src/index.html');
-const embedded=src.match(/<img class="hero-wordmark" src="data:image\/png;base64,([^"]+)"/)?.[1];
-assert.ok(embedded,'Locked original 500x113 INFUSED wordmark not found in source');
-assert.equal(hash(embedded),EXPECTED,'Original template logo drift; compare against brand masters before changing');
-const builder=await read('build.mjs');
-assert.doesNotMatch(builder,/\|\|imagesRoot\+'infused-logo-00\.webp'/,'Do not silently substitute production exhibitor-invitation logo');
-for(const id of pages)await verify(id||'home','dist/dropjourneytest/'+(id?id+'/':'')+'index.html');
-for(const id of landers)await verify('land/'+(id||'default'),'dist/dropjourneytest/land/'+(id?id+'/':'')+'index.html');
-console.log('PASS DJ-BRAND: '+pages.length+' website routes + '+landers.length+' landing routes, '+occurrences+' unchanged INFUSED brand-logo instances, SHA-256 '+EXPECTED);
+for(const id of landers){
+ const html=await readFile(path.join(root,'dist','dropjourneytest','land',id,'index.html'),'utf8');
+ const tag=[...html.matchAll(/<img\b[^>]*>/g)].map(x=>x[0]).find(t=>/\balt="INFUSED"/.test(t));
+ assert.ok(tag,'Lander '+(id||'default')+' has no wordmark');
+ const data=tag.match(/\bsrc="data:image\/png;base64,([^"]+)"/)?.[1];
+ assert.ok(data,'Lander '+(id||'default')+' must be portable and embed the approved logo');
+ assert.equal(sha(Buffer.from(data,'base64')),shaExpected,'Lander '+(id||'default')+' brand artwork drifted');
+ instances++;
+}
+console.log('PASS DJ-brand-HD: approved 1588x358 shaded white INFUSED wordmark, binary SHA pinned, '+pages.length+' website routes and '+landers.length+' portable campaign routes, '+instances+' logo instances');

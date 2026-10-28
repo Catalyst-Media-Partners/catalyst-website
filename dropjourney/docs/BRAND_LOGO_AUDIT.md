@@ -19,3 +19,13 @@ Audit: 2026-10-28. Reviewed **all 16 website routes and 6 campaign landing route
 
 ## Acceptance and limitations
 **PASS for identical use and visual artwork consistency across all 22 routes.** Retain visual wordmark unchanged. **Conditional** for immutable source provenance: the PNG was embedded in an earlier approved prototype, rather than regenerated directly from the illustrator PDF. Do not claim cryptographic equivalence to the PDF. If a future official master export is supplied, compare it and update the pin only after approval. No logos altered in this sprint. Jotform externally hosted forms are outside the 22 preview routes and require separate provider theme/branding review.
+
+## 2026-10-28 final high-definition source correction
+
+User supplied both original INFUSED Illustrator/PDF master files and four PNG lockups. Original hero used a `500×113` embedded raster magnified at the page threshold; its text edges and droplet were visibly soft. Reviewed the supplied white wordmark/dark-green-shaded-droplet treatment, especially `INFUSED-LOGO-ON-BLACK-DIM.png` and its original transparent wordmark mask `INFUSED-LOGO-REVERSE.png`.
+
+Approved high-definition web asset: `src/assets/images/infused-wordmark-shaded-web-hd.png`, **1588×358 RGBA, 38,858 bytes**, SHA-256 `bd29ef66ed28f94005043e6e4dae0f3ba48781ac5413f038d9dba9d8df12e7ff`. Export process: preserve the original ON-BLACK-DIM RGB appearance, apply the exact alpha silhouette from the provided same-size official REVERSE file, and crop **transparent padding only**. No typography, green gradient, or droplet geometry was redrawn. Source originals SHA-256: ON-BLACK-DIM `3ba362cd9541d7d049e18aecf6b8e2de207829746aa7dba02f9dadc19cd401c6`, REVERSE `533fd35f479a1278a0cff5c30fdad69a697e543f28fdcd24f51b18514b96e77a`. Archived company version: Catalyst Drive `Catalyst Media Partners/Infused/Logos/INFUSED-WORDMARK-SHADED-WEB-HD.png`.
+
+The home threshold and header, all 16 site pages, and six campaign landers use this **same high-definition official artwork**. The main site uses a cached independent PNG file; portable campaign exports retain the same exact PNG inlined for independent hosting. Build and `scripts/qa_brand_logo.mjs` fail closed on hash or route discrepancy. This supersedes the earlier 500×113 provenance pin above; the earlier audit remains historical evidence, not the active target.
+
+**Acceptance requirements:** fresh browser image dimensions are 1588×358 and render without stretching at 390/768/1024/1440; no intro CTA displacement; header navigation and five chapters still pass; all official assets must be from user-provided originals; no unintended production Worker change during preview QA.
