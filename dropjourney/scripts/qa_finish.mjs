@@ -32,7 +32,7 @@ assert.match(apply,/class="dj-intake-form"/);
 assert.doesNotMatch(home,/id="buyer-dialog"|data-open-buyer/,'Homepage must not retain dead-end buyer modal');
 assert.match(apply,/data-intake-type="hosted-buyer"/,'Hosted Buyer route needs real request');
 assert.match(apply,/data-intake-kind="buyer"/,'Native buyer form missing');
-assert.match(apply,/noopener noreferrer/,'External intake window needs isolation');
+assert.doesNotMatch(apply,/form\.jotform\.com|target="_blank"/i,'Buyer intake must be first-party, not an external window');
 assert.match(apply,/action="\/dropjourneytest\/api\/intake"/,'Native POST endpoint missing');
 assert.match(css,/\.dj-sector-adjacent/);
 assert.match(css,/\.dj-offers-visual/);
