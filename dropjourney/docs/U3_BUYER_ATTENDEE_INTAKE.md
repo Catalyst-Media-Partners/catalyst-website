@@ -27,3 +27,11 @@
 ## U3.1 layout correction
 
 Original standalone buyer prototype CSS retained a sticky two-column wizard sidebar. After replacing the wizard with a legitimate handoff, this caused the primary CTA to begin at 1172px (1440×900). DJ-U3.1 restyles the buyer request page as a full-width editorial hero, not a sticky wizard. Browser-only prototype metrics across 390/768/1024/1440px: primary CTA top 574/455/486/618px, fully visible at every tested viewport, no x-overflow. Deployment measurements required before acceptance.
+
+## U3.2 — Provider submission reconciliation (2026-10-28)
+
+**Hosted Buyer:** synthetic provider-backed submission `6690230251715724673`, Jotform form `263005621560043`. Provider readback shows one submission with required inquiry consent `Accepted`, optional newsletter not filled. Receipt https://www.jotform.com/inbox/263005621560043/6690230251715724673 .
+
+**Attendance interest:** updated consent configuration and created one successful synthetic provider-backed submission `6690234742324656320`, form `263005581843052`. Provider readback confirms `Full Name`, `Email`, attended-interest role, required consent checked, marketing-consent unanswered, count one. Receipt https://www.jotform.com/inbox/263005581843052/6690234742324656320 . Previous failed tool attempt did **not** create a submission. No real visitor data used.
+
+**Pass:** both provider-side write/readback receipts; Jotform fields persist; website handoff URLs correct, preview Worker accepts GET/HEAD only. **Still not verified:** full human browser submission through CAPTCHA, operational notification delivery, idempotent retries/duplicates, final retention/privacy settings and production marketing permissions. These remain external-service production cutover gates; do not claim end-to-end live conversion is fully proven.

@@ -60,7 +60,8 @@ const dropArtwork=await load('src/drop-art.svg');
 function dropArt(variant){
   return dropArtwork.replaceAll('__DROP_ID__',variant).replaceAll('__DROP_CLASS__',variant==='intro'?'drop-hero-svg':'drop-vector');
 }
-const logo=originalHome.match(/<img class="hero-wordmark" src="(data:image\/png;base64,[^"]+)"/)?.[1]||imagesRoot+'infused-logo-00.webp';
+const logo=originalHome.match(/<img class="hero-wordmark" src="(data:image\/png;base64,[^"]+)"/)?.[1];
+if(!logo)throw Error('INFUSED brand wordmark missing: no fallback to invitation-lockup image; restore the locked source logo');
 const shop='https://infused.show/go/booth?position=navigation&amp;page=%2F';
 function links(){return [
  ['opportunities','Exhibit / reserve a booth'],['tickets','Attend / tickets'],
