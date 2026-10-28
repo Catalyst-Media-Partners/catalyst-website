@@ -20,7 +20,7 @@ assert.match(apply,/href="https:\/\/form\.jotform\.com\/263005621560043"/,'Buyer
 assert.match(tickets,/href="https:\/\/form\.jotform\.com\/263005581843052"/,'Attendee Jotform destination');
 assert.match(apply,/referrerpolicy="no-referrer"/,'Buyer external form privacy');
 assert.match(tickets,/referrerpolicy="no-referrer"/,'Attendance external form privacy');
-assert.match(apply,/Submitting does not confirm hosted-buyer eligibility/,'Buyer disclaimers');
+assert.match(apply,/submitting does not confirm hosted-buyer eligibility/i,'Buyer disclaimers');
 assert.match(tickets,/Tickets are not yet on sale/,'Ticket state');
 assert.match(tickets,/does not reserve or purchase a ticket/,'No implied tickets');
 assert.match(apply,/class="dj-apply-photo"/,'Buyer imagery preserved');

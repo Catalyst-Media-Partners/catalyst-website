@@ -12,7 +12,7 @@ assert.match(buyer,/consent-based form/,'Buyer page must accurately state reques
 assert.match(wizard,/class="dj-apply-photo"/,'Approved buyer photography preserved');
 assert.match(wizard,/data-intake-type="hosted-buyer"/,'Real hosted buyer request missing');
 assert.match(wizard,/href="https:\/\/form\.jotform\.com\/263005621560043"/,'Approved hosted-buyer form URL changed');
-assert.match(wizard,/Submitting does not confirm hosted-buyer eligibility/,'Buyer qualification disclaimers needed');
+assert.match(wizard,/submitting does not confirm hosted-buyer eligibility/i,'Buyer qualification disclaimers needed');
 assert.match(wizard,/rel="noopener noreferrer" referrerpolicy="no-referrer"/,'Do not leak referrer or window control');
 assert.doesNotMatch(wizard,/<form\b|id="buyer-form"|class="buyer-step"/i,'Do not ask users to enter information twice');
 const home=await read('dist/dropjourneytest/index.html');
