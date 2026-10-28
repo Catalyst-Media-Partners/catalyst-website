@@ -24,7 +24,8 @@ for(const id of pages){
  }
  assert.match(html,/name="robots" content="noindex,\s*nofollow,\s*noarchive"/,(id||'home')+' public index prevention missing');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,(id||'home')+' H1 count');
- assert.doesNotMatch(html,/<form\b/i,(id||'home')+' contains unapproved submitting form');
+ if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
+ else assert.doesNotMatch(html,/<form\b/i,(id||'home')+' unexpected submitting form');
  records.push({route:'/dropjourneytest/'+pathId,links:labels,buttonLabels:buttons});
 }
 const home=await read('dist/dropjourneytest/index.html'),app=await read('src/app.js');

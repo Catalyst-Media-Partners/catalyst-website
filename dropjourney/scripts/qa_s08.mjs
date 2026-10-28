@@ -11,10 +11,11 @@ for(const ref of ['#buying','#exhibiting','/dropjourneytest/buyers/apply/','/dro
 assert.match(buyer,/consent-based form/,'Buyer page must accurately state request flow');
 assert.match(wizard,/class="dj-apply-photo"/,'Approved buyer photography preserved');
 assert.match(wizard,/data-intake-type="hosted-buyer"/,'Real hosted buyer request missing');
-assert.match(wizard,/href="https:\/\/form\.jotform\.com\/263005621560043"/,'Approved hosted-buyer form URL changed');
+assert.match(wizard,/data-intake-kind="buyer"/,'Native buyer form missing');
 assert.match(wizard,/submitting does not confirm hosted-buyer eligibility/i,'Buyer qualification disclaimers needed');
 assert.match(wizard,/rel="noopener noreferrer" referrerpolicy="no-referrer"/,'Do not leak referrer or window control');
-assert.doesNotMatch(wizard,/<form\b|id="buyer-form"|class="buyer-step"/i,'Do not ask users to enter information twice');
+assert.match(wizard,/action="\/dropjourneytest\/api\/intake"/,'Native first-party endpoint missing');
+assert.doesNotMatch(wizard,/class="buyer-step"|jotform/i,'Legacy external wizard remains');
 const home=await read('dist/dropjourneytest/index.html');
 assert.doesNotMatch(home,/id="buyer-dialog"|id="buyer-form"|data-open-buyer/,'Retired prototype must not be reachable');
 assert.match(home,/href="\/dropjourneytest\/buyers\/apply\/"/,'WHO chapter must route to real hosted intake');

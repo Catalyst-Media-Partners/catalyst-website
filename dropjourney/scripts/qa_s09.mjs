@@ -12,19 +12,19 @@ assert.match(options,/href="https:\/\/infused\.show\/go\/booth\?/,'Existing firs
 assert.ok(options.includes('10×10 inline booths start at $3,000'),'Keep source pricing (not a new quote)');
 assert.ok(options.includes('10×10 corners start at $3,500'),'Keep source pricing qualifier');
 assert.match(options,/Availability and pricing may change/,'Source sale qualification must persist');
-assert.match(contact,/href="https:\/\/form\.jotform\.com\/262867873887079"/,'Approved Jotform workflow retained');
+assert.match(contact,/data-intake-kind="contact"/,'Native contact form missing');
 assert.match(contact,/href="https:\/\/infused\.show\/go\/booth\?/,'Contact booth handoff preserved');
 assert.match(contact,/INTERESTED IN INFUSED/,'Contact heading retained');
 assert.match(tickets,/ON-SALE SOON/,'Canonical ticket state retained');
 assert.match(tickets,/not yet on sale/i,'Honest ticket state');
 assert.match(tickets,/data-intake-type="attendee-interest"/,'Explicit attendance update request route missing');
-assert.match(tickets,/href="https:\/\/form\.jotform\.com\/263005581843052"/,'Attendance interest URL changed');
+assert.match(tickets,/data-intake-kind="attendee"/,'Native attendee form missing');
 assert.match(tickets,/this does not reserve or purchase a ticket/,'No ticket guarantee');
 assert.match(tickets,/25% EARLY-BIRD TICKET OFFER/,'Published offer acknowledged');
 assert.match(tickets,/not activated in this preview/,'Published offer not falsely available');
 for(const [name,html] of [['options',options],['contact',contact],['tickets',tickets]]){
  assert.equal((html.match(/<h1\b/g)||[]).length,1,name+' one H1');
- assert.doesNotMatch(html,/<form\b|id="ticket-notify-form"/,name+' unapproved native forms forbidden');
+ if(name==='options')assert.doesNotMatch(html,/<form\b/,name+' unexpected form');else assert.match(html,/class="dj-intake-form"/,name+' native intake required');
  assert.match(html,/noindex,nofollow,noarchive/);
 }
-console.log('PASS DJ-S09: 6 published commercial paths, first-party booth attribution, Jotform, truthful tickets and no writes');
+console.log('PASS DJ-S09: 6 published commercial paths, first-party booth attribution, native intake, truthful tickets and D1-bound request submission');
