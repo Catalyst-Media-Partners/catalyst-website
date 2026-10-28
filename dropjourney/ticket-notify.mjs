@@ -44,6 +44,9 @@ async function subscribe(request,env,fetcher){
   if(rate.attempts>8)return json({error:'Too many requests. Try again later.'},429);
   const existing=await db.prepare('SELECT id,state,mail_state,mail_sent_at FROM infused_ticket_notify_v1 WHERE email=?').bind(norm.email).first();
   if(existing?.state==='verified'||existing?.state==='pending'&&['sent','uncertain','sending'].includes(existing.mail_state)&&(!existing.mail_sent_at||now.getTime()-Date.parse(existing.mail_sent_at)<3600000))return json({ok:true,message:'If this address is eligible, check your inbox for a verification email.'});
+  const dns=await mxOk(norm.domain,fetcher);
+  if(dns===null)return json({error:'Email domain verification is temporarily unavailable. Please retry.'},503);
+  if(!dns)return json({error:'This email domain does not appear able to receive messages.'},400);
   const id=crypto.randomUUID(),token=rand(),unsub=rand(),expires=new Date(now.getTime()+VERIFY_LIFETIME_MS).toISOString();
   const verifyHash=await hash(token),unsubHash=await hash(unsub);
   if(existing){
