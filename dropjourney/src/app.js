@@ -27,7 +27,7 @@
   let hoverRipple = null;
   let lastWaterFrame = 0;
   const WAVE_LIFE = 860; // One damped pebble wave, not a full-screen wash.
-  const HOVER_LIFE = 520; // Stop work after the surface has settled.
+  const HOVER_LIFE = 690; // Stop work after the surface has settled.
   const DRAG_POSITION_OMEGA = 28; // Critically damped follow, stable across display refresh rates.
   const DRAG_SHAPE_OMEGA = 16; // Surface tension: elongates with velocity, then relaxes.
   const DRAG_MAX_STRETCH = .70; // Bounded deformation, not a cursor-trail effect.
@@ -35,28 +35,17 @@
   const HOVER_RING_RADII = [21,27.8,34.5]; // Compact water surface, not a click-wave train.
 
   const motionQuery=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const motionButton=$('#motion-optin');
-  let motionOptIn=false;
-  const reduced=()=>motionQuery.matches&&!motionOptIn;
-  function syncMotionButton(){
-    if(!motionQuery.matches){
-      motionOptIn=false;
-      document.body.classList.remove('motion-opt-in');
-      motionButton.hidden=true;
-      return;
+  // Motion is automatic when permitted. No activation button; respect the OS preference.
+  const reduced=()=>motionQuery.matches;
+  function setChapterURL(name){
+    if(location.protocol==='about:')return;
+    const url=new URL(location.href);
+    url.hash=name||'';
+    const destination=url.pathname+url.search+url.hash;
+    if(destination!==location.pathname+location.search+location.hash){
+      history.pushState({chapter:name||'intro'},'',destination);
     }
-    motionButton.hidden=false;
-    motionButton.textContent=motionOptIn?'Disable water animation':'Enable water animation';
-    motionButton.setAttribute('aria-pressed',String(motionOptIn));
   }
-  motionButton.addEventListener('click',()=>{
-    if(transitioning)return;
-    motionOptIn=!motionOptIn;
-    document.body.classList.toggle('motion-opt-in',motionOptIn);
-    syncMotionButton();
-  });
-  if(typeof motionQuery.addEventListener==='function')motionQuery.addEventListener('change',syncMotionButton);
-  syncMotionButton();
   function closeNav() { navigation.hidden = true; navTrigger.setAttribute('aria-expanded', 'false'); }
   function closeToTop() {
     if (window.scrollY > 100) window.scrollTo({top:0,behavior:transitioning||reduced()?'instant':'smooth'});
@@ -68,7 +57,7 @@
     stageView.hidden = true;
     introView.hidden = false;
     closeNav();
-    if(setHash && location.protocol!=='about:')history.replaceState(null,'',location.pathname+location.search);
+    if(setHash)setChapterURL(null);
     closeToTop();
     if(focus)$('#enter-drop').focus({preventScroll:true});
   }
@@ -81,7 +70,7 @@
     stageView.hidden = false;
     document.body.classList.remove('intro-mode');
     document.body.dataset.stage = name;
-    if(setHash && location.protocol!=='about:')history.replaceState(null,'',`#${name}`);
+    if(setHash)setChapterURL(name);
     $$('.chapter-panel').forEach(panel => { panel.hidden = panel.dataset.chapter !== name; });
     $$('.chapter-nav button').forEach(btn => {
       const current = btn.dataset.go === name;
@@ -239,7 +228,7 @@
     const spring=dampedSpring(h.stretch,h.stretchV,targetStretch,DRAG_SHAPE_OMEGA,dt);
     h.stretch=spring.value;h.stretchV=spring.velocity;
     const attenuation=Math.pow(1-clamp(age/HOVER_LIFE),2.1);
-    const amplitude=(.064+.011*h.stretch/DRAG_MAX_STRETCH)*attenuation;
+    const amplitude=(.132+.020*h.stretch/DRAG_MAX_STRETCH)*attenuation;
     // Outer echo is weakest when stationary and responds to fast drags.
     // Draw farthest first so the primary meniscus always stays legible.
     for(let layer=HOVER_RING_COUNT-1;layer>=0;layer--){
@@ -257,7 +246,7 @@
     const {x,y}=currentRipple;
     const radius=4+currentRipple.reach*easeOut(p);
     // Expanding capillary wave with viscous decay, approx A(t) = A0·e^(-kt).
-    const alpha=.29*Math.exp(-2.3*p)*Math.pow(1-p,.72);
+    const alpha=.41*Math.exp(-2.05*p)*Math.pow(1-p,.72);
     waterCrest(liquidContext,x,y,radius,alpha,now);
     return true;
   }
@@ -292,7 +281,7 @@
   document.addEventListener('pointermove',e=>{
     if(reduced()||transitioning||!e.isPrimary||$('#buyer-dialog').open)return;
     if(e.pointerType==='touch'&&e.buttons===0)return;
-    if(e.target.closest('.site-nav,.buyer-dialog'))return;
+    if(e.target instanceof Element && e.target.closest('.site-nav,.buyer-dialog'))return;
     const x=e.clientX,y=e.clientY;
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     const now=performance.now();
@@ -388,7 +377,8 @@
   $('#next').addEventListener('click',event=>next(event));
   $('#previous').addEventListener('click',event=>previous(event));
   $$('.chapter-nav button').forEach(button=>button.addEventListener('click',event=>goTo(button.dataset.go,event)));
-  navTrigger.addEventListener('click',()=>{const expanded=navTrigger.getAttribute('aria-expanded')==='true';navigation.hidden=expanded;navTrigger.setAttribute('aria-expanded',String(!expanded));});
+  navTrigger.addEventListener('click',()=>{const expanded=navTrigger.getAttribute('aria-expanded')==='true';navigation.hidden=expanded;navTrigger.setAttribute('aria-expanded',String(!expanded));if(!expanded)navigation.querySelector('a[href]')?.focus();else navTrigger.focus();});
+  navigation.addEventListener('focusout',event=>{if(!navigation.contains(event.relatedTarget)&&event.relatedTarget!==navTrigger)closeNav();});
   document.addEventListener('click',event=>{if(!navigation.hidden&&!navigation.contains(event.target)&&!navTrigger.contains(event.target))closeNav();});
   $('#skip').addEventListener('click',event=>{if(introView.hidden)return;event.preventDefault();goTo('why',event);});
   const dialog = $('#buyer-dialog');
@@ -469,14 +459,22 @@
     catch(_){$('#buyer-status').textContent='Clipboard unavailable here. Select and copy the information above. No application has been submitted.';}
   });
   document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){if(!navigation.hidden)closeNav();return;}
+    if(e.key==='Escape'){if(!navigation.hidden){closeNav();navTrigger.focus();}return;}
     if(dialog.open||e.altKey||e.ctrlKey||e.metaKey||!active)return;
     const target=e.target;
     if(target.closest('input,textarea,select,[contenteditable="true"]'))return;
     if(e.key==='ArrowRight'){e.preventDefault();next(null);}
     if(e.key==='ArrowLeft'){e.preventDefault();previous(null);}
   });
-  window.addEventListener('hashchange',()=>{const target=location.hash.slice(1).toLowerCase();if(chapters.includes(target))openChapter(target,{setHash:false});else if(!target)showIntro({setHash:false});});
+  // popstate handles Back/Forward through pushState chapters and native page visits.
+  // hashchange additionally supports hand-edited URLs and manual hash jumps.
+  function restoreFromURL(){
+    const target=location.hash.slice(1).toLowerCase();
+    if(chapters.includes(target))openChapter(target,{setHash:false,focus:false});
+    else if(!target)showIntro({setHash:false,focus:false});
+  }
+  window.addEventListener('popstate',restoreFromURL);
+  window.addEventListener('hashchange',restoreFromURL);
   const initial=location.hash.slice(1).toLowerCase();
   if(chapters.includes(initial))openChapter(initial,{setHash:false,focus:false});
   else {active=null;introView.hidden=false;stageView.hidden=true;}

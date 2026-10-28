@@ -15,7 +15,7 @@ for(const id of ids){
  assert.ok(!html.includes('/tickets/api/subscribe'),`${label}: no production ticket collection`);
  assert.ok(!html.includes('form.jotform.com')||id==='contact',`${label}: contact action only on contact route`);
  assert.ok(!html.includes('href="https://infused.show/"'),`${label}: no escape to old site via home logo`);
- if(id===''||id==='buyers/apply'){assert.ok(!html.includes('<form'),`${label}: buyer wizard must not submit natively without JS`);assert.ok(html.includes('id="buyer-form"'),'wizard required');}
+ if(id===''||id==='buyers/apply'){assert.ok(!html.includes('<form'),`${label}: wizard must not submit natively without JS`);assert.ok(html.includes('id="buyer-form"'),'wizard required');}
  if(id==='tickets'){assert.ok(!html.includes('id="ticket-notify-form"'),'ticket form must be inert');assert.ok(html.includes('not accepting requests'),'honest disabled state');}
  for(const m of html.matchAll(/(?:href|src)="(\/dropjourneytest\/[^"?#]*)/g)){
    const u=m[1];if(!u||u==='/'||u.endsWith('/'))continue;

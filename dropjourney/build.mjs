@@ -37,13 +37,16 @@ const originalHome=await load('src/index.html');
 const logo=originalHome.match(/<img class="hero-wordmark" src="(data:image\/png;base64,[^"]+)"/)?.[1]||imagesRoot+'infused-logo-00.webp';
 const shop='https://infused.show/go/booth?position=navigation&amp;page=%2F';
 function links(){return [
- ['market','Market opportunity'],['ecosystem','The ecosystem'],['buyers','Hosted buyers'],['why-vegas','Why Vegas'],
- ['opportunities','Exhibit options'],['tickets','Tickets'],['contact','Contact']
+ ['opportunities','Exhibit / reserve a booth'],['tickets','Attend / tickets'],
+ ['buyers','Hosted buyers'],['sponsor','Sponsor'],['contact','Contact the team'],
+ ['market','Market opportunity'],['ecosystem','The ecosystem'],['why-vegas','Why Vegas']
  ];}
-function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.0.0-s02"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script></head>`;}
-function header(id){return `<a class="dj-skip" href="#main">Skip to content</a><header class="dj-header" id="top"><a class="dj-logo" href="${BASE}" aria-label="INFUSED journey home"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><div class="dj-header-actions"><button type="button" class="dj-explore" aria-expanded="false" aria-controls="dj-drawer"><span class="dj-menu-mark" aria-hidden="true"><i></i><i></i></span>Explore</button><a class="dj-top-action" href="${shop}">Reserve a booth <span aria-hidden="true">↗</span></a></div><nav id="dj-drawer" class="dj-drawer" aria-label="Explore INFUSED" hidden><span class="dj-menu-eyebrow">Discover your way through INFUSED</span><a href="${BASE}" class="dj-menu-home">The journey <span aria-hidden="true">↗</span></a>${links().map(([key,label])=>`<a href="${href(key)}" ${key===id?'aria-current="page"':''}>${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}<div class="dj-drawer-foot"><span>FROM ROOTS TO RETAIL</span><span>LAS VEGAS 2027</span></div></nav></header>`;}
+const menuHref=id=>id==='sponsor'?href('opportunities')+'#sponsorship':href(id);
+function noScriptNav(){return `<noscript><nav class="dj-nojs" aria-label="Explore INFUSED without JavaScript"><p>Explore INFUSED</p><a href="${BASE}#why">Why INFUSED</a><a href="${BASE}#who">Who attends</a><a href="${BASE}#when">When</a><a href="${BASE}#where">Where</a><a href="${BASE}#what">What to do</a>${links().map(([key,label])=>`<a href="${menuHref(key)}">${esc(label)}</a>`).join('')}</nav></noscript>`;}
+function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.1.0-s03"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script></head>`;}
+function header(id){return `<a class="dj-skip" href="#main">Skip to content</a><header class="dj-header" id="top"><a class="dj-logo" href="${BASE}" aria-label="INFUSED journey home"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><div class="dj-header-actions"><button type="button" class="dj-explore" aria-expanded="false" aria-controls="dj-drawer"><span class="dj-menu-mark" aria-hidden="true"><i></i><i></i></span>Explore</button><a class="dj-top-action" href="${shop}">Reserve a booth <span aria-hidden="true">↗</span></a></div><nav id="dj-drawer" class="dj-drawer" aria-label="Explore INFUSED" hidden><span class="dj-menu-eyebrow">Discover your way through INFUSED</span><a href="${BASE}" class="dj-menu-home">The journey <span aria-hidden="true">↗</span></a>${links().map(([key,label])=>`<a href="${menuHref(key)}" ${key===id?'aria-current="page"':''}>${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}<div class="dj-drawer-foot"><span>FROM ROOTS TO RETAIL</span><span>LAS VEGAS 2027</span></div></nav></header>`;}
 function footer(){return `<footer class="dj-footer"><div><a href="${BASE}" class="dj-footer-logo"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><p>The national business event for the entire infused-products ecosystem.</p></div><div class="dj-footer-links"><a href="${href('ecosystem')}">Ecosystem</a><a href="${href('opportunities')}">Exhibit</a><a href="${href('buyers')}">Hosted buyers</a><a href="${href('tickets')}">Tickets</a><a href="${href('contact')}">Contact</a></div><p class="dj-footer-date">May 13–14, 2027<br>Las Vegas Convention Center</p></footer>`;}
-function introNav(route){return `<div class="dj-wayfinder"><a href="${BASE}" class="dj-back">← The journey</a><div class="dj-current"><span>${route.num}</span> / ${route.chapter} <span class="dj-wayline"></span> ${esc(route.label)}</div><a class="dj-inline-nav" href="${href(route.next)}">Explore next <span aria-hidden="true">↗</span></a></div>`;}
+function introNav(route){return `<div class="dj-wayfinder"><a href="${BASE}#${route.chapter.toLowerCase()}" class="dj-back">← ${route.chapter.toLowerCase()} / The journey</a><div class="dj-current"><span>${route.num}</span> / ${route.chapter} <span class="dj-wayline"></span> ${esc(route.label)}</div><a class="dj-inline-nav" href="${href(route.next)}">Explore next <span aria-hidden="true">↗</span></a></div>`;}
 function convertSourceMarkup(html,id){
  // Source HTML and outbound citations remain intact. Only route prefix and heading semantic are changed.
  return html.replaceAll('{{BASE}}',BASE)
@@ -62,10 +65,11 @@ async function detailPage(route){
      .replace(/<form class="notify-form"[\s\S]*?<\/form>/, '<div class="dj-ticket-pending" role="status"><p>Ticket notifications are not accepting requests yet.</p><a class="btn btn-secondary" href="'+href('contact')+'">Questions? Contact the INFUSED Team ↗</a></div>')
      .replaceAll('—',':');
  }else{content=convertSourceMarkup(await prod(`sections/${route.section}.html`),route.id);}
+ if(route.id==='opportunities') content=content.replace('<article class="detail-box green"><h3>Sponsorship</h3>','<article class="detail-box green" id="sponsorship"><h3>Sponsorship</h3>');
  if(route.id==='buyers') content=content.replace('</section>',`<div class="dj-convert-inline"><span class="dj-kicker">FOR QUALIFIED BUYERS</span><p>Tell us what you need to source, using a guided buyer profile.</p><a href="${href('buyers/apply')}" class="dj-btn dj-btn-acid">Explore the buyer profile <span aria-hidden="true">↗</span></a></div></section>`);
  const heading=route.label==='The ecosystem'?'The full value stream':route.label;
  return head(heading,'INFUSED Las Vegas. '+heading+'. Explore the connected infused-products ecosystem.')+
- `<body class="dj-detail dj-${route.id}" data-page="${route.id}" data-chapter="${route.chapter.toLowerCase()}">${header(route.id)}<div class="dj-ambient" aria-hidden="true"></div>${introNav(route)}<main id="main" tabindex="-1" class="dj-main"><div class="dj-content">`+
+ `<body class="dj-detail dj-${route.id}" data-page="${route.id}" data-chapter="${route.chapter.toLowerCase()}">${header(route.id)}${noScriptNav()}<div class="dj-ambient" aria-hidden="true"></div>${introNav(route)}<main id="main" tabindex="-1" class="dj-main"><div class="dj-content">`+
  ((route.id==='market'||route.id==='ecosystem'||route.id==='opportunities')?`<div class="dj-cover-art" aria-hidden="true" style="background-image:url('${imagesRoot}${route.photo}')"></div>`:'')+
  `<div class="dj-source-section">${content}</div></div>${related(route)}</main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
 }
@@ -78,7 +82,7 @@ function applicationPage(){
    // can transmit a user's typed contact information by accident.
    const safe=form.replace(/<form class="buyer-form" id="buyer-form"[^>]*>/,'<div class="buyer-form" id="buyer-form">').replace(/<\/form>$/,'</div>').replaceAll('—',' - ');
    return head('Hosted Buyer Profile','INFUSED Hosted Buyers: share your sourcing priorities through a six-step guided profile preview.')+
-   `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${introNav({num:'02',chapter:'WHO',label:'Buyer profile',next:'buyers'})}<main id="main" class="dj-application"><section class="dj-app-head"><span class="dj-kicker">HOSTED BUYERS / BUYER PROFILE</span><h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Source smarter. Meet the right suppliers. Build a meeting schedule around what you are actually looking to buy.</p><p class="dj-status-note">Preview only. Information entered here is not submitted or stored.</p></section><div class="dj-wizard"><div class="dj-wizard-meter"><span id="buyer-current">01 / 06</span><div role="progressbar" id="buyer-meter" aria-label="Buyer profile progress" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><span id="buyer-meter-fill"></span></div><span>ROLE · SOURCING · PRIORITIES · COMPANY · CONTACT · REVIEW</span></div>${safe}</div></main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
+   `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${noScriptNav()}${introNav({num:'02',chapter:'WHO',label:'Buyer profile',next:'buyers'})}<main id="main" class="dj-application"><section class="dj-app-head"><span class="dj-kicker">HOSTED BUYERS / BUYER PROFILE</span><h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Source smarter. Meet the right suppliers. Build a meeting schedule around what you are actually looking to buy.</p><p class="dj-status-note">Preview only. Information entered here is not submitted or stored.</p></section><div class="dj-wizard"><div class="dj-wizard-meter"><span id="buyer-current">01 / 06</span><div role="progressbar" id="buyer-meter" aria-label="Buyer profile progress" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><span id="buyer-meter-fill"></span></div><span>ROLE · SOURCING · PRIORITIES · COMPANY · CONTACT · REVIEW</span></div>${safe}</div></main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
  });
 }
 function cleanHome(html){
@@ -98,16 +102,27 @@ function cleanHome(html){
  html=html.replaceAll('USE ← → TO NAVIGATE','');
  html=html.replaceAll('SCROLL NATURALLY','');
  html=html.replaceAll('href="https://form.jotform.com/262867873887079"','href="'+href('contact')+'"');
- html=html.replaceAll('Return to current INFUSED site ↗','Tickets ↗');
+ html=html.replaceAll('Return to current INFUSED site ↗','Attend / tickets ↗');
  html=html.replaceAll('href="'+BASE+'" class="menu-return"',`href="${href('tickets')}" class="menu-return"`);
+ html=html.replace('href="'+href('contact')+'" target="_blank" rel="noopener noreferrer"','href="'+href('contact')+'"');
+ // Clear direct paths in the journey menu for all five high-intent personas.
+ html=html.replace('<a class="menu-return"',`<a href="${href('opportunities')}#sponsorship">Sponsorship <span aria-hidden="true">↗</span></a><a class="menu-return"`);
+ html=html.replace('<a href="'+href('market')+'">Market size',`<a href="${href('opportunities')}">Exhibit <span aria-hidden="true">↗</span></a><a href="${href('market')}">Market size`);
+ // A complete static destination menu is also available with JavaScript disabled.
+ html=html.replace('</main>',`${noScriptNav()}</main>`);
+ html=html.replace(/<button id="motion-optin"[^>]*>[\s\S]*?<\/button>/,'');
+ // The homepage and subpages share the same five direct-purpose links.
+ // Replace the legacy menu, including its broken "Tickets" return link.
+ const homeNav=`<nav class="site-nav" id="site-nav" aria-label="Explore INFUSED" hidden><p class="menu-kicker">Choose your direction</p>${links().map(([key,label])=>`<a href="${menuHref(key)}">${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}</nav>`;
+ if(!/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/.test(html))throw Error('Homepage navigation markup missing');
+ html=html.replace(/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/,homeNav);
  html=html.replaceAll('<title>INFUSED | Follow the Drop | Experience Prototype</title>','<title>INFUSED Las Vegas | From Roots to Retail</title>');
- html=html.replaceAll('name="dropjourney-prototype-version" content="1.5.0"','name="dropjourney-site-version" content="2.0.0-s02"');
+ html=html.replaceAll('name="dropjourney-prototype-version" content="1.5.0"','name="dropjourney-site-version" content="2.1.0-s03"');
  html=html.replaceAll('An interactive, five-chapter preview of INFUSED Las Vegas: From Roots to Retail.','INFUSED Las Vegas. The national business event for the entire infused-products ecosystem.');
 
  html=html.replace('<!-- TURNSTILE_WIDGET -->','');
- // No native FORM in an unconnected prototype: a disabled browser scripting
- // environment must not be able to POST any visitor-entered buyer details.
- if(!/<form class="buyer-form" id="buyer-form"[^>]*>/.test(html)) throw Error('Expected buyer profile scaffold missing');
+ // A no-script browser must never post buyer contact information.
+ if(!/<form class="buyer-form" id="buyer-form"[^>]*>/.test(html))throw Error('Expected buyer profile scaffold');
  html=html.replace(/<form class="buyer-form" id="buyer-form"[^>]*>/,'<div class="buyer-form" id="buyer-form">').replace('</form>','</div>');
  return html;
 }
@@ -120,7 +135,7 @@ await write('assets/site.js',js);
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
 let home=cleanHome(await load('src/index.html'));
 const safeScript=scriptOriginal.replace('form.elements.namedItem(name)', 'form.querySelector(`[name="${name}"]`)');
-if(safeScript===scriptOriginal)throw Error('Buyer field lookup compatibility patch missing');
+if(safeScript===scriptOriginal)throw Error('Buyer compatibility patch missing');
 home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
   .replaceAll('{{S02_OVERRIDES}}',()=>styleOverrides)
   .replaceAll('{{ORIGINAL_JS}}',()=>safeScript);

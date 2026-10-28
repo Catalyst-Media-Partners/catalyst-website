@@ -17,3 +17,21 @@ body[data-stage=what]{--chapter-photo:url('/dropjourneytest/assets/images/infuse
 @media(max-width:720px){.chapter-layout{grid-template-columns:1fr}.chapter-layout:before{inset:20% 0 0;opacity:.085}.chapter-visual{order:2}.chapter-copy{order:1}.chapter-panel h2{font-size:clamp(42px,10vw,62px)}.stage-bottom{margin-top:10px}.threshold-topline{font-size:9px}.threshold-footer{gap:10px}.threshold-footer>span:first-child{display:none}.topbar .brand img{width:115px}}
 @media(max-width:390px){.threshold-footer{font-size:9px}.threshold-footer>a{font-size:9px}.chapter-layout{min-height:auto}}
 @media(prefers-reduced-motion:reduce){.chapter-layout:before{opacity:.03}}
+
+/* S03: responsive layout, no sideways-scrolling metrics or chapter selectors. */
+.market-scroll{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;overflow:visible;scroll-snap-type:none;padding:0;margin:16px 0 18px}
+.market-point{min-width:0;max-width:100%;padding:16px 13px;overflow-wrap:anywhere;scroll-snap-align:none}
+.market-point strong{font-size:clamp(22px,2.1vw,30px);line-height:1.12}
+.chapter-nav{overflow:visible;scrollbar-width:auto}
+.chapter-nav ol{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));min-width:0;gap:0;width:100%}
+.chapter-nav button{width:100%;min-width:0;min-height:48px;gap:clamp(2px,.85vw,11px);padding:15px 2px;font-size:clamp(10px,1.15vw,13px);letter-spacing:.09em}
+.chapter-nav small{font-size:9px}
+.chapter-panel,.chapter-details,.chapter-copy,.chapter-layout{min-width:0;max-width:100%}
+.chapter-panel .market-scroll{width:100%;max-width:100%}
+@media(max-width:780px){.chapter-nav button{flex-direction:column;gap:3px;letter-spacing:.06em}.chapter-nav small{font-size:8px}.chapter-details{max-width:100%}}
+@media(max-width:560px){.market-scroll{grid-template-columns:repeat(auto-fit,minmax(min(100%,136px),1fr));gap:9px}.market-point strong{font-size:23px}.market-point{padding:14px 11px}.chapter-nav button{padding:12px 1px;font-size:10px}}
+@media(max-width:350px){.market-scroll{grid-template-columns:1fr}.chapter-nav small{display:none}.chapter-nav button{font-size:9px;letter-spacing:0}}
+/* No-script visitors can follow direct routes without triggering the entry animation. */
+.dj-nojs{max-width:1150px;margin:22px auto;padding:26px;display:flex;gap:15px;align-items:center;flex-wrap:wrap;border:1px solid rgba(190,250,114,.32);border-radius:14px;background:rgba(24,23,35,.96)}
+.dj-nojs p{width:100%;margin:0 0 4px;font-size:16px;font-weight:800}.dj-nojs a{color:#d3f6b1;font-weight:650;padding:10px;min-height:44px;display:flex;align-items:center;text-decoration:none}
+@media(prefers-reduced-motion:reduce){.market-scroll,.chapter-nav{scroll-behavior:auto}}

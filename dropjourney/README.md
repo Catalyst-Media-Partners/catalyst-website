@@ -38,3 +38,12 @@ The original `src/sections/` and `src/assets/images/` are read at build time, so
 
 ## Rollback
 Cloudflare retains prior `infused-dropjourneytest` Worker version IDs. Roll back that Worker only; leave the production `infused-show` Worker, host bindings and DNS untouched. The GitHub development branch tracks every S02 update.
+
+## DJ-S03 | Navigation and water interaction release (2026-10-27)
+
+- All 16 `/dropjourneytest/` pages remain generated from the authoritative INFUSED GitHub site source.
+- Direct task paths, chapter URL history with UTM preservation, no-JS navigation, responsive no-side-scroll metrics and chapter selector.
+- Restores three water menisci following pointer drag with single click/tap ripple; retains subtle droplet rebound. Motion activation buttons removed; system reduced-motion preference honored.
+- New test: `node dropjourney/scripts/qa_s03.mjs` plus local responsive smoke `python dropjourney/scripts/qa_s03_smoke.py`.
+- Preview CI workflow is on `.github/workflows/deploy-dropjourney-s03.yml` and can deploy **only** `infused-dropjourneytest`, preserving `infused-show` worker, assets, routing and secrets.
+- Acceptance evidence and next sprint in `dropjourney/docs/S03_ACCEPTANCE.md`.
