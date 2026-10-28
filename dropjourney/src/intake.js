@@ -37,7 +37,7 @@
     if(!response.ok||!result.ok)throw Error(String(result.error||'Submission failed. Please try again.'));
     tell('Request received. Receipt: '+result.receiptId+'. '+(payload.kind==='attendee'?'This is not a ticket or reservation.':'The INFUSED team will review your request.'),true);
     form.querySelectorAll('input,select,textarea,button').forEach(el=>{el.disabled=true;});
-    requestId=null;
+    requestId=null;form.dataset.completed='true';
    }catch(err){
     tell(err.name==='AbortError'?'Response timed out. Check your connection and retry.':String(err.message||'Submission failed. Please retry.'),false);
     if(window.turnstile?.reset)try{window.turnstile.reset(form.querySelector('.cf-turnstile'));}catch{}

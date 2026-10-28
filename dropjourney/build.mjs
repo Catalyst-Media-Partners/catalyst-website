@@ -6,6 +6,7 @@ import {validateLanders,renderLander} from './src/landing-pages.mjs';
 import {renderEcosystem,renderSector,checkTaxonomy} from './src/s06-pages.mjs';
 import {renderBuyers} from './src/s08-pages.mjs';
 import {renderOpportunities,renderContact,renderTickets} from './src/s09-pages.mjs';
+import {renderIntakeForm} from './src/intake-form.mjs';
 
 // Separate site, generated exclusively beneath /dropjourneytest/. No production build edits.
 const root=path.dirname(fileURLToPath(import.meta.url));
@@ -70,7 +71,7 @@ function links(){return [
  ];}
 const menuHref=id=>id==='sponsor'?href('opportunities')+'#sponsorship':href(id);
 function noScriptNav(){return `<noscript><nav class="dj-nojs" aria-label="Explore INFUSED without JavaScript"><p>Explore INFUSED</p><a href="${BASE}#why">Why INFUSED</a><a href="${BASE}#who">Who attends</a><a href="${BASE}#when">When</a><a href="${BASE}#where">Where</a><a href="${BASE}#what">What to do</a>${links().map(([key,label])=>`<a href="${menuHref(key)}">${esc(label)}</a>`).join('')}</nav></noscript>`;}
-function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.9.1-review"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script></head>`;}
+function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.9.1-review"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script><script src="${BASE}assets/intake.js" defer></script></head>`;}
 function header(id){return `<a class="dj-skip" href="#main">Skip to content</a><header class="dj-header" id="top"><a class="dj-logo" href="${BASE}" aria-label="INFUSED journey home"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><div class="dj-header-actions"><button type="button" class="dj-explore" aria-expanded="false" aria-controls="dj-drawer"><span class="dj-menu-mark" aria-hidden="true"><i></i><i></i></span>Explore</button><a class="dj-top-action" href="${shop}">Reserve a booth <span aria-hidden="true">↗</span></a></div><nav id="dj-drawer" class="dj-drawer" aria-label="Explore INFUSED" hidden><span class="dj-menu-eyebrow">Discover your way through INFUSED</span><a href="${BASE}" class="dj-menu-home">The journey <span aria-hidden="true">↗</span></a>${links().map(([key,label])=>`<a href="${menuHref(key)}" ${key===id?'aria-current="page"':''}>${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}<div class="dj-drawer-foot"><span>FROM ROOTS TO RETAIL</span><span>LAS VEGAS ${startDate.year}</span></div></nav></header>`;}
 function footer(){return `<footer class="dj-footer"><div><a href="${BASE}" class="dj-footer-logo"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><p>The national business event for the entire infused-products ecosystem.</p></div><div class="dj-footer-links"><a href="${href('ecosystem')}">Ecosystem</a><a href="${href('opportunities')}">Exhibit</a><a href="${href('buyers')}">Hosted buyers</a><a href="${href('tickets')}">Tickets</a><a href="${href('contact')}">Contact</a></div><p class="dj-footer-date">${esc(event.dateLabel)}<br>${esc(event.venue)}</p></footer>`;}
 function introNav(route){return `<div class="dj-wayfinder"><a href="${BASE}#${route.chapter.toLowerCase()}" class="dj-back">← ${route.chapter.toLowerCase()} / The journey</a><div class="dj-current"><span>${route.num}</span> / ${route.chapter} <span class="dj-wayline"></span> ${esc(route.label)}</div><a class="dj-inline-nav" href="${href(route.next)}">Explore next <span aria-hidden="true">↗</span></a></div>`;}
@@ -119,24 +120,16 @@ async function detailPage(route){
  `<div class="dj-source-section">${content}</div></div>${route.id==='opportunities'?'':related(route)}</main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
 }
 function applicationPage(){
- const buyerForm='https://form.jotform.com/263005621560043';
- return Promise.resolve(
-  head('Hosted Buyer Request','Request Hosted Buyer consideration for INFUSED Las Vegas. Qualified requests are reviewed; meetings are not guaranteed.')+
-  `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${noScriptNav()}${introNav({num:'02',chapter:'WHO',label:'Buyer request',next:'buyers'})}
-  <main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual">
-    <div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / MAKE A REQUEST</span><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>
-      <h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1>
-      <p>Tell the INFUSED team what your company sources and which business connections matter. Requests are reviewed; submitting does not confirm hosted-buyer eligibility, benefits or meetings.</p>
-      <div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${buyerForm}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" data-intake-type="hosted-buyer">Submit a Hosted Buyer request <span aria-hidden="true">↗</span></a><a class="dj-btn dj-btn-quiet" href="${href('buyers')}">About Hosted Buyers <span aria-hidden="true">↗</span></a></div>
-      <p class="dj-intake-privacy">The request opens in a separate Jotform page. Contact details and sourcing needs are entered there, not on this preview site. An optional marketing opt-in is separate from consent to be contacted about your request.</p>
-    </div>
-    <figure class="dj-apply-photo"><img src="${imagesRoot}brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing products and sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure>
-  </section>
-  <section class="dj-secure-intake" aria-label="Buyer request process"><h2>What happens next?</h2><div class="dj-intake-steps"><p><strong>1 · Share priorities</strong> Complete the secure Hosted Buyer request on Jotform.</p><p><strong>2 · Team review</strong> The INFUSED team reviews the information and may follow up.</p><p><strong>3 · Confirmation</strong> A submitted request is not an approved application or confirmed meeting.</p></div></section>
-  </main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`
- );
+ return Promise.resolve(head('Hosted Buyer Request','Submit a first-party INFUSED Hosted Buyer inquiry, reviewed by the INFUSED team.')+
+ '<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">'+header('buyers')+noScriptNav()+introNav({num:'02',chapter:'WHO',label:'Buyer request',next:'buyers'})+
+ '<main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual"><div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / REQUEST CONSIDERATION</span><span class="dj-sector-kicker">'+event.dateLabel+' / '+event.venue+'</span>'+
+ '<h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Tell INFUSED what you source and whom you want to meet. A request is not a confirmed hosted-buyer benefit, acceptance or meeting.</p>'+
+ '<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#buyer-request-form" data-intake-type="hosted-buyer">Request buyer consideration <span aria-hidden="true">↘</span></a><a class="dj-btn dj-btn-quiet" href="'+href('buyers')+'">Hosted Buyer information <span aria-hidden="true">↗</span></a></div></div>'+
+ '<figure class="dj-apply-photo"><img src="'+imagesRoot+'brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure></section>'+
+ renderIntakeForm('buyer')+
+ '<section class="dj-secure-intake" aria-label="Request process"><h2>What happens after submission?</h2><div class="dj-intake-steps"><p><strong>1 · Request received</strong> We save your sourcing priorities securely and provide a receipt.</p><p><strong>2 · Team review</strong> The INFUSED team reviews the request and may contact you.</p><p><strong>3 · No automatic acceptance</strong> Your request is not a confirmed meeting, benefit or ticket.</p></div></section>'+
+ '</main>'+footer()+'<canvas class="dj-water" aria-hidden="true"></canvas></body></html>');
 }
-
 function cleanHome(html){
  if(!html.includes('{{DROP_ART_INTRO}}')||!html.includes('{{DROP_ART_STAGE}}'))throw Error('Missing shared droplet source markers');
  html=html.replaceAll('{{DROP_ART_INTRO}}',dropArt('intro')).replaceAll('{{DROP_ART_STAGE}}',dropArt('stage'));
@@ -156,7 +149,7 @@ function cleanHome(html){
  html=html.replaceAll('NOW EXPLORING','');
  html=html.replaceAll('USE ← → TO NAVIGATE','');
  html=html.replaceAll('SCROLL NATURALLY','');
- html=html.replaceAll('href="https://form.jotform.com/262867873887079"','href="'+href('contact')+'"');
+ // Homepage source now uses the native /contact/ route.
  html=html.replaceAll('Return to current INFUSED site ↗','Attend / tickets ↗');
  html=html.replaceAll('href="'+BASE+'" class="menu-return"',`href="${href('tickets')}" class="menu-return"`);
  html=html.replace('href="'+href('contact')+'" target="_blank" rel="noopener noreferrer"','href="'+href('contact')+'"');
@@ -198,6 +191,7 @@ await mkdir(path.join(output,'assets','images'),{recursive:true});
 for(const name of (await readdir(path.join(source,'assets','images'))).filter(s=>/\.(webp|png|jpe?g|svg)$/i.test(s))) await copyFile(path.join(source,'assets','images',name),path.join(output,'assets','images',name));
 await write('assets/site.css',css);
 await write('assets/site.js',js);
+ await write('assets/intake.js',await load('src/intake.js'));
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
 const combinedHomeStyles=styleOverrides+'\n'+(await load('src/finish.css'));
 let home=cleanHome(await load('src/index.html'));
@@ -220,6 +214,6 @@ for(const offer of offers){
  await writeFile(path.join(exportDir,'infused-'+offer.id+'.html'),html,'utf8');
  if(offer.id===campaignConfig.default)await write('land/index.html',html);
 }
-// Explicitly no preview collection endpoints, nor scripts that can POST to production.
+// Only the native /dropjourneytest/api/intake endpoint can accept first-party consented inquiries.
 await write('robots.txt','User-agent: *\nDisallow: /\n');
 console.log(`Built ${catalog.length+2} full-site routes and ${offers.length+1} campaign landers under ${BASE}; exported ${offers.length} standalone HTML files`);

@@ -117,3 +117,29 @@ body[data-stage=who] a.small-pill{display:inline-flex;align-items:center;justify
 .dj-application .dj-secure-intake{margin:35px 0 0;max-width:none}
 @media(max-width:980px){.dj-application .dj-app-head{grid-template-columns:1fr}.dj-application .dj-apply-photo img{max-height:220px;aspect-ratio:16/8}}
 @media(max-width:680px){.dj-application .dj-app-intro h1{font-size:clamp(37px,9vw,48px)}.dj-application .dj-app-head{gap:15px}.dj-application .dj-apply-photo img{max-height:160px}}
+
+/* DJ-U3 native inquiry: responsive and accessible; no external form provider. */
+.dj-native-intake{max-width:1150px;margin:clamp(24px,4vw,60px) auto;padding:clamp(20px,3vw,42px);border:1px solid rgba(194,255,109,.3);border-radius:22px;background:rgba(15,26,22,.62);scroll-margin-top:95px}
+.dj-native-intake h2{font-size:clamp(24px,3vw,42px);line-height:1.12;margin:0 0 12px}
+.dj-intake-description{max-width:76ch;color:#d6e2d8;margin:0 0 26px;line-height:1.5}
+.dj-intake-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 24px}
+.dj-intake-field{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:14px;color:#e6f2e4}
+.dj-intake-field input,.dj-intake-field select,.dj-intake-field textarea{width:100%;min-height:48px;border:1px solid rgba(194,255,109,.4);border-radius:10px;background:#101d18;color:white;padding:12px 14px;font:inherit}
+.dj-intake-field textarea{min-height:128px;resize:vertical}
+.dj-intake-field input:focus-visible,.dj-intake-field select:focus-visible,.dj-intake-field textarea:focus-visible,.dj-intake-consent input:focus-visible,.dj-intake-checkgrid input:focus-visible{outline:3px solid #f9a2cd;outline-offset:2px}
+.dj-intake-field b,.dj-intake-consent b{color:#f9a2cd}
+.dj-intake-full{grid-column:1/-1}
+.dj-intake-categories,.dj-intake-consent{border:0;padding:0;margin:0;min-width:0}
+.dj-intake-categories legend,.dj-intake-consent legend{font-size:14px;font-weight:750;margin-bottom:12px}
+.dj-intake-checkgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 17px}
+.dj-intake-checkgrid label,.dj-intake-consent label{display:flex;align-items:flex-start;gap:10px;line-height:1.45;font-size:13px;color:#dceadd}
+.dj-intake-checkgrid input,.dj-intake-consent input{accent-color:#c2ff6d;width:18px;height:18px;flex-shrink:0}
+.dj-intake-consent{display:flex;flex-direction:column;gap:16px}
+.dj-intake-consent span,.dj-intake-help,.dj-intake-privacy{color:#acc1ae;font-size:12px;line-height:1.45}
+.dj-intake-trap{position:absolute!important;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+.dj-native-intake button[type=submit]{margin-top:26px;min-height:48px}
+.dj-native-intake button:disabled{opacity:.6;cursor:progress}
+.dj-intake-status{min-height:1.5em;font-size:14px;margin:14px 0;color:#c2ff6d;overflow-wrap:anywhere}
+.dj-intake-status[data-state=error]{color:#ffb7cb}
+.dj-intake-privacy{max-width:75ch;margin:10px 0 0}
+@media(max-width:720px){.dj-intake-grid,.dj-intake-checkgrid{grid-template-columns:1fr}.dj-native-intake{padding:20px;margin:26px 0}.dj-intake-field input,.dj-intake-field select,.dj-intake-field textarea{font-size:16px}}
