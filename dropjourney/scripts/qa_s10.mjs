@@ -34,7 +34,8 @@ assert.match(css,/grid-template-columns:repeat\(auto-fit/,'responsive metric arr
 assert.match(styles,/\.chapter-nav ol\{display:grid/,'chapter navigation must not be horizontal scroller');
 assert.match(water,/prefers-reduced-motion:reduce/,'system reduced-motion support missing');
 assert.match(conf,/name = "infused-dropjourneytest"/,'wrong preview Worker');
-assert.doesNotMatch(conf,/d1_databases|AUDIENCE_DB|STRIPE_|infused-show"/,'preview has production binding');
+assert.match(conf,/database_name = "infused-intake"/,'Isolated INFUSED intake D1 must be bound');
+assert.doesNotMatch(conf,/4fc7440c-c340-47c4-a75f-96f4e7ad7441|AUDIENCE_DB|STRIPE_|infused-show"/,'Preview must not bind production audience or payments');
 assert.doesNotMatch(worker,/AUDIENCE_DB|STRIPE_|sendEmail|webhook/,'preview must not run production handlers');
 assert.match(worker,/noindex, nofollow, noarchive/,'preview response headers required');
 assert.equal((await readdir(path.join(dist,'assets','images'))).filter(n=>n.endsWith('.webp')).length,21,'original media asset count');
