@@ -87,4 +87,11 @@ Source `dj/ux-finish-campaign-landers-20261028` stacked on the accepted S10 prev
 - The same single-file outputs are emitted under `exports/landers/infused-<id>.html` and uploaded by the CI workflow for use with HTML-hosting platforms. Static destinations cannot be changed by URL input; UTMs pass through by allowlist. No forms, external scripts, or custom analytics.
 - Light/dark are campaign styles, not duplicate canonical websites. Existing light production remains unchanged. Preview is `noindex`, not authenticated.
 - New QA checks: `scripts/qa_finish.mjs` and `scripts/qa_campaign.mjs`. Audit and limitations in `docs/REVIEW_FINDINGS.md`.
-- Version: `2.9.0-review`, isolated Cloudflare Worker `infused-dropjourneytest` only.
+- Version: `2.9.1-review`, isolated Cloudflare Worker `infused-dropjourneytest` only.
+
+## DJ-X1.1 | Hosted Buyer conversion handoff (2026-10-28)
+
+- Both the homepage buyer profile and standalone `/dropjourneytest/buyers/apply/` now offer a review-stage contact link to the existing preview Contact page, opened in a new tab after an optional explicit draft copy.
+- The profile stays local: **no submission, persistence, automatic prefill, email, or API call**. The link does not transmit buyer inputs. A separately approved secure application destination is still required before turning the wizard into an intake.
+- New assertions in `scripts/qa_finish.mjs` cover the two review stages, disclosure, fixed internal destination and retained copy control.
+- Version `2.9.1-review` is a design-preview patch; it does not authorize production deployment.
