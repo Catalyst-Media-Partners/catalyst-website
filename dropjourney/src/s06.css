@@ -12,7 +12,7 @@
 .dj-stream-node::before{content:'';position:absolute;left:-1px;top:0;width:30%;height:1px;background:var(--accent,var(--dj-acid));transform:scaleX(0);transform-origin:left;transition:transform .25s}
 .dj-stream-node:hover::before,.dj-stream-node:focus-visible::before{transform:scaleX(1)}
 .dj-stream-num{grid-column:1/-1;font-size:10px;color:var(--dj-muted);font-weight:850;letter-spacing:.16em;margin-bottom:20px}
-.dj-stream-photo{display:block;align-self:stretch;min-width:0;overflow:hidden;border-radius:16px 16px 48px 16px;aspect-ratio:4/3}
+.dj-stream-photo{display:block;align-self:start;width:100%;max-width:100%;min-width:0;overflow:hidden;border-radius:16px 16px 48px 16px;aspect-ratio:4/3}
 .dj-stream-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .28s}
 .dj-stream-node:hover img{transform:scale(1.035)}
 .dj-stream-caption{display:flex;flex-direction:column;min-width:0;align-items:flex-start;gap:9px}
