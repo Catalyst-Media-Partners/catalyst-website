@@ -147,6 +147,9 @@ function cleanHome(html){
  html=html.replace(/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/,homeNav);
  html=html.replaceAll('<title>INFUSED | Follow the Drop | Experience Prototype</title>','<title>INFUSED Las Vegas | From Roots to Retail</title>');
  html=html.replaceAll('name="dropjourney-prototype-version" content="1.5.0"','name="dropjourney-site-version" content="2.3.0-s05"');
+ // The authoritative S04 prototype template already carries a site-version meta tag.
+ if(!/name="dropjourney-site-version" content="[^"]+"/.test(html))throw Error('DJ-S05 homepage version marker missing');
+ html=html.replace(/name="dropjourney-site-version" content="[^"]+"/,'name="dropjourney-site-version" content="2.3.0-s05"');
  html=html.replaceAll('An interactive, five-chapter preview of INFUSED Las Vegas: From Roots to Retail.','INFUSED Las Vegas. The national business event for the entire infused-products ecosystem.');
 
  // Reproduce published date and venue from one preview data source.
