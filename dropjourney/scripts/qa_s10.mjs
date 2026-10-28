@@ -13,7 +13,8 @@ for(const id of routes){
  assert.match(html,new RegExp(`<main\\b[^>]*\\bid="${mainTarget}"`),label+' missing original main target');
  assert.ok(html.includes(`href="#${mainTarget}"`),label+' skip link missing or broken');
  assert.doesNotMatch(html,/id="motion-optin"/,label+' unsolicited motion activation');
-  if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
+  if(id==='tickets')assert.match(html,/class="dj-ticket-notify-form"/);
+  else if(['buyers/apply','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
   else assert.doesNotMatch(html,/<form\b/,label+' unexpected form');
  assert.ok(html.includes('/dropjourneytest/'),label+' escaped route namespace');
  assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),label+' double-prefixed resource');
