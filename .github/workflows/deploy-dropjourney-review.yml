@@ -2,7 +2,7 @@ name: INFUSED Drop Journey DJ-X1 finish + campaign landers preview release
 
 on:
   push:
-    branches: [dj/ux-finish-campaign-landers-20261028]
+    branches: [dj/ux-finish-campaign-landers-20261028, infused-preview]
     paths:
       - 'dropjourney/**'
       - 'src/**'
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   validate-and-publish-preview:
-    if: github.ref == 'refs/heads/dj/ux-finish-campaign-landers-20261028' && github.repository == 'Catalyst-Media-Partners/catalyst-website'
+    if: github.repository == 'Catalyst-Media-Partners/catalyst-website' && (github.ref == 'refs/heads/dj/ux-finish-campaign-landers-20261028' || github.ref == 'refs/heads/infused-preview')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source without credential persistence
