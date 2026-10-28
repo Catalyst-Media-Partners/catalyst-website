@@ -197,6 +197,7 @@ await copyFile(brandPath,path.join(output,'assets','images',brandFilename));
 await write('assets/site.css',css);
 await write('assets/site.js',js);
  await write('assets/intake.js',await load('src/intake.js'));
+await write('assets/ticket-notify.js',await load('src/ticket-notify.js'));
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
 const combinedHomeStyles=styleOverrides+'\n'+(await load('src/finish.css'));
 let home=cleanHome(await load('src/index.html'));
