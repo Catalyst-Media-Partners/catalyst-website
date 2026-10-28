@@ -14,7 +14,7 @@ const script=await read('src/app.js');
 const worker=await read('worker.mjs');
 for(const id of routes){
  const html=await read('dist/dropjourneytest/'+(id?id+'/':'')+'index.html');
- assert.match(html,/name="dropjourney-site-version" content="2\.9\.1-review"/,id+' not current');
+ assert.match(html,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,id+' not current');
  assert.match(html,/<meta name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,id+' preview indexing enabled');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,id+' H1 count');
  if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,id+' native form missing');else assert.doesNotMatch(html,/<form\b/,id+' unexpected form');

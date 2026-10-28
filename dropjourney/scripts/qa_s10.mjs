@@ -6,7 +6,7 @@ const routes=['','market','ecosystem','roots','science','make','package','move',
 const dist=path.join(root,'dist','dropjourneytest');let links=0,images=0;
 for(const id of routes){
  const html=await read(`dist/dropjourneytest/${id?id+'/':''}index.html`),label=id||'journey';
- assert.match(html,/name="dropjourney-site-version" content="2\.9\.1-review"/,label+' wrong version');
+ assert.match(html,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,label+' wrong version');
  assert.match(html,/name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,label+' not isolated from indexing');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,label+' H1 count wrong');
  const mainTarget=id?'main':'story-main';
