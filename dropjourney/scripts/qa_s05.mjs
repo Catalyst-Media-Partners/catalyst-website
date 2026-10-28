@@ -50,7 +50,8 @@ for(const route of ['','market/','why-vegas/','opportunities/','ecosystem/','buy
  assert.ok(content.includes(event.dateLabel),`${route} must render the event date from one source`);
  assert.ok(content.includes(event.venue),`${route} must render the venue from one source`);
  assert.equal((content.match(/<h1\b/g)||[]).length,1,`${route} must have one H1`);
- if(['buyers/apply/','tickets/','contact/'].includes(route))assert.match(content,/class="dj-intake-form"/);
+ if(route==='tickets/')assert.match(content,/class="dj-ticket-notify-form"/,'Tickets must offer the simple email signup');
+ else if(['buyers/apply/','contact/'].includes(route))assert.match(content,/class="dj-intake-form"/,'Keep first-party buyer/contact inquiry forms');
   else assert.doesNotMatch(content,/<form\b/i,`${route} unexpected form`);
  assert.match(content,/noindex[, ]*nofollow[, ]*noarchive/,`${route} must remain noindex`);
 }
