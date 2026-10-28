@@ -15,6 +15,7 @@ for(const o of conf.variants){
  assert.ok(a.includes('data-theme="'+o.theme+'"'));
  assert.equal((a.match(/<h1\b/g)||[]).length,1);
  assert.match(a,/noindex, nofollow, noarchive/);
+ assert.match(a,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,'Campaign and main site version must match');
  assert.match(a,/http-equiv="Content-Security-Policy"/);
  assert.match(a,/src="data:image\/png;base64,/);
  assert.match(a,/drop-specular-lander-/);
