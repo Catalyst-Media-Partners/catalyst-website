@@ -8,7 +8,7 @@ const options=await read('dist/dropjourneytest/opportunities/index.html');
 const css=await read('src/finish.css');
 const renderer=await read('src/s09-pages.mjs');
 const build=await read('build.mjs');
-const container=options.slice(options.indexOf('class="dj-offers-page"'),options.indexOf('</main>'));
+const container=options.slice(options.indexOf('<section class="section dj-offers-page"'),options.indexOf('</main>'));
 assert.match(container,/class="dj-offers-visual"/,'Keep approved photograph');
 assert.match(container,/class="dj-offers-booking"/,'Keep actual published price information');
 assert.match(container,/class="dj-sponsor-spotlight"/,'Sponsor must have a direct visible section');
