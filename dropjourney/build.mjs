@@ -96,7 +96,7 @@ async function detailPage(route){
  if(route.id==='market')content=renderMarket(content,{href});
  if(route.id==='why-vegas')content=renderVegas(content,{href,event});
  if(route.id==='ecosystem')content=renderEcosystem(content,{href,taxonomy});
- if(['roots','science','make','package'].includes(route.id))content=renderSector(content,route,{href,taxonomy});
+ if(['roots','science','make','package','move','sell','services'].includes(route.id))content=renderSector(content,route,{href,taxonomy});
  if(route.id==='opportunities') content=content.replace('<article class="detail-box green"><h3>Sponsorship</h3>','<article class="detail-box green" id="sponsorship"><h3>Sponsorship</h3>');
  if(route.id==='buyers') content=content.replace('</section>',`<div class="dj-convert-inline"><span class="dj-kicker">FOR QUALIFIED BUYERS</span><p>Tell us what you need to source, using a guided buyer profile.</p><a href="${href('buyers/apply')}" class="dj-btn dj-btn-acid">Explore the buyer profile <span aria-hidden="true">↗</span></a></div></section>`);
  const heading=route.label==='The ecosystem'?'The full value stream':route.label;
