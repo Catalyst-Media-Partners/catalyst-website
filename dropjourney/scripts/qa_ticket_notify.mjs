@@ -38,6 +38,15 @@ const invalid=await handleTicketRequest(make('not-an-email'),env,fetcher);
 assert.equal(invalid.status,400);assert.equal(count(),before);
 const disabled=await handleTicketRequest(make(),{...env,TICKET_NOTIFY_ENABLED:'false'},fetcher);
 assert.equal(disabled.status,503);assert.equal(count(),before);
+const noMx=async url=>new Response(JSON.stringify(String(url).includes('siteverify')
+ ?{success:true,hostname:'infused.show',action:'infused-tickets'}:{Status:0,Answer:[]}),{status:200});
+const badDomain=await handleTicketRequest(make(),env,noMx);
+assert.equal(badDomain.status,400,'Reject domains without functioning MX');
+assert.equal(count(),before,'Failed domain check must not write subscriber');
+const dnsOutage=async url=>String(url).includes('siteverify')?fetcher(url):new Response(JSON.stringify({Status:2,Answer:[]}),{status:200});
+const dnsUnavailable=await handleTicketRequest(make(),env,dnsOutage);
+assert.equal(dnsUnavailable.status,503,'Transient DNS failure must not record a subscriber');
+assert.equal(count(),before,'Unverified domain cannot be saved');
 const accepted=await handleTicketRequest(make(),env,fetcher);
 assert.equal(accepted.status,200);assert.equal((await accepted.json()).ok,true);
 assert.equal(count(),before+1);assert.equal(sends,1);
