@@ -12,12 +12,13 @@ for(const id of ids){
  const h1=(html.match(/<h1\b/g)||[]).length;assert.equal(h1,1,`${label}: exactly one h1`);
  assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),`${label}: doubled preview prefix`);
  assert.ok(!html.includes('AN INTERACTIVE PREVIEW'),`${label}: prototype disclaimer in public copy`);
- assert.ok(!html.includes('/tickets/api/subscribe'),`${label}: no production ticket collection`);
+ assert.ok(!html.includes('action="/tickets/api/subscribe"'),`${label}: no production-origin ticket collection`);
  assert.ok(!/jotform/i.test(html),`${label}: no Jotform dependency allowed`);
  assert.ok(!html.includes('href="https://infused.show/"'),`${label}: no escape to old site via home logo`);
- if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,`${label}: required native form missing`);
+ if(id==='tickets')assert.match(html,/class="dj-ticket-notify-form"/,`${label}: native ticket signup missing`);
+ else if(['buyers/apply','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,`${label}: required native inquiry form missing`);
  else assert.ok(!html.includes('<form'),`${label}: unexpected form`);
- if(id==='tickets'){assert.ok(!html.includes('id="ticket-notify-form"'),'ticket form must be inert');assert.ok(html.includes('not yet on sale'),'honest ticket-not-on-sale state');}
+ if(id==='tickets'){assert.ok(html.includes('id="ticket-notify-form"'),'email-only ticket flow required');assert.ok(html.includes('not yet on sale'),'honest ticket-not-on-sale state');}
  for(const m of html.matchAll(/(?:href|src)="(\/dropjourneytest\/[^"?#]*)/g)){
    const u=m[1];if(!u||u==='/'||u.endsWith('/'))continue;
    const target=path.join(root,'dist',u.slice(1));await stat(target).catch(()=>{throw Error(`${label}: missing resource ${u}`)});links++;

@@ -158,7 +158,7 @@ assert.ok(flush.attempted>0,'Pending outbox must be eligible for scheduled retry
 assert.ok(flush.accepted>0,'Mock transport should report accepted');
 assert.equal(store.prepare('SELECT COUNT(*) n FROM intake_submissions_v1 WHERE id=?').get(receipt).n,1);
 
-const pages=['buyers/apply','tickets','contact'];
+const pages=['buyers/apply','contact'];
 for(const id of pages){
  const html=await readFile(path.join(root,'dist/dropjourneytest',id,'index.html'),'utf8');
  assert.match(html,/cf-turnstile/);

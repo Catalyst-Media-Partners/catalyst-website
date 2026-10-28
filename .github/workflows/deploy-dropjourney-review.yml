@@ -61,6 +61,8 @@ jobs:
           node --check dropjourney/worker.mjs
           node --check dropjourney/intake.mjs
           node --check dropjourney/src/intake.js
+          node --check dropjourney/ticket-notify.mjs
+          node --check dropjourney/src/ticket-notify.js
           node --check dropjourney/src/intake-form.mjs
           node --check dropjourney/build.mjs
           node --check dropjourney/src/site.js
@@ -86,6 +88,7 @@ jobs:
           node dropjourney/scripts/qa_u3.mjs
           node dropjourney/scripts/qa_brand_logo.mjs
           node dropjourney/scripts/qa_native_intake.mjs
+          node dropjourney/scripts/qa_ticket_notify.mjs
 
   validate-and-publish-preview:
     if: github.repository == 'Catalyst-Media-Partners/catalyst-website' && github.ref == 'refs/heads/infused-preview' && github.event_name != 'pull_request'
@@ -124,6 +127,8 @@ jobs:
           node --check dropjourney/worker.mjs
           node --check dropjourney/intake.mjs
           node --check dropjourney/src/intake.js
+          node --check dropjourney/ticket-notify.mjs
+          node --check dropjourney/src/ticket-notify.js
           node --check dropjourney/src/intake-form.mjs
           node --check dropjourney/build.mjs
           node --check dropjourney/src/site.js
@@ -149,6 +154,7 @@ jobs:
           node dropjourney/scripts/qa_u3.mjs
           node dropjourney/scripts/qa_brand_logo.mjs
           node dropjourney/scripts/qa_native_intake.mjs
+          node dropjourney/scripts/qa_ticket_notify.mjs
       - name: Archive U0 structured route inventory
         uses: actions/upload-artifact@v4
         with:

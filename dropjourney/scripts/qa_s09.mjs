@@ -17,14 +17,15 @@ assert.match(contact,/href="https:\/\/infused\.show\/go\/booth\?/,'Contact booth
 assert.match(contact,/INTERESTED IN INFUSED/,'Contact heading retained');
 assert.match(tickets,/ON-SALE SOON/,'Canonical ticket state retained');
 assert.match(tickets,/not yet on sale/i,'Honest ticket state');
-assert.match(tickets,/data-intake-type="attendee-interest"/,'Explicit attendance update request route missing');
-assert.match(tickets,/data-intake-kind="attendee"/,'Native attendee form missing');
-assert.match(tickets,/this does not reserve or purchase a ticket/,'No ticket guarantee');
-assert.match(tickets,/25% EARLY-BIRD TICKET OFFER/,'Published offer acknowledged');
-assert.match(tickets,/not activated in this preview/,'Published offer not falsely available');
+assert.match(tickets,/id="ticket-notify-form"/,'Email-only ticket signup missing');
+assert.match(tickets,/name="email" type="email"/,'Single ticket email field missing');
+assert.match(tickets,/action="\/dropjourneytest\/tickets\/api\/subscribe"/,'Ticket subscribe API mismatch');
+assert.match(tickets,/25% early-bird/i,'Published 25% offer must be visible');
+assert.match(tickets,/No ticket is purchased or reserved today/,'Truthful pre-sale message');
+assert.doesNotMatch(tickets,/data-intake-kind="attendee"|name="fullName"|name="company"|name="attendeeRole"|name="categories"/,'No buyer-style attendee form');
 for(const [name,html] of [['options',options],['contact',contact],['tickets',tickets]]){
  assert.equal((html.match(/<h1\b/g)||[]).length,1,name+' one H1');
- if(name==='options')assert.doesNotMatch(html,/<form\b/,name+' unexpected form');else assert.match(html,/class="dj-intake-form"/,name+' native intake required');
+ if(name==='options')assert.doesNotMatch(html,/<form\b/,name+' unexpected form');else assert.match(html,name==='tickets'?/class="dj-ticket-notify-form"/:/class="dj-intake-form"/,name+' intended form required');
  assert.match(html,/noindex,nofollow,noarchive/);
 }
-console.log('PASS DJ-S09: 6 published commercial paths, first-party booth attribution, native intake, truthful tickets and D1-bound request submission');
+console.log('PASS DJ-S09: 6 published commercial paths, first-party booth attribution, buyer/contact intake and email-only verified ticket notifications');

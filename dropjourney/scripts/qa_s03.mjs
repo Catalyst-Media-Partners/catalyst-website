@@ -11,11 +11,12 @@ for(const route of routes){
   assert.match(html,/name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,`${id} missing noindex`);
   assert.equal((html.match(/<h1\b/g)||[]).length,1,`${id} must have one H1`);
   assert.ok(html.includes('class="dj-nojs"'),`${id} missing no-JS fallback`);
-  if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
+  if(id==='tickets')assert.match(html,/class="dj-ticket-notify-form"/);
+  else if(['buyers/apply','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
    else assert.ok(!html.includes('<form'),`${id} unexpected form`);
   assert.ok(!html.includes('id="motion-optin"'),`${id} contains motion activation`);
   assert.ok(html.includes('/dropjourneytest/'),`${id} preview must stay namespaced`);
-  assert.ok(!html.includes('/tickets/api/subscribe'),`${id} cannot submit ticket requests`);
+  assert.ok(!html.includes('action="/tickets/api/subscribe"'),`${id} cannot submit unscoped requests`);
   assert.ok(!html.includes('href="https://infused.show/"'),`${id} logo escaped to production`);
   // Links to these endpoints are an explicitly approved checkout exception only.
   for(const m of html.matchAll(/href="(https:\/\/infused\.show\/[^"?#]+)[^"\s]*"/g)){
