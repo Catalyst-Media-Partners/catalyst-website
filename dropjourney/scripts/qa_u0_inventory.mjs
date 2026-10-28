@@ -22,7 +22,7 @@ for(const id of pages){
      assert.ok(pages.some(x=>u.pathname==='/dropjourneytest/'+(x?x+'/':'')) || landers.some(x=>u.pathname==='/dropjourneytest/land/'+(x?x+'/':'')),(id||'home')+': unknown preview route '+u.pathname);
    }
  }
- assert.match(html,/name="robots" content="noindex,nofollow,noarchive"/,(id||'home')+' public index prevention missing');
+ assert.match(html,/name="robots" content="noindex,\\s*nofollow,\\s*noarchive"/,(id||'home')+' public index prevention missing');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,(id||'home')+' H1 count');
  assert.doesNotMatch(html,/<form\b/i,(id||'home')+' contains unapproved submitting form');
  records.push({route:'/dropjourneytest/'+pathId,links:labels,buttonLabels:buttons});
