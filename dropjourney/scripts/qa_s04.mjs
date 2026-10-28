@@ -14,7 +14,7 @@ const script=await read('src/app.js');
 const worker=await read('worker.mjs');
 for(const id of routes){
  const html=await read('dist/dropjourneytest/'+(id?id+'/':'')+'index.html');
- assert.match(html,/name="dropjourney-site-version" content="2\.9\.0-review"/,id+' not current');
+ assert.match(html,/name="dropjourney-site-version" content="2\.9\.1-review"/,id+' not current');
  assert.match(html,/<meta name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,id+' preview indexing enabled');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,id+' H1 count');
  assert.doesNotMatch(html,/<form\b/,id+' native form could submit personal data');
@@ -45,5 +45,5 @@ assert.match(script,/function drawClick/,'Retain click wave');
 assert.match(script,/EXPLORE YOUR OPTIONS/,'Final chapter drop must lead to the commercial CTA rather than loop');
 assert.doesNotMatch(home,/AN INTERACTIVE PREVIEW|MOTION REDUCED \/ V1\.5/,'Prototype disclaimers remain');
 assert.ok(!worker.includes('AUDIENCE_DB')&&!worker.includes('STRIPE_'),'Worker remains isolated');
-assert.ok(worker.includes('2.9.0-review')&&worker.includes("noindex, nofollow, noarchive"));
+assert.ok(worker.includes('2.9.1-review')&&worker.includes("noindex, nofollow, noarchive"));
 console.log(`PASS DJ-S04: ${routes.length} pages, shared 3D SVG drop, 3 curated metrics / 5 sourced totals, navigation, water physics and protected preview boundaries`);

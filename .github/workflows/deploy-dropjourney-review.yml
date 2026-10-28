@@ -66,6 +66,13 @@ jobs:
           node dropjourney/scripts/qa_s10.mjs
           node dropjourney/scripts/qa_finish.mjs
           node dropjourney/scripts/qa_campaign.mjs
+          node dropjourney/scripts/qa_u0_inventory.mjs
+      - name: Archive U0 structured route inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: infused-u0-route-inventory
+          path: dropjourney/reports/u0-route-inventory.json
+          if-no-files-found: error
       - name: Package standalone campaign HTML for external hosting
         uses: actions/upload-artifact@v4
         with:
