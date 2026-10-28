@@ -14,7 +14,7 @@ export function validateLanders(config){
   for(const key of ['destination','secondaryDestination']){
    const value=o[key];
    if(typeof value!=='string'||!value.startsWith(suffix)||/\?|\/\/|\\|\.\./.test(value))throw Error('Unapproved campaign destination '+o.id+':'+key);
-   if(!/^\/dropjourneytest\/(?:[a-z]+(?:\/[a-z]+)?\/)?(?:#[a-z0-9-]+)?$/.test(value))throw Error('Campaign route invalid '+o.id+':'+key);
+   if(!/^\/dropjourneytest\/(?:[a-z-]+(?:\/[a-z-]+)?\/)?(?:#[a-z0-9-]+)?$/.test(value))throw Error('Campaign route invalid '+o.id+':'+key);
   }
  }
  if(!ids.has(config.default))throw Error('Campaign default must be a compiled variant');
