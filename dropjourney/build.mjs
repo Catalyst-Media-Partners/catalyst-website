@@ -62,7 +62,7 @@ function dropArt(variant){
   return dropArtwork.replaceAll('__DROP_ID__',variant).replaceAll('__DROP_CLASS__',variant==='intro'?'drop-hero-svg':'drop-vector');
 }
 const brandFilename='infused-wordmark-shaded-web-hd.png';
-const brandPath=path.join(source,'assets','images',brandFilename);
+const brandPath=path.join(root,'src','assets','images',brandFilename);
 const brandData=await readFile(brandPath);
 const logo=imagesRoot+brandFilename;
 const embeddedLogo='data:image/png;base64,'+brandData.toString('base64');
