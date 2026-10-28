@@ -2,6 +2,7 @@ import {readFile, mkdir, readdir, copyFile, writeFile, rm} from 'node:fs/promise
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {renderMarket,renderVegas} from './src/s05-pages.mjs';
+import {validateLanders,renderLander} from './src/landing-pages.mjs';
 import {renderEcosystem,renderSector,checkTaxonomy} from './src/s06-pages.mjs';
 import {renderBuyers} from './src/s08-pages.mjs';
 import {renderOpportunities,renderContact,renderTickets} from './src/s09-pages.mjs';
@@ -68,7 +69,7 @@ function links(){return [
  ];}
 const menuHref=id=>id==='sponsor'?href('opportunities')+'#sponsorship':href(id);
 function noScriptNav(){return `<noscript><nav class="dj-nojs" aria-label="Explore INFUSED without JavaScript"><p>Explore INFUSED</p><a href="${BASE}#why">Why INFUSED</a><a href="${BASE}#who">Who attends</a><a href="${BASE}#when">When</a><a href="${BASE}#where">Where</a><a href="${BASE}#what">What to do</a>${links().map(([key,label])=>`<a href="${menuHref(key)}">${esc(label)}</a>`).join('')}</nav></noscript>`;}
-function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.8.0-s10"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script></head>`;}
+function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.9.0-review"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script></head>`;}
 function header(id){return `<a class="dj-skip" href="#main">Skip to content</a><header class="dj-header" id="top"><a class="dj-logo" href="${BASE}" aria-label="INFUSED journey home"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><div class="dj-header-actions"><button type="button" class="dj-explore" aria-expanded="false" aria-controls="dj-drawer"><span class="dj-menu-mark" aria-hidden="true"><i></i><i></i></span>Explore</button><a class="dj-top-action" href="${shop}">Reserve a booth <span aria-hidden="true">↗</span></a></div><nav id="dj-drawer" class="dj-drawer" aria-label="Explore INFUSED" hidden><span class="dj-menu-eyebrow">Discover your way through INFUSED</span><a href="${BASE}" class="dj-menu-home">The journey <span aria-hidden="true">↗</span></a>${links().map(([key,label])=>`<a href="${menuHref(key)}" ${key===id?'aria-current="page"':''}>${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}<div class="dj-drawer-foot"><span>FROM ROOTS TO RETAIL</span><span>LAS VEGAS ${startDate.year}</span></div></nav></header>`;}
 function footer(){return `<footer class="dj-footer"><div><a href="${BASE}" class="dj-footer-logo"><img src="${logo}" alt="INFUSED" width="535" height="146"></a><p>The national business event for the entire infused-products ecosystem.</p></div><div class="dj-footer-links"><a href="${href('ecosystem')}">Ecosystem</a><a href="${href('opportunities')}">Exhibit</a><a href="${href('buyers')}">Hosted buyers</a><a href="${href('tickets')}">Tickets</a><a href="${href('contact')}">Contact</a></div><p class="dj-footer-date">${esc(event.dateLabel)}<br>${esc(event.venue)}</p></footer>`;}
 function introNav(route){return `<div class="dj-wayfinder"><a href="${BASE}#${route.chapter.toLowerCase()}" class="dj-back">← ${route.chapter.toLowerCase()} / The journey</a><div class="dj-current"><span>${route.num}</span> / ${route.chapter} <span class="dj-wayline"></span> ${esc(route.label)}</div><a class="dj-inline-nav" href="${href(route.next)}">Explore next <span aria-hidden="true">↗</span></a></div>`;}
@@ -162,10 +163,10 @@ function cleanHome(html){
  if(!/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/.test(html))throw Error('Homepage navigation markup missing');
  html=html.replace(/<nav class="site-nav" id="site-nav"[\s\S]*?<\/nav>/,homeNav);
  html=html.replaceAll('<title>INFUSED | Follow the Drop | Experience Prototype</title>','<title>INFUSED Las Vegas | From Roots to Retail</title>');
- html=html.replaceAll('name="dropjourney-prototype-version" content="1.5.0"','name="dropjourney-site-version" content="2.8.0-s10"');
+ html=html.replaceAll('name="dropjourney-prototype-version" content="1.5.0"','name="dropjourney-site-version" content="2.9.0-review"');
  // The authoritative S04 prototype template already carries a site-version meta tag.
  if(!/name="dropjourney-site-version" content="[^"]+"/.test(html))throw Error('DJ-S05 homepage version marker missing');
- html=html.replace(/name="dropjourney-site-version" content="[^"]+"/,'name="dropjourney-site-version" content="2.8.0-s10"');
+ html=html.replace(/name="dropjourney-site-version" content="[^"]+"/,'name="dropjourney-site-version" content="2.9.0-review"');
  html=html.replaceAll('An interactive, five-chapter preview of INFUSED Las Vegas: From Roots to Retail.','INFUSED Las Vegas. The national business event for the entire infused-products ecosystem.');
 
  // Reproduce published date and venue from one preview data source.
@@ -199,6 +200,18 @@ home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
 await write('index.html',home);
 for(const route of catalog)await write(`${route.id}/index.html`,await detailPage(route));
 await write('buyers/apply/index.html',await applicationPage());
+// Standalone HTML campaign output, with inline brand media and no external assets.
+const campaignConfig=JSON.parse(await load('content/landers.json'));
+const exportDir=path.join(root,'exports','landers');
+await mkdir(exportDir,{recursive:true});
+const [landingCss,landingJs,landingArt]=await Promise.all([load('src/landing.css'),load('src/landing.js'),load('src/drop-art.svg')]);
+const offers=validateLanders(campaignConfig);
+for(const offer of offers){
+ const html=renderLander({offer,config:campaignConfig,logo,art:landingArt,css:landingCss,js:landingJs});
+ await write('land/'+offer.id+'/index.html',html);
+ await writeFile(path.join(exportDir,'infused-'+offer.id+'.html'),html,'utf8');
+ if(offer.id===campaignConfig.default)await write('land/index.html',html);
+}
 // Explicitly no preview collection endpoints, nor scripts that can POST to production.
 await write('robots.txt','User-agent: *\nDisallow: /\n');
-console.log(`Built ${catalog.length+2} pages (journey + ${catalog.length} production counterparts + buyer profile) under ${BASE}`);
+console.log(`Built ${catalog.length+2} full-site routes and ${offers.length+1} campaign landers under ${BASE}; exported ${offers.length} standalone HTML files`);
