@@ -7,11 +7,12 @@ const routes=['','market','ecosystem','roots','science','make','package','move',
 for(const route of routes){
   const html=await get(`dist/dropjourneytest/${route?route+'/':''}index.html`);
   const id=route||'home';
-  assert.match(html,/name="dropjourney-site-version" content="2\.9\.1-review"/,`${id} wrong version`);
+  assert.match(html,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,`${id} wrong version`);
   assert.match(html,/name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,`${id} missing noindex`);
   assert.equal((html.match(/<h1\b/g)||[]).length,1,`${id} must have one H1`);
   assert.ok(html.includes('class="dj-nojs"'),`${id} missing no-JS fallback`);
-  assert.ok(!html.includes('<form'),`${id} must not submit PII`);
+  if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
+   else assert.ok(!html.includes('<form'),`${id} unexpected form`);
   assert.ok(!html.includes('id="motion-optin"'),`${id} contains motion activation`);
   assert.ok(html.includes('/dropjourneytest/'),`${id} preview must stay namespaced`);
   assert.ok(!html.includes('/tickets/api/subscribe'),`${id} cannot submit ticket requests`);
@@ -35,7 +36,7 @@ for(const route of routes){
   }
   if(id==='opportunities')assert.match(html,/id="sponsorship"/, 'Sponsor target missing');
   if(id==='tickets')assert.match(html,/Tickets are not yet on sale/, 'Tickets not-on-sale state must be truthful');
-  if(id==='buyers/apply')assert.ok(html.includes('data-intake-type="hosted-buyer"')&&!html.includes('<form'),'Buyer request requires approved external handoff, never local PII form');
+  if(id==='buyers/apply')assert.ok(html.includes('data-intake-type="hosted-buyer"')&&html.includes('data-intake-kind="buyer"'),'Buyer requires native form');
 }
 const homeCss=await get('src/home.css');
 assert.match(homeCss,/\.market-scroll\{display:grid/,'Market metrics grid must be responsive');
@@ -45,7 +46,7 @@ assert.match(detailCss,/\.dj-source-section \.stats-grid\{display:grid/,'Market 
 assert.match(detailCss,/\.dj-nojs/,'No-JS nav not styled');
 const worker=await get('worker.mjs');
 assert.match(worker,/noindex, nofollow, noarchive/);
-assert.match(worker,/2\.9\.1-review/);
+assert.match(worker,/2\.9\.2-native-intake/);
 assert.doesNotMatch(worker,/AUDIENCE_DB|STRIPE_|d1_databases/,'No production bindings');
 const js=await get('src/site.js');
 assert.match(js,/const alpha=\.18/,'Three-ring hover optics missing');

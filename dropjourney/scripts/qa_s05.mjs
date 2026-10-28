@@ -46,11 +46,12 @@ assert.ok(vegas.includes('href="/dropjourneytest/tickets/"'),'Vegas must link to
 assert.ok(vegas.includes('href="/dropjourneytest/opportunities/"'),'Vegas must link to exhibitors');
 for(const route of ['','market/','why-vegas/','opportunities/','ecosystem/','buyers/','tickets/','buyers/apply/']){
  const content=await built(`${route}index.html`);
- assert.match(content,/name="dropjourney-site-version" content="2\.9\.1-review"/,`${route} version`);
+ assert.match(content,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,`${route} version`);
  assert.ok(content.includes(event.dateLabel),`${route} must render the event date from one source`);
  assert.ok(content.includes(event.venue),`${route} must render the venue from one source`);
  assert.equal((content.match(/<h1\b/g)||[]).length,1,`${route} must have one H1`);
- assert.doesNotMatch(content,/<form\b/i,`${route} must not introduce live PII forms`);
+ if(['buyers/apply/','tickets/','contact/'].includes(route))assert.match(content,/class="dj-intake-form"/);
+  else assert.doesNotMatch(content,/<form\b/i,`${route} unexpected form`);
  assert.match(content,/noindex[, ]*nofollow[, ]*noarchive/,`${route} must remain noindex`);
 }
 assert.match(await read(project,'src/s05.css'),/\.dj-evidence-grid\{display:grid/, 'Metrics must use a responsive grid');
@@ -58,6 +59,6 @@ assert.match(await read(project,'src/s05.css'),/@media\(max-width:620px\)/, 'Mob
 assert.match(await read(project,'src/s05-pages.mjs'),/sourcePathByMarket/, 'Source linking must use canonical published URLs');
 assert.equal(event.verificationStatus.includes('signed venue/date record has not been independently reviewed'),true,'Approval limitation must be documented');
 const worker=await read(project,'worker.mjs');
-assert.match(worker,/2\.9\.1-review/,'Only preview Worker version should advance');
+assert.match(worker,/2\.9\.2-native-intake/,'Only preview Worker version should advance');
 assert.doesNotMatch(worker,/AUDIENCE_DB|STRIPE_|d1_databases/,'No protected runtime bindings');
 console.log('PASS DJ-S05: 5/5 sourced and geo-dated metrics, four original Vegas reasons, original photography, one event manifest, responsive markup, links, and all preview safety controls');

@@ -42,7 +42,11 @@ jobs:
           grep -Fxq 'name = "infused-dropjourneytest"' dropjourney/wrangler.toml
           grep -Fxq 'workers_dev = false' dropjourney/wrangler.toml
           grep -Fxq 'keep_vars = true' dropjourney/wrangler.toml
-          ! grep -Eq 'AUDIENCE_DB|database_id|d1_databases|STRIPE_|infused-show"' dropjourney/wrangler.toml
+          grep -Fxq 'binding = "INTAKE_DB"' dropjourney/wrangler.toml
+          grep -Fxq 'database_id = "13188d57-a463-445d-b341-9479ac3a4558"' dropjourney/wrangler.toml
+          grep -Fxq 'entrypoint = "InfusedIntakeSESBridge"' dropjourney/wrangler.toml
+          ! grep -Eq '4fc7440c-c340-47c4-a75f-96f4e7ad7441|AUDIENCE_DB|STRIPE_|infused-show"' dropjourney/wrangler.toml
+          ! grep -Eq 'AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY' dropjourney/wrangler.toml dropjourney/worker.mjs dropjourney/intake.mjs
           ! grep -Eq 'AUDIENCE_DB|STRIPE_|webhook|sendEmail|infused-show"' dropjourney/worker.mjs
       - name: Validate original production source without deploying
         run: |
@@ -55,6 +59,9 @@ jobs:
         run: |
           set -euo pipefail
           node --check dropjourney/worker.mjs
+          node --check dropjourney/intake.mjs
+          node --check dropjourney/src/intake.js
+          node --check dropjourney/src/intake-form.mjs
           node --check dropjourney/build.mjs
           node --check dropjourney/src/site.js
           node --check dropjourney/src/s05-pages.mjs
@@ -78,6 +85,7 @@ jobs:
           node dropjourney/scripts/qa_u2.mjs
           node dropjourney/scripts/qa_u3.mjs
           node dropjourney/scripts/qa_brand_logo.mjs
+          node dropjourney/scripts/qa_native_intake.mjs
 
   validate-and-publish-preview:
     if: github.repository == 'Catalyst-Media-Partners/catalyst-website' && github.ref == 'refs/heads/infused-preview' && github.event_name != 'pull_request'
@@ -91,13 +99,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Prevent access to production Worker, D1 and checkout runtime
+      - name: Verify isolated D1 and private SES bindings without production access
         run: |
           set -euo pipefail
           grep -Fxq 'name = "infused-dropjourneytest"' dropjourney/wrangler.toml
           grep -Fxq 'workers_dev = false' dropjourney/wrangler.toml
           grep -Fxq 'keep_vars = true' dropjourney/wrangler.toml
-          ! grep -Eq 'AUDIENCE_DB|database_id|d1_databases|STRIPE_|infused-show"' dropjourney/wrangler.toml
+          grep -Fxq 'binding = "INTAKE_DB"' dropjourney/wrangler.toml
+          grep -Fxq 'database_id = "13188d57-a463-445d-b341-9479ac3a4558"' dropjourney/wrangler.toml
+          grep -Fxq 'entrypoint = "InfusedIntakeSESBridge"' dropjourney/wrangler.toml
+          ! grep -Eq '4fc7440c-c340-47c4-a75f-96f4e7ad7441|AUDIENCE_DB|STRIPE_|infused-show"' dropjourney/wrangler.toml
+          ! grep -Eq 'AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY' dropjourney/wrangler.toml dropjourney/worker.mjs dropjourney/intake.mjs
           ! grep -Eq 'AUDIENCE_DB|STRIPE_|webhook|sendEmail|infused-show"' dropjourney/worker.mjs
       - name: Verify current unchanged production source without deploying
         run: |
@@ -110,6 +122,9 @@ jobs:
         run: |
           set -euo pipefail
           node --check dropjourney/worker.mjs
+          node --check dropjourney/intake.mjs
+          node --check dropjourney/src/intake.js
+          node --check dropjourney/src/intake-form.mjs
           node --check dropjourney/build.mjs
           node --check dropjourney/src/site.js
           node --check dropjourney/src/s05-pages.mjs
@@ -133,6 +148,7 @@ jobs:
           node dropjourney/scripts/qa_u2.mjs
           node dropjourney/scripts/qa_u3.mjs
           node dropjourney/scripts/qa_brand_logo.mjs
+          node dropjourney/scripts/qa_native_intake.mjs
       - name: Archive U0 structured route inventory
         uses: actions/upload-artifact@v4
         with:

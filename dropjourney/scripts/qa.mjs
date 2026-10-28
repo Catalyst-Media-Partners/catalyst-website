@@ -13,9 +13,10 @@ for(const id of ids){
  assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),`${label}: doubled preview prefix`);
  assert.ok(!html.includes('AN INTERACTIVE PREVIEW'),`${label}: prototype disclaimer in public copy`);
  assert.ok(!html.includes('/tickets/api/subscribe'),`${label}: no production ticket collection`);
- assert.ok(!html.includes('form.jotform.com')||['contact','tickets','buyers/apply'].includes(id),`${label}: contact action only on contact route`);
+ assert.ok(!/jotform/i.test(html),`${label}: no Jotform dependency allowed`);
  assert.ok(!html.includes('href="https://infused.show/"'),`${label}: no escape to old site via home logo`);
- if(id===''||id==='buyers/apply'){assert.ok(!html.includes('<form'),`${label}: no native PII form allowed`);assert.ok(!html.includes('id="buyer-form"'),'legacy wizard must be retired');}
+ if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,`${label}: required native form missing`);
+ else assert.ok(!html.includes('<form'),`${label}: unexpected form`);
  if(id==='tickets'){assert.ok(!html.includes('id="ticket-notify-form"'),'ticket form must be inert');assert.ok(html.includes('not yet on sale'),'honest ticket-not-on-sale state');}
  for(const m of html.matchAll(/(?:href|src)="(\/dropjourneytest\/[^"?#]*)/g)){
    const u=m[1];if(!u||u==='/'||u.endsWith('/'))continue;
@@ -26,7 +27,7 @@ for(const id of ids){
 }
 const code=await readFile(path.join(root,'worker.mjs'),'utf8');
 for(const needle of ['noindex, nofollow, noarchive','if(request.method','env.ASSETS.fetch','tickets\\/api','X-DropJourney-Version'])assert.ok(code.includes(needle),`Worker missing ${needle}`);
-assert.ok(!code.includes('AUDIENCE_DB'),'Preview should have no D1 binding');
+assert.ok(!code.includes('AUDIENCE_DB'),'No production audience binding');
 const conf=await readFile(path.join(root,'wrangler.toml'),'utf8');
 assert.ok(conf.includes('name = "infused-dropjourneytest"'),'Worker name must be isolated');
 assert.ok(conf.includes('workers_dev = false'),'No workers.dev public preview');

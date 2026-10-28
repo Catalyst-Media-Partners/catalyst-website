@@ -6,13 +6,15 @@ const routes=['','market','ecosystem','roots','science','make','package','move',
 const dist=path.join(root,'dist','dropjourneytest');let links=0,images=0;
 for(const id of routes){
  const html=await read(`dist/dropjourneytest/${id?id+'/':''}index.html`),label=id||'journey';
- assert.match(html,/name="dropjourney-site-version" content="2\.9\.1-review"/,label+' wrong version');
+ assert.match(html,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,label+' wrong version');
  assert.match(html,/name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,label+' not isolated from indexing');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,label+' H1 count wrong');
  const mainTarget=id?'main':'story-main';
  assert.match(html,new RegExp(`<main\\b[^>]*\\bid="${mainTarget}"`),label+' missing original main target');
  assert.ok(html.includes(`href="#${mainTarget}"`),label+' skip link missing or broken');
- assert.doesNotMatch(html,/<form\b|id="motion-optin"/,label+' contains unapproved form or motion activation');
+ assert.doesNotMatch(html,/id="motion-optin"/,label+' unsolicited motion activation');
+  if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/);
+  else assert.doesNotMatch(html,/<form\b/,label+' unexpected form');
  assert.ok(html.includes('/dropjourneytest/'),label+' escaped route namespace');
  assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),label+' double-prefixed resource');
  for(const m of html.matchAll(/(?:href|src)="(\/dropjourneytest\/[^"?#]*)/g)){
@@ -32,7 +34,8 @@ assert.match(css,/grid-template-columns:repeat\(auto-fit/,'responsive metric arr
 assert.match(styles,/\.chapter-nav ol\{display:grid/,'chapter navigation must not be horizontal scroller');
 assert.match(water,/prefers-reduced-motion:reduce/,'system reduced-motion support missing');
 assert.match(conf,/name = "infused-dropjourneytest"/,'wrong preview Worker');
-assert.doesNotMatch(conf,/d1_databases|AUDIENCE_DB|STRIPE_|infused-show"/,'preview has production binding');
+assert.match(conf,/database_name = "infused-intake"/,'Isolated INFUSED intake D1 must be bound');
+assert.doesNotMatch(conf,/4fc7440c-c340-47c4-a75f-96f4e7ad7441|AUDIENCE_DB|STRIPE_|infused-show"/,'Preview must not bind production audience or payments');
 assert.doesNotMatch(worker,/AUDIENCE_DB|STRIPE_|sendEmail|webhook/,'preview must not run production handlers');
 assert.match(worker,/noindex, nofollow, noarchive/,'preview response headers required');
 assert.equal((await readdir(path.join(dist,'assets','images'))).filter(n=>n.endsWith('.webp')).length,21,'original media asset count');

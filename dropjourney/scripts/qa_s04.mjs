@@ -14,10 +14,10 @@ const script=await read('src/app.js');
 const worker=await read('worker.mjs');
 for(const id of routes){
  const html=await read('dist/dropjourneytest/'+(id?id+'/':'')+'index.html');
- assert.match(html,/name="dropjourney-site-version" content="2\.9\.1-review"/,id+' not current');
+ assert.match(html,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,id+' not current');
  assert.match(html,/<meta name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,id+' preview indexing enabled');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,id+' H1 count');
- assert.doesNotMatch(html,/<form\b/,id+' native form could submit personal data');
+ if(['buyers/apply','tickets','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,id+' native form missing');else assert.doesNotMatch(html,/<form\b/,id+' unexpected form');
  assert.doesNotMatch(html,/id="motion-optin"/,id+' motion activation control');
  assert.ok(html.includes('/dropjourneytest/'),id+' not namespaced');
 }
@@ -45,5 +45,5 @@ assert.match(script,/function drawClick/,'Retain click wave');
 assert.match(script,/CHOOSE YOUR PATH/,'Final chapter drop must focus audience choices, not loop or force exhibitor');
 assert.doesNotMatch(home,/AN INTERACTIVE PREVIEW|MOTION REDUCED \/ V1\.5/,'Prototype disclaimers remain');
 assert.ok(!worker.includes('AUDIENCE_DB')&&!worker.includes('STRIPE_'),'Worker remains isolated');
-assert.ok(worker.includes('2.9.1-review')&&worker.includes("noindex, nofollow, noarchive"));
+assert.ok(worker.includes('2.9.2-native-intake')&&worker.includes("noindex, nofollow, noarchive"));
 console.log(`PASS DJ-S04: ${routes.length} pages, shared 3D SVG drop, 3 curated metrics / 5 sourced totals, navigation, water physics and protected preview boundaries`);
