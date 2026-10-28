@@ -22,3 +22,7 @@ entrypoint = "InfusedIntakeSESBridge"
 
 [triggers]
 crons = ["*/5 * * * *"]
+
+# Launch only after private SES bridge and D1 schema pass acceptance.
+[vars]
+TICKET_NOTIFY_ENABLED = "false"
