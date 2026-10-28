@@ -22,7 +22,7 @@ for(const id of pages){
      assert.ok(pages.some(x=>u.pathname==='/dropjourneytest/'+(x?x+'/':'')) || landers.some(x=>u.pathname==='/dropjourneytest/land/'+(x?x+'/':'')),(id||'home')+': unknown preview route '+u.pathname);
    }
  }
- assert.match(html,/name="robots" content="noindex,\\s*nofollow,\\s*noarchive"/,(id||'home')+' public index prevention missing');
+ assert.match(html,/name="robots" content="noindex,\s*nofollow,\s*noarchive"/,(id||'home')+' public index prevention missing');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,(id||'home')+' H1 count');
  assert.doesNotMatch(html,/<form\b/i,(id||'home')+' contains unapproved submitting form');
  records.push({route:'/dropjourneytest/'+pathId,links:labels,buttonLabels:buttons});
@@ -36,7 +36,7 @@ const landerRecords=[];
 for(const id of landers){
  const name=id||'';
  const html=await read('dist/dropjourneytest/land/'+(name?name+'/':'')+'index.html');
- assert.match(html,/noindex,nofollow,noarchive/,'Campaign lander indexing enabled');
+ assert.match(html,/noindex,\s*nofollow,\s*noarchive/,'Campaign lander indexing enabled');
  assert.doesNotMatch(html,/<form\b/i,'Campaign lander has unapproved form');
  landerRecords.push({route:'/dropjourneytest/land/'+(name?name+'/':''),links:(html.match(/<a\b/g)||[]).length});
 }
