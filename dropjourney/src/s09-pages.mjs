@@ -16,11 +16,27 @@ export function renderOpportunities(source,{href,event,photo}){
  const sections=topics.map((raw,i)=>{
   const name=must(raw,/<h3>[\s\S]*?<\/h3>/,'offer type').replace('<h3>','<h2>').replace('</h3>','</h2>');
   const p=must(raw,/<p>[\s\S]*?<\/p>/,'offer description');
-  const id=/Sponsorship/i.test(name)?' id="sponsorship"':'';
-  return `<article class="dj-offer"${id}><span class="dj-topic-index" aria-hidden="true">${String(i+1).padStart(2,'0')}</span><div>${name}${p}${id?`<a href="${href('contact')}" class="dj-offer-link">Ask about sponsorship <span aria-hidden="true">↗</span></a>`:''}</div></article>`;
- }).join('');
+  const sponsor=/Sponsorship/i.test(name);
+  return `<article class="dj-offer"${sponsor?' id="sponsorship"':''} role="listitem"><span class="dj-topic-index" aria-hidden="true">${String(i+1).padStart(2,'0')}</span><div>${name}${p}${sponsor?`<a href="${href('contact')}" class="dj-offer-link">Ask about sponsorship <span aria-hidden="true">↗</span></a>`:''}</div></article>`;
+ });
+ const sponsor=sections.find(s=>s.includes('id="sponsorship"'));
+ const secondary=sections.filter(s=>!s.includes('id="sponsorship"'));
+ if(!sponsor||secondary.length!==5)throw Error('DJ-U2 sponsorship must remain a direct, visible destination');
  if(!purchase.includes('https://infused.show/go/booth'))throw Error('DJ-S09 first-party purchase must stay unchanged');
- return `<section class="section dj-offers-page" id="opportunities" aria-labelledby="opps-title"><div class="container"><div class="dj-commercial-intro"><div class="dj-commercial-copy">${label}<span class="dj-sector-kicker">EXHIBIT / SHOWCASE / SPONSOR</span>${title}${lead}<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${purchaseHref}">Browse available booth space <span aria-hidden="true">↗</span></a><a href="${href('contact')}" class="dj-btn dj-btn-quiet">Talk to our team <span aria-hidden="true">↗</span></a></div></div><figure class="dj-offers-visual"><img src="${photo}" alt="Exhibitors and attendees discussing products at a trade show" width="1380" height="920" decoding="async" loading="eager"><figcaption>Products / relationships / opportunities</figcaption></figure></div><div class="dj-offers-head"><span>WAYS TO PARTICIPATE</span><span>SIX COMMERCIAL PATHWAYS</span></div><div class="dj-offers-grid" role="list">${sections.replaceAll('class="dj-offer"','class="dj-offer" role="listitem"').replaceAll('class="dj-offer" id="sponsorship"','class="dj-offer" id="sponsorship" role="listitem"')}</div><aside class="dj-offers-booking"><div class="dj-offers-booking-copy"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${price}</div><div class="dj-offers-booking-action">${purchase.replace('class="btn btn-primary"','class="dj-btn dj-btn-acid"')}<p>Final price and availability are confirmed in the official booking process.</p></div></aside></div></section>`;
+ return `<section class="section dj-offers-page" id="opportunities" aria-labelledby="opps-title"><div class="container">
+   <div class="dj-commercial-intro">
+     <div class="dj-commercial-copy">${label}<span class="dj-sector-kicker">EXHIBIT / SHOWCASE / SPONSOR</span>${title}${lead}
+       <div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${purchaseHref}">Browse available booth space <span aria-hidden="true">↗</span></a><a href="#sponsorship" class="dj-btn dj-btn-quiet">Explore sponsorship <span aria-hidden="true">↗</span></a></div>
+     </div>
+     <figure class="dj-offers-visual"><img src="${photo}" alt="Exhibitors and attendees discussing products at a trade show" width="1380" height="920" decoding="async" loading="eager"><figcaption>Products / relationships / opportunities</figcaption></figure>
+   </div>
+   <aside class="dj-offers-booking" aria-label="Booth pricing and purchase">
+     <div class="dj-offers-booking-copy"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${price}</div>
+     <div class="dj-offers-booking-action">${purchase.replace('class="btn btn-primary"','class="dj-btn dj-btn-acid"')}<p>Final price and availability are confirmed in the official booking process.</p></div>
+   </aside>
+   <section class="dj-sponsor-spotlight" aria-label="Sponsorship option">${sponsor}</section>
+   <details class="dj-more-pathways"><summary>Explore five other ways to participate</summary><div class="dj-offers-grid" role="list">${secondary.join('')}</div></details>
+ </div></section>`;
 }
 export function renderContact(source,{href,event}){
  const label=must(source,/<span class="kicker">[\s\S]*?<\/span>/,'contact label');

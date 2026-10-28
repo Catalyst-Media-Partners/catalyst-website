@@ -38,7 +38,9 @@ for(const [name,page] of [['homepage',home],['buyer profile',apply]]){
 assert.doesNotMatch(apply,/<form\b|fetch\(|sendBeacon\(/i,'Preview must not submit or transmit buyer information');
 assert.match(css,/\.dj-sector-adjacent/);
 assert.match(css,/\.dj-offers-visual/);
-for(const id of ['opportunities','buyers','tickets','contact']){
+const opportunities=await read('dist/dropjourneytest/opportunities/index.html');
+assert.doesNotMatch(opportunities,/class="dj-related"/,'Exhibitor page must not repeat generic final purchase CTA');
+for(const id of ['buyers','tickets','contact']){
  const s=await read('dist/dropjourneytest/'+id+'/index.html');
  assert.match(s,/dj-related-primary/,'Commercial page needs obvious final conversion');
 }
