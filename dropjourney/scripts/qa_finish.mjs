@@ -12,8 +12,12 @@ assert.match(home,/class="final-action"/);
 assert.match(home,/href="\/dropjourneytest\/opportunities\/"[^>]*>.*?Explore exhibit options/s);
 assert.match(home,/href="\/dropjourneytest\/tickets\/"/);
 assert.doesNotMatch(home,/BACK TO (?:THE )?BEGINNING/,'Final chapter must convert, not restart');
-assert.match(app,/location\.assign\('\/dropjourneytest\/opportunities\/'\)/);
-assert.match(app,/Explore ways to participate/);
+assert.doesNotMatch(app,/location\.assign\('\/dropjourneytest\/opportunities\/'\)/,'Final Next/drop must not force exhibitor conversion');
+assert.match(app,/function focusFinalDecision\(\)/);
+assert.match(home,/data-role="attendee"/);
+assert.match(home,/data-role="exhibitor"/);
+assert.match(home,/data-role="buyer"/);
+assert.match(app,/CHOOSE YOUR PATH/);
 for(const id of ['make','move']){
  const s=await read('dist/dropjourneytest/'+id+'/index.html');
  assert.match(s,/class="dj-sector-adjacent"/,'Sparse sector must show related category media');

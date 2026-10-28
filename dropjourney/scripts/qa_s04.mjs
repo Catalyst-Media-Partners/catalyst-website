@@ -42,7 +42,7 @@ assert.match(styles,/\.chapter-layout:after\{content:/,'Feathered imagery, not l
 assert.match(site,/DJ-S04 shared finishing/,'Detail pages must adopt the same finish');
 assert.match(script,/function drawHover/,'Retain original three-ring pointer physics');
 assert.match(script,/function drawClick/,'Retain click wave');
-assert.match(script,/EXPLORE YOUR OPTIONS/,'Final chapter drop must lead to the commercial CTA rather than loop');
+assert.match(script,/CHOOSE YOUR PATH/,'Final chapter drop must focus audience choices, not loop or force exhibitor');
 assert.doesNotMatch(home,/AN INTERACTIVE PREVIEW|MOTION REDUCED \/ V1\.5/,'Prototype disclaimers remain');
 assert.ok(!worker.includes('AUDIENCE_DB')&&!worker.includes('STRIPE_'),'Worker remains isolated');
 assert.ok(worker.includes('2.9.1-review')&&worker.includes("noindex, nofollow, noarchive"));

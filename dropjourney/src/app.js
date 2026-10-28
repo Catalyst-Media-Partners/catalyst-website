@@ -88,9 +88,9 @@
     $('.keyboard-hint span').textContent = `${String(i+1).padStart(2,'0')} / 05`;
     $('#previous').disabled = i===0;
     const last = i===chapters.length-1;
-    $('#next').innerHTML = last ? 'EXPLORE OPTIONS <span aria-hidden="true">&#8599;</span>' : 'NEXT CHAPTER <span aria-hidden="true">→</span>';
-    $('#drop-action').textContent = last ? 'EXPLORE YOUR OPTIONS' : 'NEXT / ' + chapters[i+1].toUpperCase();
-    drop.setAttribute('aria-label',last?'Explore ways to participate in INFUSED':`Continue to chapter ${chapters[i+1]}`);
+    $('#next').innerHTML = last ? 'CHOOSE YOUR PATH <span aria-hidden="true">&#8595;</span>' : 'NEXT CHAPTER <span aria-hidden="true">→</span>';
+    $('#drop-action').textContent = last ? 'CHOOSE YOUR PATH' : 'NEXT / ' + chapters[i+1].toUpperCase();
+    drop.setAttribute('aria-label',last?'Focus the participation choices for INFUSED':`Continue to chapter ${chapters[i+1]}`);
     // The droplet remains visually steady between chapters; water moves instead.
     drop.classList.remove('is-shifting');
     closeNav();
@@ -364,10 +364,18 @@
       $('#liquid-live').textContent=name===null?'Journey restarted':`Now exploring ${name}`;
     },transitionDuration);
   }
+  function focusFinalDecision(){
+    const firstChoice = $('#what .final-role-links a');
+    if(!firstChoice)return;
+    firstChoice.scrollIntoView({block:'nearest',behavior:reduced()?'instant':'smooth'});
+    firstChoice.focus({preventScroll:true});
+    $('#liquid-live').textContent = 'Choose Attend, Exhibit, or Hosted Buyers';
+  }
   function next(event,fromDrop=false){
     if(active==='what'){
-      // The final chapter is a conversion choice, not an automatic story loop.
-      location.assign('/dropjourneytest/opportunities/');
+      // At the end of the guided journey, offer a real audience choice.
+      // The drop and NEXT never infer that this visitor is an exhibitor.
+      focusFinalDecision();
       return;
     }
     const i=chapters.indexOf(active);
