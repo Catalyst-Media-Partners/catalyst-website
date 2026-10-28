@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {renderMarket,renderVegas} from './src/s05-pages.mjs';
 import {renderEcosystem,renderSector,checkTaxonomy} from './src/s06-pages.mjs';
 import {renderBuyers} from './src/s08-pages.mjs';
+import {renderOpportunities,renderContact,renderTickets} from './src/s09-pages.mjs';
 
 // Separate site, generated exclusively beneath /dropjourneytest/. No production build edits.
 const root=path.dirname(fileURLToPath(import.meta.url));
@@ -35,7 +36,7 @@ checkTaxonomy(taxonomy,catalog);
 const href=id=>BASE+(id?id+'/':'');
 const pathify=raw=>raw.replaceAll('{{BASE}}',BASE).replaceAll('href="/','href="'+BASE);
 const imagesRoot=BASE+'assets/images/';
-const css=(await load('src/site.css'))+'\n'+(await load('src/s05.css'))+'\n'+(await load('src/s06.css'))+'\n'+(await load('src/s08.css'));
+const css=(await load('src/site.css'))+'\n'+(await load('src/s05.css'))+'\n'+(await load('src/s06.css'))+'\n'+(await load('src/s08.css'))+'\n'+(await load('src/s09.css'));
 const js=await load('src/site.js');
 // Reuse the same approved transparent wordmark already in the deployed Drop Journey.
 const originalHome=await load('src/index.html');
@@ -100,6 +101,9 @@ async function detailPage(route){
  if(['roots','science','make','package','move','sell','services'].includes(route.id))content=renderSector(content,route,{href,taxonomy});
  if(route.id==='opportunities') content=content.replace('<article class="detail-box green"><h3>Sponsorship</h3>','<article class="detail-box green" id="sponsorship"><h3>Sponsorship</h3>');
  if(route.id==='buyers')content=renderBuyers(content,{href});
+ if(route.id==='opportunities')content=renderOpportunities(content,{href,event});
+ if(route.id==='contact')content=renderContact(content,{href,event});
+ if(route.id==='tickets')content=renderTickets(content,{href,event});
  const heading=route.label==='The ecosystem'?'The full value stream':route.label;
  return head(heading,'INFUSED Las Vegas. '+heading+'. Explore the connected infused-products ecosystem.')+
  `<body class="dj-detail dj-${route.id}" data-page="${route.id}" data-chapter="${route.chapter.toLowerCase()}">${header(route.id)}${noScriptNav()}<div class="dj-ambient" aria-hidden="true"></div>${introNav(route)}<main id="main" tabindex="-1" class="dj-main"><div class="dj-content">`+
