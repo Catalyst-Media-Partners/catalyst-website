@@ -21,3 +21,19 @@
 .dj-promo-unavailable{margin-top:clamp(33px,5vw,80px);border-top:1px solid var(--dj-edge);padding:25px 0 0;max-width:920px}.dj-promo-unavailable strong{display:block;font-size:clamp(21px,2.7vw,36px);letter-spacing:-.045em;line-height:1.15;margin:10px 0}.dj-promo-unavailable p{font-size:13px;max-width:750px}
 @media(max-width:950px){.dj-contact-hero,.dj-tickets-hero{grid-template-columns:1fr}.dj-contact-photo img,.dj-tickets-photo img{aspect-ratio:16/9;max-height:400px;border-radius:18px 18px 64px 18px}.dj-offers-booking{grid-template-columns:1fr}}
 @media(max-width:560px){.dj-offers-grid{grid-template-columns:1fr}.dj-offers-head{font-size:9px}.dj-offer{grid-template-columns:33px minmax(0,1fr)}.dj-contact-actions .dj-btn,.dj-tickets-intro .dj-btn{width:100%}.dj-contact-next{grid-template-columns:1fr}.dj-ticket-next{grid-template-columns:1fr}.dj-contact-next a,.dj-ticket-next a{border-right:0;border-bottom:1px solid var(--dj-edge);padding-left:0}.dj-contact-next a:last-child,.dj-ticket-next a:last-child{border-bottom:0}.dj-offers-booking{padding:25px 18px}.dj-contact-copy h1,.dj-tickets-intro h1{font-size:clamp(36px,10vw,59px)}}
+/* Ticket notifications are deliberately NOT a Hosted Buyer profile. */
+.dj-ticket-notify-form{display:grid;gap:10px;max-width:640px;margin:24px 0 12px}
+.dj-ticket-notify-form>label{font-weight:800;font-size:15px;color:#f5f1f5}
+.dj-ticket-notify-row{display:flex;align-items:stretch;gap:10px}
+.dj-ticket-notify-row input{min-width:0;flex:1;border:1px solid #5f596c;border-radius:7px;background:#1d1826;color:white;padding:14px 16px;font:inherit;font-size:16px;min-height:53px}
+.dj-ticket-notify-row input:focus-visible{outline:3px solid #b9ee84;outline-offset:3px}
+.dj-ticket-notify-row button{min-width:180px;white-space:normal;line-height:1.15}
+.dj-ticket-notify-row button:disabled{opacity:.6;cursor:not-allowed}
+.dj-ticket-notify-form .cf-turnstile{margin:4px 0;min-height:52px}
+.dj-ticket-notify-help{font-size:13px!important;line-height:1.5!important;color:#e7e3e9!important;margin:0!important}
+.dj-ticket-notify-privacy{font-size:12px!important;line-height:1.55!important;color:var(--dj-muted)!important;margin:0!important}
+.dj-ticket-notify-status{font-size:14px!important;font-weight:700;min-height:24px;color:#b9ed83!important;margin:5px 0!important}
+.dj-ticket-notify-status[data-state="error"]{color:#ffc8cc!important}
+.dj-tickets-photo img{max-height:370px;aspect-ratio:5/4}
+.dj-tickets-intro .dj-ticket-state{background:transparent;border:0;padding:0;color:#f2f0f3;font-size:15px;margin:8px 0}
+@media(max-width:650px){.dj-ticket-notify-row{flex-direction:column}.dj-ticket-notify-row button{min-height:52px}.dj-tickets-photo img{max-height:280px;aspect-ratio:16/9}}
