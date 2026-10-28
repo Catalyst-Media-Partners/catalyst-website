@@ -108,7 +108,7 @@ body[data-stage=who] a.small-pill{display:inline-flex;align-items:center;justify
 @media(max-width:720px){.dj-intake-steps{grid-template-columns:1fr}.dj-secure-intake{margin-top:15px;padding:20px}}
 
 /* DJ-U3.1: retire old sticky/sidebar grid from the removed six-step buyer wizard.
-   The consent-based Jotform handoff is a compact, full-width editorial page. */
+   The consent-based first-party handoff is a compact, full-width editorial page. */
 .dj-application{display:block;max-width:1420px}
 .dj-application .dj-app-head{position:relative;top:auto;max-width:none;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.5fr);gap:clamp(25px,4vw,55px);align-items:center}
 .dj-application .dj-app-intro h1{font-size:clamp(40px,4.5vw,66px);line-height:1.04;max-width:810px;margin:14px 0 19px}
