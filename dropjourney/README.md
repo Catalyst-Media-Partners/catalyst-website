@@ -57,3 +57,11 @@ Cloudflare retains prior `infused-dropjourneytest` Worker version IDs. Roll back
 - S04 QA: `node dropjourney/scripts/qa_s04.mjs` and local `python dropjourney/scripts/visual_s04.py`; results recorded in `docs/S04_ACCEPTANCE.md` and the GitHub S04 PR.
 - Deploy workflow: `.github/workflows/deploy-dropjourney-s04.yml`. Only dedicated test Worker `infused-dropjourneytest` may be deployed; production is immutable.
 - **Next S05:** Market and Las Vegas detail pages, source evidence hierarchy and image-led destination storytelling.
+
+## DJ-S05 | Market Evidence and Vegas destination (2026-10-27)
+
+- Branch: `dj/s05-market-vegas-evidence-20261027`, based on S04. Do not merge into production `infused-show`.
+- `src/s05-pages.mjs` reorganizes the canonical Market/Why Vegas source without copying or inventing published market numbers, citations, original reasons or imagery. `src/s05.css` applies the responsive editorial system only to those two pages.
+- `content/event.json` is the single preview source for the **currently published** event date, venue and city. Build fails if canonical site source conflicts with those values. Signed operator verification remains pending for any production cutover.
+- `scripts/qa_s05.mjs` checks figure/source integrity, original Las Vegas copy and imagery, global date/venue parity and preview protection.
+- **Next S06:** Ecosystem hub, Roots, Science, Make and Package.
