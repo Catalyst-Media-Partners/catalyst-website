@@ -9,7 +9,9 @@ for(const id of routes){
  assert.match(html,/name="dropjourney-site-version" content="2\.8\.0-s10"/,label+' wrong version');
  assert.match(html,/name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,label+' not isolated from indexing');
  assert.equal((html.match(/<h1\b/g)||[]).length,1,label+' H1 count wrong');
- assert.match(html,/<main\b[^>]*id="main"|<main\b[^>]*\bid="main"/,label+' missing skip target');
+ const mainTarget=id?'main':'story-main';
+ assert.match(html,new RegExp(`<main\\b[^>]*\\bid="${mainTarget}"`),label+' missing original main target');
+ assert.ok(html.includes(`href="#${mainTarget}"`),label+' skip link missing or broken');
  assert.doesNotMatch(html,/<form\b|id="motion-optin"/,label+' contains unapproved form or motion activation');
  assert.ok(html.includes('/dropjourneytest/'),label+' escaped route namespace');
  assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),label+' double-prefixed resource');
