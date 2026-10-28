@@ -9,7 +9,7 @@ const app=await read('src/app.js');
 const css=await read('src/finish.css');
 assert.match(home,/data-chapter="what"/);
 assert.match(home,/class="final-action"/);
-assert.match(home,/href="\/dropjourneytest\/opportunities\/"[^>]*>.*?Explore exhibit options/s);
+assert.match(home,/href="\/dropjourneytest\/opportunities\/" data-role="exhibitor"/);
 assert.match(home,/href="\/dropjourneytest\/tickets\/"/);
 assert.doesNotMatch(home,/BACK TO (?:THE )?BEGINNING/,'Final chapter must convert, not restart');
 assert.doesNotMatch(app,/location\.assign\('\/dropjourneytest\/opportunities\/'\)/,'Final Next/drop must not force exhibitor conversion');
