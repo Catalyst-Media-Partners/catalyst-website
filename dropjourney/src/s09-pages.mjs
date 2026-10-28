@@ -55,9 +55,26 @@ export function renderTickets(source,{href,event}){
  const title=must(source,/<h1\b[^>]*>[\s\S]*?<\/h1>/,'ticket headline');
  const photo=must(source,/<img class="hero-image"[^>]*>/,'ticket image');
  const lead=must(source,/<p class="hero-description">[\s\S]*?<\/p>/,'ticket announcement');
- const promo=must(source,/<div class="notify-promo">[\s\S]*?<\/div>/,'existing published ticket offer');
- if(!/25%/.test(promo))throw Error('DJ-S09 original ticket offer changed; do not invent offer');
- const promoTitle=must(promo,/<strong>[\s\S]*?<\/strong>/,'ticket promo title');
- // Tickets are unavailable; first-party attendance interest is consented and persisted.
- return `<section class="section dj-tickets-page" id="tickets" aria-labelledby="ticket-hero-title"><div class="container"><div class="dj-tickets-hero"><div class="dj-tickets-intro"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${lead}<p class="dj-ticket-state" role="status">Tickets are not yet on sale. You may request attendance updates; this does not reserve or purchase a ticket.</p><div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#attendee-interest-form" data-intake-type="attendee-interest">Request attendance updates <span aria-hidden="true">↗</span></a><a class="dj-btn dj-btn-quiet" href="${href('why-vegas')}">Explore Las Vegas <span aria-hidden="true">↗</span></a></div></div><figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure></div><aside class="dj-promo-unavailable"><span class="dj-sector-kicker">PUBLISHED EARLY-BIRD OFFER</span>${promoTitle}<p>The published incentive is not activated in this preview. Eligibility and terms must be confirmed before ticket registration opens.</p></aside><nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Hosted Buyers <span aria-hidden="true">↗</span></a></nav>${renderIntakeForm('attendee')}</div></section>`;
+ const promo=must(source,/<div class="notify-promo">[\s\S]*?<\/div>/,'published offer');
+ if(!/25%/.test(promo))throw Error('DJ-S09 original 25% ticket incentive changed');
+ return `<section class="section dj-tickets-page" id="tickets" aria-labelledby="ticket-hero-title"><div class="container">
+ <div class="dj-tickets-hero">
+  <div class="dj-tickets-intro"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${lead}
+   <p class="dj-ticket-state" role="status">Tickets are not yet on sale. Get notified and reserve your 25% early-bird code.</p>
+   <form class="dj-ticket-notify-form" id="ticket-notify-form" action="/dropjourneytest/tickets/api/subscribe" method="post" novalidate aria-describedby="ticket-notify-details">
+    <label for="ticket-notify-email">Email address</label>
+    <div class="dj-ticket-notify-row">
+     <input id="ticket-notify-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="you@example.com">
+     <button id="ticket-notify-submit" class="dj-btn dj-btn-acid" type="submit">Notify me + unlock 25%</button>
+    </div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAAFqD00K1sQuydqkj" data-action="infused-tickets" data-theme="dark"></div>
+    <p class="dj-ticket-notify-help" id="ticket-notify-details">One email, one confirmation link. Verify your address to get your personal code. No ticket is purchased or reserved today.</p>
+    <p class="dj-ticket-notify-privacy">By submitting, you request INFUSED ticket availability and early-bird offer emails. No unrelated marketing. Unsubscribe anytime.</p>
+    <p id="ticket-notify-status" class="dj-ticket-notify-status" role="status" aria-live="polite" aria-atomic="true"></p>
+   </form>
+  </div>
+  <figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure>
+ </div>
+ <nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Need Hosted Buyer access? <span aria-hidden="true">↗</span></a></nav>
+ </div></section><script src="/dropjourneytest/assets/ticket-notify.js" defer></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
 }
