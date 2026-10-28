@@ -30,3 +30,12 @@ body[data-stage=what] .stage-bottom #next{color:var(--acid);border-color:rgba(19
 @media(max-width:680px){.dj-sector-adjacent-links{grid-template-columns:1fr}.dj-cross-link{grid-template-columns:110px minmax(0,1fr)}.dj-cross-link img{height:110px}.dj-app-head-visual{gap:18px}.final-role-links a,.final-role-links button{width:100%}.dj-related-primary{width:100%}.dj-offers-visual img{aspect-ratio:16/10}}
 @media(max-width:390px){.dj-cross-link{grid-template-columns:95px minmax(0,1fr)}.dj-cross-link img{height:98px}.final-action{padding:18px}.final-action h3{font-size:29px}}
 @media(prefers-reduced-motion:reduce){.dj-related-primary{transition:none}}
+
+/* DJ-X1.1: final review-stage handoff. Only links to the existing contact page;
+   no application submission, profile transfer, storage or tracking. */
+.buyer-handoff{margin:clamp(18px,3vw,30px) 0;padding:clamp(16px,2.5vw,25px);border:1px solid rgba(194,255,109,.34);background:linear-gradient(120deg,rgba(194,255,109,.08),rgba(124,67,151,.1));border-radius:20px;max-width:100%}
+.buyer-handoff p{margin:0 0 15px;max-width:65ch;line-height:1.5;overflow-wrap:anywhere}
+.buyer-contact-link{display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:48px;max-width:100%;padding:12px 22px;border-radius:100px;text-align:center;background:#c2ff6d;color:#101913!important;font-size:13px;font-weight:850;line-height:1.25;text-decoration:none}
+.buyer-contact-link:hover{background:#e0ffb4}.buyer-contact-link:focus-visible{outline:3px solid #f9a2cd;outline-offset:3px}
+.buyer-handoff .buyer-handoff-note{margin:12px 0 0;color:inherit;opacity:.8;font-size:12px;line-height:1.4}
+@media(max-width:480px){.buyer-contact-link{display:flex;width:100%}.buyer-handoff{padding:16px}}
