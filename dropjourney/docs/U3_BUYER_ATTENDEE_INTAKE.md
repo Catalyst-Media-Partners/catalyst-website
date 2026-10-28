@@ -1,3 +1,5 @@
+> **SUPERSEDED — historical U3 prototype checkpoint only.** The Jotform handoffs described below were replaced by native INFUSED buyer, attendee and contact intake in preview release `2.9.2-native-intake` on October 28, 2026. Do not use the links below for new implementation or deployment. See [`U3_NATIVE_INTAKE_ACCEPTANCE.md`](./U3_NATIVE_INTAKE_ACCEPTANCE.md) for the canonical D1/SES configuration, tests, limitations and operational handoff. Existing historical Jotform submissions have not been deleted.
+
 # DJ-U3 — Verified third-party intake handoff (2026-10-28)
 
 **Entry:** U1 and U2 PASS, 16-page isolated test Worker. **Objective:** replace inert buyer application and ticket notification dead ends with actual, event-specific secure form destinations, without adding personal-data storage or write APIs to the preview Worker.
