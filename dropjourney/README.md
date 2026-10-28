@@ -65,3 +65,15 @@ Cloudflare retains prior `infused-dropjourneytest` Worker version IDs. Roll back
 - `content/event.json` is the single preview source for the **currently published** event date, venue and city. Build fails if canonical site source conflicts with those values. Signed operator verification remains pending for any production cutover.
 - `scripts/qa_s05.mjs` checks figure/source integrity, original Las Vegas copy and imagery, global date/venue parity and preview protection.
 - **Next S06:** Ecosystem hub, Roots, Science, Make and Package.
+
+
+## DJ-S06–S10 | Complete alternate site (2026-10-27)
+
+- **Authoritative code and acceptance:** GitHub branch `dj/s06-s10-complete-preview-20261027`, reviewed against S05.
+- **16-page preview:** https://infused.show/dropjourneytest/ under isolated Cloudflare `infused-dropjourneytest` Worker only. The primary INFUSED site is untouched.
+- **S06:** `content/taxonomy.json`, `src/s06-pages.mjs`, `src/s06.css` for source-derived ecosystem, Roots/Science/Make/Package.
+- **S07:** Same structured taxonomy for Move/Sell/Services, complete previous/next and buyer navigation.
+- **S08:** `src/s08-pages.mjs` and `src/s08.css` for two-sided Hosted Buyer experiences; existing six-step wizard remains a local, non-submitting demo.
+- **S09:** `src/s09-pages.mjs`, `src/s09.css` for full exhibit, sponsor, contact and tickets pages. Existing `/go/booth` and approved external Jotform only. Ticket subscriptions remain inactive.
+- **S10:** `scripts/qa_s06.mjs` through `scripts/qa_s10.mjs`, isolated CI workflow and `docs/S10_RELEASE.md` preserve responsiveness, accessibility, integrity, noindex and rollback.
+- Version `2.8.0-s10`. **No production cutover.** See `docs/S10_RELEASE.md` for acceptance evidence and remaining factual approvals.

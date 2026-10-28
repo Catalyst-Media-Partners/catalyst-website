@@ -7,7 +7,7 @@ const routes=['','market','ecosystem','roots','science','make','package','move',
 for(const route of routes){
   const html=await get(`dist/dropjourneytest/${route?route+'/':''}index.html`);
   const id=route||'home';
-  assert.match(html,/name="dropjourney-site-version" content="2\.3\.0-s05"/,`${id} wrong version`);
+  assert.match(html,/name="dropjourney-site-version" content="2\.8\.0-s10"/,`${id} wrong version`);
   assert.match(html,/name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/,`${id} missing noindex`);
   assert.equal((html.match(/<h1\b/g)||[]).length,1,`${id} must have one H1`);
   assert.ok(html.includes('class="dj-nojs"'),`${id} missing no-JS fallback`);
@@ -45,7 +45,7 @@ assert.match(detailCss,/\.dj-source-section \.stats-grid\{display:grid/,'Market 
 assert.match(detailCss,/\.dj-nojs/,'No-JS nav not styled');
 const worker=await get('worker.mjs');
 assert.match(worker,/noindex, nofollow, noarchive/);
-assert.match(worker,/2\.3\.0-s05/);
+assert.match(worker,/2\.8\.0-s10/);
 assert.doesNotMatch(worker,/AUDIENCE_DB|STRIPE_|d1_databases/,'No production bindings');
 const js=await get('src/site.js');
 assert.match(js,/const alpha=\.18/,'Three-ring hover optics missing');

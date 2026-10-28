@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source": "Current INFUSED production site, src/sections/ecosystem.html. Navigation sequence only; canonical descriptions stay in production sections.",
+  "stages": [
+    {"id":"roots","phase":"upstream"},
+    {"id":"science","phase":"upstream"},
+    {"id":"make","phase":"upstream"},
+    {"id":"package","phase":"upstream"},
+    {"id":"move","phase":"downstream"},
+    {"id":"sell","phase":"downstream"},
+    {"id":"services","phase":"downstream"}
+  ],
+  "connector": {"id":"buyers","role":"cross-cutting commercial audience"}
+}
