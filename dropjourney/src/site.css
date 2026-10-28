@@ -69,3 +69,15 @@ a{color:inherit}button,input,select,textarea{font:inherit}button{cursor:pointer}
 @media(max-width:540px){.dj-source-section .stats-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}.dj-source-section .photo-ribbon img:last-child{display:block}.dj-source-section .photo-ribbon{grid-template-columns:repeat(2,minmax(0,1fr))}.dj-source-section .photo-ribbon img:last-child{grid-column:1/-1;height:165px}.dj-source-section .stat-number{font-size:clamp(32px,9vw,45px)}}
 @media(max-width:350px){.dj-source-section .stats-grid{grid-template-columns:1fr}.dj-drawer{left:10px;right:10px;width:auto}}
 @media(prefers-reduced-motion:reduce){.dj-main,.dj-wayfinder{animation:none!important}@view-transition{navigation:none}}
+
+/* DJ-S04 shared finishing: smooth editorial crops, deliberate edge treatment. */
+.dj-source-section .detail-photo,.dj-source-section .detail-split.flip .detail-photo{border-radius:22px 22px 58px 22px;filter:saturate(.92);box-shadow:0 28px 72px rgba(0,0,0,.29)}
+.dj-source-section .photo-ribbon img,.dj-source-section .photo-ribbon img:first-child{border-radius:18px}
+.dj-source-section .eco-card img{border-radius:16px 16px 40px 16px}
+.dj-source-section .cta-photo{border-radius:22px 22px 58px 22px}
+.dj-content>.dj-cover-art{border-radius:48%;mask-image:radial-gradient(ellipse 73% 72% at 53% 43%,#000 18%,transparent 97%);opacity:.13;filter:saturate(.85)}
+.dj-source-section h1{font-size:clamp(45px,6.3vw,100px);line-height:.985;letter-spacing:-.068em}
+.dj-source-section .section-lead{line-height:1.44}
+.dj-source-section .detail-box{border-color:rgba(246,240,249,.18)}
+@media(max-width:800px){.dj-source-section .detail-split .detail-photo,.dj-source-section .detail-split.flip .detail-photo,.dj-source-section .cta-photo{border-radius:16px 16px 36px 16px}}
+@media(max-width:540px){.dj-source-section h1{font-size:clamp(38px,11.3vw,61px)}.dj-source-section .photo-ribbon img,.dj-source-section .photo-ribbon img:first-child{border-radius:12px}}

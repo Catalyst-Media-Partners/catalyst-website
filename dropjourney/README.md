@@ -47,3 +47,13 @@ Cloudflare retains prior `infused-dropjourneytest` Worker version IDs. Roll back
 - New test: `node dropjourney/scripts/qa_s03.mjs` plus local responsive smoke `python dropjourney/scripts/qa_s03_smoke.py`.
 - Preview CI workflow is on `.github/workflows/deploy-dropjourney-s03.yml` and can deploy **only** `infused-dropjourneytest`, preserving `infused-show` worker, assets, routing and secrets.
 - Acceptance evidence and next sprint in `dropjourney/docs/S03_ACCEPTANCE.md`.
+
+## DJ-S04 | Shared 3D droplet and editorial homepage (2026-10-27)
+
+- Authoritative branch: `dj/s04-editorial-3d-water-20261027`, stacked on DJ-S03 (GitHub PR remains draft, no merge to production).
+- `src/drop-art.svg` is the single shared smooth Bezier droplet artwork with layered diffuse/specular lighting and antialiased rim, expanded by `build.mjs` to the entrance and all five chapters.
+- Detailed page photography gets soft editorial crops while chapter photography feathers rather than forming hard rectangles. No low-poly silhouettes, large animation framework, WebGL or added dependencies.
+- WHY homepage summarizes three individually qualified examples; the full Market page keeps all five official published figures and source references. Chapter-specific CTAs and buyers/tickets links remain under `/dropjourneytest/` except existing `/go/booth` handoff.
+- S04 QA: `node dropjourney/scripts/qa_s04.mjs` and local `python dropjourney/scripts/visual_s04.py`; results recorded in `docs/S04_ACCEPTANCE.md` and the GitHub S04 PR.
+- Deploy workflow: `.github/workflows/deploy-dropjourney-s04.yml`. Only dedicated test Worker `infused-dropjourneytest` may be deployed; production is immutable.
+- **Next S05:** Market and Las Vegas detail pages, source evidence hierarchy and image-led destination storytelling.

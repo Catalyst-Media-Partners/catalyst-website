@@ -1,0 +1,47 @@
+<!-- Shared, scalable INFUSED water droplet. Built twice with unique SVG IDs. -->
+<svg class="drop-svg __DROP_CLASS__" viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" role="presentation" focusable="false" aria-hidden="true" shape-rendering="geometricPrecision">
+  <defs>
+    <path id="drop-outline-__DROP_ID__" d="M100 8 C97 8 96 14 93 22 C81 55 54 94 39 122 C27 144 21 160 23 179 C27 219 57 243 100 243 C143 243 173 219 177 179 C179 160 173 144 161 122 C146 94 119 55 107 22 C104 14 103 8 100 8 Z"/>
+    <clipPath id="drop-mask-__DROP_ID__"><use href="#drop-outline-__DROP_ID__"/></clipPath>
+    <linearGradient id="drop-body-__DROP_ID__" x1="8%" y1="6%" x2="94%" y2="90%">
+      <stop offset="0" stop-color="#f3ffe0"/>
+      <stop offset=".15" stop-color="#d7ff98"/>
+      <stop offset=".34" stop-color="#b2f764"/>
+      <stop offset=".53" stop-color="#8ce24c"/>
+      <stop offset=".74" stop-color="#57b94a"/>
+      <stop offset=".91" stop-color="#2d803f"/>
+      <stop offset="1" stop-color="#183b34"/>
+    </linearGradient>
+    <radialGradient id="drop-light-__DROP_ID__" cx="27%" cy="34%" fx="25%" fy="29%" r="78%">
+      <stop offset="0" stop-color="#faffd9" stop-opacity=".85"/>
+      <stop offset=".24" stop-color="#d9ff9d" stop-opacity=".47"/>
+      <stop offset=".62" stop-color="#a7eb64" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0b5632" stop-opacity=".18"/>
+    </radialGradient>
+    <radialGradient id="drop-low-__DROP_ID__" cx="82%" cy="95%" fx="87%" fy="98%" r="67%">
+      <stop offset="0" stop-color="#102e31" stop-opacity=".7"/>
+      <stop offset=".43" stop-color="#175a38" stop-opacity=".37"/>
+      <stop offset="1" stop-color="#104526" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="drop-specular-__DROP_ID__" cx="37%" cy="34%" r="67%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".84"/>
+      <stop offset=".32" stop-color="#edffe0" stop-opacity=".5"/>
+      <stop offset=".76" stop-color="#f7ffef" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="drop-rim-__DROP_ID__" x1="10%" y1="8%" x2="91%" y2="92%">
+      <stop offset="0" stop-color="#faffee" stop-opacity=".83"/>
+      <stop offset=".43" stop-color="#cfff9b" stop-opacity=".38"/>
+      <stop offset=".7" stop-color="#84df68" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#c5ffbd" stop-opacity=".16"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#drop-mask-__DROP_ID__)">
+    <use href="#drop-outline-__DROP_ID__" fill="url(#drop-body-__DROP_ID__)"/>
+    <use href="#drop-outline-__DROP_ID__" fill="url(#drop-light-__DROP_ID__)"/>
+    <use href="#drop-outline-__DROP_ID__" fill="url(#drop-low-__DROP_ID__)"/>
+    <ellipse cx="72" cy="116" rx="39" ry="83" fill="url(#drop-specular-__DROP_ID__)" opacity=".64"/>
+    <path d="M96 21 C89 47 68 79 53 109 C43 130 38 147 37 161" stroke="#f7ffde" stroke-width="3.4" stroke-linecap="round" opacity=".55" fill="none"/>
+  </g>
+  <use href="#drop-outline-__DROP_ID__" fill="none" stroke="url(#drop-rim-__DROP_ID__)" stroke-width="1.65"/>
+</svg>
