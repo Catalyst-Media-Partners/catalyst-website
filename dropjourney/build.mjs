@@ -36,7 +36,7 @@ checkTaxonomy(taxonomy,catalog);
 const href=id=>BASE+(id?id+'/':'');
 const pathify=raw=>raw.replaceAll('{{BASE}}',BASE).replaceAll('href="/','href="'+BASE);
 const imagesRoot=BASE+'assets/images/';
-const css=(await load('src/site.css'))+'\n'+(await load('src/s05.css'))+'\n'+(await load('src/s06.css'))+'\n'+(await load('src/s08.css'))+'\n'+(await load('src/s09.css'));
+const css=(await load('src/site.css'))+'\n'+(await load('src/s05.css'))+'\n'+(await load('src/s06.css'))+'\n'+(await load('src/s08.css'))+'\n'+(await load('src/s09.css'))+'\n'+(await load('src/finish.css'));
 const js=await load('src/site.js');
 // Reuse the same approved transparent wordmark already in the deployed Drop Journey.
 const originalHome=await load('src/index.html');
@@ -85,7 +85,13 @@ function convertSourceMarkup(html,id){
  return updated;
 }
 function originalImageAlt(route){return {'market':'Product research and laboratory testing','ecosystem':'Trade show product discovery and buyer conversations','roots':'Outdoor farming and cultivation','science':'Ingredient science and laboratory research','make':'Manufacturing and co-packing line','package':'Finished products and packaging','move':'Warehouse and logistics','sell':'Retail merchandising','services':'Business professionals meeting','buyers':'Buyer and brand representative in discussion','why-vegas':'Las Vegas skyline','opportunities':'Expo booth and product conversation','contact':'Exhibitors at a trade show','tickets':'Professionals in an expo conversation'}[route.id];}
-function related(route){return `<aside class="dj-related" aria-label="Continue exploring"><span class="dj-kicker">FOLLOW THE CURRENT</span><h2>Continue the journey.</h2><div class="dj-related-row"><a href="${href(route.next)}"><span>${esc(catalog.find(x=>x.id===route.next)?.label||'The ecosystem')}</span><span aria-hidden="true">↗</span></a><a href="${href('opportunities')}"><span>Explore exhibit options</span><span aria-hidden="true">↗</span></a>${route.id!=='buyers'?`<a href="${href('buyers')}"><span>Discover hosted buyers</span><span aria-hidden="true">↗</span></a>`:`<a href="${href('buyers/apply')}"><span>Start buyer profile</span><span aria-hidden="true">↗</span></a>`}</div></aside>`;}
+function related(route){
+ const act=route.id==='opportunities'||route.id==='contact'?{url:shop,label:'Browse available booth space',heading:'Make your next move.'}
+  :route.id==='buyers'?{url:href('buyers/apply'),label:'Explore the buyer profile',heading:'Start with what you need.'}
+  :route.id==='tickets'?{url:href('ecosystem'),label:'Discover the INFUSED ecosystem',heading:'Explore what comes next.'}
+  :{url:href('opportunities'),label:'Explore exhibit opportunities',heading:'Make your next connection.'};
+ return `<aside class="dj-related" aria-label="Next actions"><span class="dj-kicker">YOUR NEXT MOVE</span><h2>${act.heading}</h2><a class="dj-related-primary" href="${act.url}">${act.label} <span aria-hidden="true">&#8599;</span></a><div class="dj-related-row"><a href="${href(route.next)}"><span>${esc(catalog.find(x=>x.id===route.next)?.label||'The ecosystem')}</span><span aria-hidden="true">&#8599;</span></a><a href="${href('opportunities')}"><span>Explore exhibit options</span><span aria-hidden="true">&#8599;</span></a>${route.id!=='buyers'?`<a href="${href('buyers')}"><span>Discover hosted buyers</span><span aria-hidden="true">&#8599;</span></a>`:`<a href="${href('buyers/apply')}"><span>Buyer profile</span><span aria-hidden="true">&#8599;</span></a>`}</div></aside>`;
+}
 function photo(route){return `<div class="dj-editorial-frame"><img src="${imagesRoot}${route.photo}" alt="${esc(originalImageAlt(route))}" width="1450" height="960" decoding="async" loading="lazy"><div class="dj-frame-edge" aria-hidden="true"></div></div>`;}
 async function detailPage(route){
  let content;
@@ -98,10 +104,10 @@ async function detailPage(route){
  if(route.id==='market')content=renderMarket(content,{href});
  if(route.id==='why-vegas')content=renderVegas(content,{href,event});
  if(route.id==='ecosystem')content=renderEcosystem(content,{href,taxonomy});
- if(['roots','science','make','package','move','sell','services'].includes(route.id))content=renderSector(content,route,{href,taxonomy});
+ if(['roots','science','make','package','move','sell','services'].includes(route.id))content=renderSector(content,route,{href,taxonomy,catalog});
  if(route.id==='opportunities') content=content.replace('<article class="detail-box green"><h3>Sponsorship</h3>','<article class="detail-box green" id="sponsorship"><h3>Sponsorship</h3>');
  if(route.id==='buyers')content=renderBuyers(content,{href});
- if(route.id==='opportunities')content=renderOpportunities(content,{href,event});
+ if(route.id==='opportunities')content=renderOpportunities(content,{href,event,photo:imagesRoot+route.photo});
  if(route.id==='contact')content=renderContact(content,{href,event});
  if(route.id==='tickets')content=renderTickets(content,{href,event});
  const heading=route.label==='The ecosystem'?'The full value stream':route.label;
@@ -119,7 +125,7 @@ function applicationPage(){
    // can transmit a user's typed contact information by accident.
    const safe=form.replace(/<form class="buyer-form" id="buyer-form"[^>]*>/,'<div class="buyer-form" id="buyer-form">').replace(/<\/form>$/,'</div>').replaceAll('—',' - ');
    return head('Hosted Buyer Profile','INFUSED Hosted Buyers: share your sourcing priorities through a six-step guided profile preview.')+
-   `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${noScriptNav()}${introNav({num:'02',chapter:'WHO',label:'Buyer profile',next:'buyers'})}<main id="main" class="dj-application"><section class="dj-app-head"><span class="dj-kicker">HOSTED BUYERS / BUYER PROFILE</span><h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Source smarter. Meet the right suppliers. Build a meeting schedule around what you are actually looking to buy.</p><p class="dj-status-note">Preview only. Information entered here is not submitted or stored.</p></section><div class="dj-wizard"><div class="dj-wizard-meter"><span id="buyer-current">01 / 06</span><div role="progressbar" id="buyer-meter" aria-label="Buyer profile progress" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><span id="buyer-meter-fill"></span></div><span>ROLE · SOURCING · PRIORITIES · COMPANY · CONTACT · REVIEW</span></div>${safe}</div></main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
+   `<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">${header('buyers')}${noScriptNav()}${introNav({num:'02',chapter:'WHO',label:'Buyer profile',next:'buyers'})}<main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual"><div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / BUYER PROFILE</span><h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Source smarter. Meet the right suppliers. Build a meeting schedule around what you are actually looking to buy.</p><p class="dj-status-note">Preview only. Information entered here is not submitted or stored.</p></div><figure class="dj-apply-photo"><img src="${imagesRoot}brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing products and sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure></section><div class="dj-wizard"><div class="dj-wizard-meter"><span id="buyer-current">01 / 06</span><div role="progressbar" id="buyer-meter" aria-label="Buyer profile progress" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><span id="buyer-meter-fill"></span></div><span>ROLE · SOURCING · PRIORITIES · COMPANY · CONTACT · REVIEW</span></div>${safe}</div></main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
  });
 }
 function cleanHome(html){
@@ -183,11 +189,12 @@ for(const name of (await readdir(path.join(source,'assets','images'))).filter(s=
 await write('assets/site.css',css);
 await write('assets/site.js',js);
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
+const combinedHomeStyles=styleOverrides+'\n'+(await load('src/finish.css'));
 let home=cleanHome(await load('src/index.html'));
 const safeScript=scriptOriginal.replace('form.elements.namedItem(name)', 'form.querySelector(`[name="${name}"]`)');
 if(safeScript===scriptOriginal)throw Error('Buyer compatibility patch missing');
 home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
-  .replaceAll('{{S02_OVERRIDES}}',()=>styleOverrides)
+  .replaceAll('{{S02_OVERRIDES}}',()=>combinedHomeStyles)
   .replaceAll('{{ORIGINAL_JS}}',()=>safeScript);
 await write('index.html',home);
 for(const route of catalog)await write(`${route.id}/index.html`,await detailPage(route));
