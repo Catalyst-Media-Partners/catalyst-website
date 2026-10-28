@@ -31,7 +31,7 @@ export function renderLander({offer,config,logo,art,css,js}){
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive"><meta name="color-scheme" content="${offer.theme}">
 <meta name="description" content="${safe(offer.lead)}"><meta name="theme-color" content="${offer.theme==='dark'?'#110f1b':'#f6f3ed'}">
-<meta name="dropjourney-site-version" content="2.9.0-review"><title>${safe(title)} | INFUSED Las Vegas</title>
+<meta name="dropjourney-site-version" content="2.9.1-review"><title>${safe(title)} | INFUSED Las Vegas</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <style>${css}</style></head><body class="lander" data-theme="${offer.theme}" data-campaign="${offer.id}">
 <a class="skip" href="#main">Skip to campaign</a>
