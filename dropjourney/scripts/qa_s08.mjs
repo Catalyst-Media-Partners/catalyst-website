@@ -12,8 +12,8 @@ assert.match(buyer,/consent-based form/,'Buyer page must accurately state reques
 assert.match(wizard,/class="dj-apply-photo"/,'Approved buyer photography preserved');
 assert.match(wizard,/data-intake-type="hosted-buyer"/,'Real hosted buyer request missing');
 assert.match(wizard,/data-intake-kind="buyer"/,'Native buyer form missing');
-assert.match(wizard,/submitting does not confirm hosted-buyer eligibility/i,'Buyer qualification disclaimers needed');
-assert.match(wizard,/rel="noopener noreferrer" referrerpolicy="no-referrer"/,'Do not leak referrer or window control');
+assert.match(wizard,/not a confirmed hosted-buyer benefit, acceptance or meeting/i,'Buyer qualification disclaimers needed');
+assert.doesNotMatch(wizard,/form\.jotform\.com|target="_blank"/i,'Buyer intake must stay first-party');
 assert.match(wizard,/action="\/dropjourneytest\/api\/intake"/,'Native first-party endpoint missing');
 assert.doesNotMatch(wizard,/class="buyer-step"|jotform/i,'Legacy external wizard remains');
 const home=await read('dist/dropjourneytest/index.html');
@@ -21,4 +21,4 @@ assert.doesNotMatch(home,/id="buyer-dialog"|id="buyer-form"|data-open-buyer/,'Re
 assert.match(home,/href="\/dropjourneytest\/buyers\/apply\/"/,'WHO chapter must route to real hosted intake');
 const js=await read('src/app.js');
 assert.doesNotMatch(js,/buyer-dialog|buyer-form|buyer-copy/,'No obsolete home modal scripting');
-console.log('PASS DJ-S08: two-sided Hosted Buyer path, direct consent-based external intake without redundant wizard, preserved original groups');
+console.log('PASS DJ-S08: two-sided Hosted Buyer path, direct consent-based native intake without redundant wizard, preserved original groups');
