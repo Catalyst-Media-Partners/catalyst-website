@@ -23,3 +23,7 @@
 **Required before production use:** an authorized synthetic submission to each form and received receipt, provider notification/retry/de-duplication behavior, verified privacy/retention/marketing-automation configuration, and approval of final consent text. Do not claim form response or duplicate prevention tested simply because Jotform shows ENABLED. If those remain unverified, U3 exits **PARTIAL** and production integration remains blocked; no real payments or emails are authorized.
 
 **Next:** U3.1 acceptance of provider configuration and QA receipt, then U4 event-gravity editorial work. No production cutover.
+
+## U3.1 layout correction
+
+Original standalone buyer prototype CSS retained a sticky two-column wizard sidebar. After replacing the wizard with a legitimate handoff, this caused the primary CTA to begin at 1172px (1440×900). DJ-U3.1 restyles the buyer request page as a full-width editorial hero, not a sticky wizard. Browser-only prototype metrics across 390/768/1024/1440px: primary CTA top 574/455/486/618px, fully visible at every tested viewport, no x-overflow. Deployment measurements required before acceptance.

@@ -24,6 +24,8 @@ assert.match(apply,/submitting does not confirm hosted-buyer eligibility/i,'Buye
 assert.match(tickets,/Tickets are not yet on sale/,'Ticket state');
 assert.match(tickets,/does not reserve or purchase a ticket/,'No implied tickets');
 assert.match(apply,/class="dj-apply-photo"/,'Buyer imagery preserved');
+const css=await read('src/finish.css');
+assert.match(css,/\.dj-application\{display:block/,'Old two-column wizard sidebar must be replaced for Hosted Buyer CTA visibility');
 assert.match(tickets,/25% EARLY-BIRD TICKET OFFER/,'Original published offer disclosure preserved');
 assert.doesNotMatch(tickets,/href="https:\/\/form\.jotform\.com\/262665252358059"/,'Never reuse CannaCon ticket registration');
 assert.doesNotMatch(apply,/href="https:\/\/form\.jotform\.com\/262642521146048"/,'Never reuse CannaCon hosted buyer form');
