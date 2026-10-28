@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "default": "discover",
+  "siteOrigin": "https://infused.show",
+  "variants": [
+    {
+      "id": "discover",
+      "theme": "dark",
+      "eyebrow": "INFUSED / FROM ROOTS TO RETAIL",
+      "headline": ["ONE DROP.", "A WHOLE WORLD."],
+      "lead": "Explore the products, people, and possibilities connecting the infused-products ecosystem.",
+      "action": "Explore the ecosystem",
+      "destination": "/dropjourneytest/ecosystem/",
+      "secondary": "Experience the full journey",
+      "secondaryDestination": "/dropjourneytest/"
+    },
+    {
+      "id": "exhibit",
+      "theme": "dark",
+      "eyebrow": "INFUSED / EXHIBITOR OPPORTUNITIES",
+      "headline": ["YOUR PRODUCTS.", "YOUR NEXT CONNECTION."],
+      "lead": "Explore exhibition space, product discovery, and ways for your business to participate at INFUSED Las Vegas.",
+      "action": "Explore exhibit options",
+      "destination": "/dropjourneytest/opportunities/",
+      "secondary": "See the full ecosystem",
+      "secondaryDestination": "/dropjourneytest/ecosystem/"
+    },
+    {
+      "id": "buyers",
+      "theme": "light",
+      "eyebrow": "INFUSED / HOSTED BUYERS",
+      "headline": ["WHAT ARE YOU", "LOOKING TO SOURCE?"],
+      "lead": "Connect your sourcing priorities with the relevant categories, brands, and supply-chain partners at INFUSED.",
+      "action": "Explore Hosted Buyers",
+      "destination": "/dropjourneytest/buyers/",
+      "secondary": "Explore the buyer profile",
+      "secondaryDestination": "/dropjourneytest/buyers/apply/"
+    },
+    {
+      "id": "sponsor",
+      "theme": "dark",
+      "eyebrow": "INFUSED / SPONSORSHIP",
+      "headline": ["BE PART OF", "WHAT'S NEXT."],
+      "lead": "Explore sponsorship and product visibility opportunities across the INFUSED business ecosystem.",
+      "action": "Explore sponsorship",
+      "destination": "/dropjourneytest/opportunities/#sponsorship",
+      "secondary": "Contact the INFUSED team",
+      "secondaryDestination": "/dropjourneytest/contact/"
+    },
+    {
+      "id": "attend",
+      "theme": "light",
+      "eyebrow": "INFUSED / LAS VEGAS",
+      "headline": ["DISCOVER", "WHAT'S NEXT."],
+      "lead": "Explore the INFUSED event experience and attendance information. Ticket notifications are not accepting requests yet.",
+      "action": "View attendance details",
+      "destination": "/dropjourneytest/tickets/",
+      "secondary": "Discover why Las Vegas",
+      "secondaryDestination": "/dropjourneytest/why-vegas/"
+    }
+  ]
+}
