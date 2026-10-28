@@ -17,7 +17,9 @@ assert.match(contact,/href="https:\/\/infused\.show\/go\/booth\?/,'Contact booth
 assert.match(contact,/INTERESTED IN INFUSED/,'Contact heading retained');
 assert.match(tickets,/ON-SALE SOON/,'Canonical ticket state retained');
 assert.match(tickets,/not yet on sale/i,'Honest ticket state');
-assert.match(tickets,/Ticket notifications are not accepting requests yet/,'No implied working list');
+assert.match(tickets,/data-intake-type="attendee-interest"/,'Explicit attendance update request route missing');
+assert.match(tickets,/href="https:\/\/form\.jotform\.com\/263005581843052"/,'Attendance interest URL changed');
+assert.match(tickets,/this does not reserve or purchase a ticket/,'No ticket guarantee');
 assert.match(tickets,/25% EARLY-BIRD TICKET OFFER/,'Published offer acknowledged');
 assert.match(tickets,/not activated in this preview/,'Published offer not falsely available');
 for(const [name,html] of [['options',options],['contact',contact],['tickets',tickets]]){

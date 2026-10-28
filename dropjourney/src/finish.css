@@ -1,0 +1,119 @@
+/* Review finish: cross-page conversion, editorial detail, consistent line wrapping. */
+.dj-source-section h1,.dj-source-section h2,.dj-sector-topic h2,.dj-offer h2{overflow-wrap:anywhere;text-wrap:balance}
+.dj-sector-topic,.dj-offer{align-content:start;min-width:0}
+.dj-sector-topic>div,.dj-offer>div{min-width:0}.dj-sector-topic h2,.dj-offer h2{max-width:30ch}
+.dj-sector-topic p,.dj-offer p{max-width:60ch;text-wrap:pretty}
+.dj-sector-topic-list:has(.dj-sector-topic:only-child){align-self:start}
+.dj-sector-adjacent{margin:clamp(36px,6vw,80px) 0 0;border-top:1px solid rgba(255,255,255,.12);padding-top:clamp(24px,3vw,40px)}
+.dj-sector-adjacent-label{display:block;color:var(--dj-acid);font-size:11px;letter-spacing:.17em;font-weight:850;text-transform:uppercase;margin-bottom:22px}
+.dj-sector-adjacent-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(14px,2vw,27px)}
+.dj-cross-link{min-width:0;display:grid;grid-template-columns:clamp(82px,10vw,165px) minmax(0,1fr);gap:clamp(12px,2vw,22px);align-items:center;text-decoration:none;padding:12px 0;border-block:1px solid rgba(255,255,255,.1)}
+.dj-cross-link img{width:100%;height:clamp(90px,10vw,136px);object-fit:cover;border-radius:14px 14px 38px 14px}
+.dj-cross-link span{display:flex;flex-direction:column;gap:10px;min-width:0}.dj-cross-link small{color:var(--dj-pink);font-size:10px;letter-spacing:.14em;font-weight:800}.dj-cross-link strong{font-size:clamp(19px,2.2vw,31px);letter-spacing:-.045em;text-wrap:balance;overflow-wrap:anywhere;line-height:1.05}.dj-cross-link:hover strong{color:var(--dj-acid)}
+.dj-offers-page .dj-commercial-intro{max-width:none;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.82fr);gap:clamp(25px,5vw,76px);align-items:center}
+.dj-offers-page .dj-commercial-copy{min-width:0}.dj-offers-page .dj-commercial-copy h1{max-width:800px}
+.dj-offers-visual{margin:0;min-width:0;position:relative}.dj-offers-visual img{width:100%;height:auto;max-height:590px;aspect-ratio:4/4.7;object-fit:cover;border-radius:24px 24px 105px 24px;box-shadow:0 28px 100px rgba(0,0,0,.27)}
+.dj-offers-visual figcaption{font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-top:12px;color:var(--dj-muted)}
+.dj-related{position:relative}.dj-related-primary{display:inline-flex;align-items:center;justify-content:center;min-height:52px;background:var(--dj-acid);border:1px solid var(--dj-acid);border-radius:100px;color:#101913;font-weight:850;padding:16px 24px;text-decoration:none;font-size:13px;line-height:1.2;margin:0 0 25px;max-width:100%;text-align:center;gap:18px;transition:transform .2s,background .2s}
+.dj-related-primary:hover{background:#e0ffb4;transform:translateY(-2px)}.dj-related .dj-related-row{margin-top:12px}
+.dj-app-head-visual{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,.42fr);gap:clamp(24px,5vw,70px);align-items:center}.dj-app-intro{min-width:0}
+.dj-apply-photo{margin:0;min-width:0}.dj-apply-photo img{display:block;width:100%;height:auto;max-height:430px;aspect-ratio:4/5;object-fit:cover;border-radius:18px 18px 80px 18px}.dj-apply-photo figcaption{color:var(--dj-muted);font-size:10px;letter-spacing:.12em;margin-top:11px;text-transform:uppercase}
+.final-action{margin:clamp(22px,4vw,36px) 0 22px;padding:clamp(20px,3vw,34px);border-radius:20px;background:linear-gradient(142deg,rgba(194,255,109,.1),rgba(116,70,139,.14));border:1px solid rgba(194,255,109,.28);position:relative;overflow:hidden}
+.final-action:before{content:'';position:absolute;width:165px;height:165px;right:-75px;top:-80px;border-radius:50%;background:radial-gradient(circle,rgba(194,255,109,.14),transparent 75%);pointer-events:none}
+.final-action .final-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--acid);font-weight:900;margin:0 0 9px}
+.final-action h3{font-size:clamp(27px,3.5vw,44px);line-height:1.01;letter-spacing:-.06em;margin:0 0 17px;text-wrap:balance;max-width:18ch}
+.final-role-links{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.final-role-links a,.final-role-links button{min-height:45px;display:inline-flex;align-items:center;justify-content:center;border-radius:100px;padding:12px 18px;font-size:12px;font-weight:800;border:1px solid rgba(194,255,109,.37);background:transparent;color:var(--ink);text-decoration:none;gap:8px;cursor:pointer;line-height:1.2}
+.final-role-links a:first-child{background:var(--acid);border-color:var(--acid);color:#101913}.final-role-links :is(a,button):hover{border-color:var(--acid)}
+body[data-stage=what] .offer-footer{border-color:rgba(245,255,245,.2)}
+body[data-stage=what] .stage-bottom #next{color:var(--acid);border-color:rgba(194,255,109,.48)}
+@media(max-width:980px){.dj-offers-page .dj-commercial-intro{grid-template-columns:minmax(0,1fr)}.dj-offers-visual{width:100%}.dj-offers-visual img{aspect-ratio:16/8;max-height:365px;border-radius:18px 18px 70px 18px}.dj-app-head-visual{grid-template-columns:minmax(0,1fr)}.dj-apply-photo img{aspect-ratio:16/7;max-height:250px;border-radius:18px 18px 68px 18px}}
+@media(max-width:680px){.dj-sector-adjacent-links{grid-template-columns:1fr}.dj-cross-link{grid-template-columns:110px minmax(0,1fr)}.dj-cross-link img{height:110px}.dj-app-head-visual{gap:18px}.final-role-links a,.final-role-links button{width:100%}.dj-related-primary{width:100%}.dj-offers-visual img{aspect-ratio:16/10}}
+@media(max-width:390px){.dj-cross-link{grid-template-columns:95px minmax(0,1fr)}.dj-cross-link img{height:98px}.final-action{padding:18px}.final-action h3{font-size:29px}}
+@media(prefers-reduced-motion:reduce){.dj-related-primary{transition:none}}
+
+/* DJ-X1.1: final review-stage handoff. Only links to the existing contact page;
+   no application submission, profile transfer, storage or tracking. */
+.buyer-handoff{margin:clamp(18px,3vw,30px) 0;padding:clamp(16px,2.5vw,25px);border:1px solid rgba(194,255,109,.34);background:linear-gradient(120deg,rgba(194,255,109,.08),rgba(124,67,151,.1));border-radius:20px;max-width:100%}
+.buyer-handoff p{margin:0 0 15px;max-width:65ch;line-height:1.5;overflow-wrap:anywhere}
+.buyer-contact-link{display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:48px;max-width:100%;padding:12px 22px;border-radius:100px;text-align:center;background:#c2ff6d;color:#101913!important;font-size:13px;font-weight:850;line-height:1.25;text-decoration:none}
+.buyer-contact-link:hover{background:#e0ffb4}.buyer-contact-link:focus-visible{outline:3px solid #f9a2cd;outline-offset:3px}
+.buyer-handoff .buyer-handoff-note{margin:12px 0 0;color:inherit;opacity:.8;font-size:12px;line-height:1.4}
+@media(max-width:480px){.buyer-contact-link{display:flex;width:100%}.buyer-handoff{padding:16px}}
+
+/* DJ-U1: compact, audience-neutral end of the five-chapter journey.
+   Full commercial categories and booth price detail remain on Opportunities. */
+body[data-stage=what] #what>.chapter-lead{max-width:48ch}
+body[data-stage=what] .final-action{margin:13px 0 0;padding:18px 20px}
+body[data-stage=what] .final-action h3{font-size:clamp(22px,2.6vw,29px);margin-bottom:13px;max-width:none}
+body[data-stage=what] .final-role-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+body[data-stage=what] .final-role-links a{display:flex;min-width:0;flex-direction:column;gap:4px;min-height:72px;align-items:flex-start;justify-content:center;padding:12px 13px;border-radius:13px;background:rgba(194,255,109,.07);border-color:rgba(194,255,109,.35);color:#f5fff4}
+body[data-stage=what] .final-role-links a:first-child{background:rgba(194,255,109,.07);border-color:rgba(194,255,109,.35);color:#f5fff4}
+body[data-stage=what] .final-role-links a strong{font-size:13px;line-height:1.2}
+body[data-stage=what] .final-role-links a small{font-size:10px;color:#c2d2bc;line-height:1.3}
+body[data-stage=what] .final-role-links a:hover{background:rgba(194,255,109,.2);border-color:var(--acid)}
+body[data-stage=what] .final-role-links a:focus-visible{outline:3px solid #f9a2cd;outline-offset:3px}
+@media(max-width:720px){
+ body[data-stage=what] .chapter-copy{order:0}
+ body[data-stage=what] .drop-col{order:1;min-height:94px;height:94px;gap:0}
+ body[data-stage=what] .chapter-aside{display:none}
+ body[data-stage=what] .journey-drop{width:92px;height:92px}
+ body[data-stage=what] .drop-inner .drop-vector{width:65px}
+ body[data-stage=what] .drop-hint,body[data-stage=what] .kinetic-index{display:none}
+ body[data-stage=what] .stage-bottom{margin-top:0}
+ body[data-stage=what] .final-role-links{grid-template-columns:1fr}
+ body[data-stage=what] .final-role-links a{min-height:53px;padding:8px 12px}
+ body[data-stage=what] .final-action{padding:14px 15px}
+ body[data-stage=what] .final-action h3{font-size:22px}
+ body[data-stage=what] .chapter-panel h2{font-size:clamp(35px,8vw,48px)}
+}
+
+/* DJ-U2: compact exhibitor commerce and progressive disclosure.
+   No speculative price or attendance changes; no checkout code copied. */
+.dj-offers-page .dj-commercial-intro{max-width:none;grid-template-columns:minmax(0,1.3fr) minmax(0,.6fr);gap:clamp(25px,4vw,55px);align-items:center;margin-bottom:clamp(22px,3vw,44px)}
+.dj-offers-page .dj-commercial-copy h1{font-size:clamp(40px,5.7vw,72px);line-height:1.02;margin:12px 0 20px}
+.dj-offers-page .dj-commercial-copy .section-lead{margin:0 0 18px}
+.dj-offers-page .dj-offers-visual img{width:100%;max-height:310px;aspect-ratio:4/3;object-fit:cover;border-radius:20px 20px 64px 20px}
+.dj-offers-page .dj-offers-booking{margin:0;padding:clamp(20px,3vw,40px)}
+.dj-offers-page .dj-offers-booking h3{font-size:clamp(26px,3.2vw,44px)}
+.dj-offers-page .dj-sponsor-spotlight{margin:35px 0 10px;border-top:1px solid rgba(194,255,109,.3)}
+.dj-offers-page .dj-sponsor-spotlight .dj-offer{border:0;padding:23px 0 16px}
+.dj-offers-page .dj-more-pathways{margin:20px 0 0;padding:19px 23px;border:1px solid rgba(194,255,109,.25);border-radius:18px}
+.dj-offers-page .dj-more-pathways summary{cursor:pointer;font-weight:750;list-style-position:outside}
+.dj-offers-page .dj-more-pathways summary:focus-visible{outline:3px solid #f9a2cd;outline-offset:5px}
+.dj-offers-page .dj-more-pathways .dj-offers-grid{padding-top:24px;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 18px}
+.dj-offers-page .dj-more-pathways .dj-offer{padding:22px 0}
+@media(max-width:980px){
+ .dj-offers-page .dj-commercial-intro{grid-template-columns:1fr}
+ .dj-offers-page .dj-offers-visual img{max-height:230px;aspect-ratio:16/7}
+ .dj-offers-page .dj-more-pathways .dj-offers-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:680px){
+ .dj-offers-page .dj-commercial-copy h1{font-size:clamp(39px,10vw,52px)}
+ .dj-offers-page .dj-offers-visual img{max-height:170px;aspect-ratio:16/8}
+ .dj-offers-page .dj-more-pathways .dj-offers-grid{grid-template-columns:1fr}
+ .dj-offers-page .dj-more-pathways{padding:16px}
+ .dj-offers-page .dj-offers-booking{padding:20px}
+}
+
+/* DJ-U3: real intake handoffs, not a duplicated non-submitting wizard. */
+body[data-stage=who] a.small-pill{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:44px;white-space:normal;text-align:center}
+.dj-app-intro .dj-topic-actions{margin:24px 0}
+.dj-app-intro .dj-topic-actions a{max-width:100%;text-align:center}
+.dj-apply .dj-intake-privacy{font-size:12px;line-height:1.5;color:var(--dj-muted);max-width:65ch;margin-top:16px}
+.dj-secure-intake{max-width:1100px;margin:clamp(20px,4vw,50px) auto 80px;padding:clamp(20px,3vw,35px);border:1px solid var(--dj-edge);border-radius:18px}
+.dj-secure-intake h2{font-size:clamp(22px,3vw,32px);margin:0 0 14px}
+.dj-intake-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dj-intake-steps p{font-size:13px;line-height:1.5;margin:0;max-width:42ch}
+.dj-intake-steps strong{display:block;color:var(--dj-acid);margin-bottom:7px}
+@media(max-width:720px){.dj-intake-steps{grid-template-columns:1fr}.dj-secure-intake{margin-top:15px;padding:20px}}
+
+/* DJ-U3.1: retire old sticky/sidebar grid from the removed six-step buyer wizard.
+   The consent-based Jotform handoff is a compact, full-width editorial page. */
+.dj-application{display:block;max-width:1420px}
+.dj-application .dj-app-head{position:relative;top:auto;max-width:none;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.5fr);gap:clamp(25px,4vw,55px);align-items:center}
+.dj-application .dj-app-intro h1{font-size:clamp(40px,4.5vw,66px);line-height:1.04;max-width:810px;margin:14px 0 19px}
+.dj-application .dj-app-intro p{max-width:65ch;line-height:1.5}
+.dj-application .dj-apply-photo img{max-height:295px;aspect-ratio:4/3;object-fit:cover}
+.dj-application .dj-secure-intake{margin:35px 0 0;max-width:none}
+@media(max-width:980px){.dj-application .dj-app-head{grid-template-columns:1fr}.dj-application .dj-apply-photo img{max-height:220px;aspect-ratio:16/8}}
+@media(max-width:680px){.dj-application .dj-app-intro h1{font-size:clamp(37px,9vw,48px)}.dj-application .dj-app-head{gap:15px}.dj-application .dj-apply-photo img{max-height:160px}}

@@ -13,10 +13,10 @@ for(const id of ids){
  assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),`${label}: doubled preview prefix`);
  assert.ok(!html.includes('AN INTERACTIVE PREVIEW'),`${label}: prototype disclaimer in public copy`);
  assert.ok(!html.includes('/tickets/api/subscribe'),`${label}: no production ticket collection`);
- assert.ok(!html.includes('form.jotform.com')||id==='contact',`${label}: contact action only on contact route`);
+ assert.ok(!html.includes('form.jotform.com')||['contact','tickets','buyers/apply'].includes(id),`${label}: contact action only on contact route`);
  assert.ok(!html.includes('href="https://infused.show/"'),`${label}: no escape to old site via home logo`);
- if(id===''||id==='buyers/apply'){assert.ok(!html.includes('<form'),`${label}: wizard must not submit natively without JS`);assert.ok(html.includes('id="buyer-form"'),'wizard required');}
- if(id==='tickets'){assert.ok(!html.includes('id="ticket-notify-form"'),'ticket form must be inert');assert.ok(html.includes('not accepting requests'),'honest disabled state');}
+ if(id===''||id==='buyers/apply'){assert.ok(!html.includes('<form'),`${label}: no native PII form allowed`);assert.ok(!html.includes('id="buyer-form"'),'legacy wizard must be retired');}
+ if(id==='tickets'){assert.ok(!html.includes('id="ticket-notify-form"'),'ticket form must be inert');assert.ok(html.includes('not yet on sale'),'honest ticket-not-on-sale state');}
  for(const m of html.matchAll(/(?:href|src)="(\/dropjourneytest\/[^"?#]*)/g)){
    const u=m[1];if(!u||u==='/'||u.endsWith('/'))continue;
    const target=path.join(root,'dist',u.slice(1));await stat(target).catch(()=>{throw Error(`${label}: missing resource ${u}`)});links++;

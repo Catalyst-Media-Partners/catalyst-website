@@ -3,7 +3,8 @@
 const must=(s,re,label)=>{const m=String(s).match(re);if(!m)throw Error('DJ-S09 missing canonical '+label);return m[0];};
 const all=(s,re,count,label)=>{const values=[...s.matchAll(re)].map(m=>m[0]);if(values.length!==count)throw Error('DJ-S09 '+label+' count changed: '+values.length);return values;};
 const text=s=>String(s).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-export function renderOpportunities(source,{href,event}){
+export function renderOpportunities(source,{href,event,photo}){
+ if(typeof photo!=='string'||!/^\/dropjourneytest\/assets\/images\/[a-z0-9-]+\.webp$/.test(photo))throw Error('DJ-X1 unapproved opportunities photo');
  const label=must(source,/<span class="kicker">[\s\S]*?<\/span>/,'opportunities label');
  const title=must(source,/<h1\b[^>]*>[\s\S]*?<\/h1>/,'opportunities headline');
  const lead=must(source,/<p class="section-lead">[\s\S]*?<\/p>/,'opportunities description');
@@ -15,11 +16,27 @@ export function renderOpportunities(source,{href,event}){
  const sections=topics.map((raw,i)=>{
   const name=must(raw,/<h3>[\s\S]*?<\/h3>/,'offer type').replace('<h3>','<h2>').replace('</h3>','</h2>');
   const p=must(raw,/<p>[\s\S]*?<\/p>/,'offer description');
-  const id=/Sponsorship/i.test(name)?' id="sponsorship"':'';
-  return `<article class="dj-offer"${id}><span class="dj-topic-index" aria-hidden="true">${String(i+1).padStart(2,'0')}</span><div>${name}${p}${id?`<a href="${href('contact')}" class="dj-offer-link">Ask about sponsorship <span aria-hidden="true">↗</span></a>`:''}</div></article>`;
- }).join('');
+  const sponsor=/Sponsorship/i.test(name);
+  return `<article class="dj-offer"${sponsor?' id="sponsorship"':''} role="listitem"><span class="dj-topic-index" aria-hidden="true">${String(i+1).padStart(2,'0')}</span><div>${name}${p}${sponsor?`<a href="${href('contact')}" class="dj-offer-link">Ask about sponsorship <span aria-hidden="true">↗</span></a>`:''}</div></article>`;
+ });
+ const sponsor=sections.find(s=>s.includes('id="sponsorship"'));
+ const secondary=sections.filter(s=>!s.includes('id="sponsorship"'));
+ if(!sponsor||secondary.length!==5)throw Error('DJ-U2 sponsorship must remain a direct, visible destination');
  if(!purchase.includes('https://infused.show/go/booth'))throw Error('DJ-S09 first-party purchase must stay unchanged');
- return `<section class="section dj-offers-page" id="opportunities" aria-labelledby="opps-title"><div class="container"><div class="dj-commercial-intro">${label}<span class="dj-sector-kicker">EXHIBIT / SHOWCASE / SPONSOR</span>${title}${lead}<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${purchaseHref}">Browse available booth space <span aria-hidden="true">↗</span></a><a href="${href('contact')}" class="dj-btn dj-btn-quiet">Talk to our team <span aria-hidden="true">↗</span></a></div></div><div class="dj-offers-head"><span>WAYS TO PARTICIPATE</span><span>SIX COMMERCIAL PATHWAYS</span></div><div class="dj-offers-grid" role="list">${sections.replaceAll('class="dj-offer"','class="dj-offer" role="listitem"').replaceAll('class="dj-offer" id="sponsorship"','class="dj-offer" id="sponsorship" role="listitem"')}</div><aside class="dj-offers-booking"><div class="dj-offers-booking-copy"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${price}</div><div class="dj-offers-booking-action">${purchase.replace('class="btn btn-primary"','class="dj-btn dj-btn-acid"')}<p>Final price and availability are confirmed in the official booking process.</p></div></aside></div></section>`;
+ return `<section class="section dj-offers-page" id="opportunities" aria-labelledby="opps-title"><div class="container">
+   <div class="dj-commercial-intro">
+     <div class="dj-commercial-copy">${label}<span class="dj-sector-kicker">EXHIBIT / SHOWCASE / SPONSOR</span>${title}${lead}
+       <div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${purchaseHref}">Browse available booth space <span aria-hidden="true">↗</span></a><a href="#sponsorship" class="dj-btn dj-btn-quiet">Explore sponsorship <span aria-hidden="true">↗</span></a></div>
+     </div>
+     <figure class="dj-offers-visual"><img src="${photo}" alt="Exhibitors and attendees discussing products at a trade show" width="1380" height="920" decoding="async" loading="eager"><figcaption>Products / relationships / opportunities</figcaption></figure>
+   </div>
+   <aside class="dj-offers-booking" aria-label="Booth pricing and purchase">
+     <div class="dj-offers-booking-copy"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${price}</div>
+     <div class="dj-offers-booking-action">${purchase.replace('class="btn btn-primary"','class="dj-btn dj-btn-acid"')}<p>Final price and availability are confirmed in the official booking process.</p></div>
+   </aside>
+   <section class="dj-sponsor-spotlight" aria-label="Sponsorship option">${sponsor}</section>
+   <details class="dj-more-pathways"><summary>Explore five other ways to participate</summary><div class="dj-offers-grid" role="list">${secondary.join('')}</div></details>
+ </div></section>`;
 }
 export function renderContact(source,{href,event}){
  const label=must(source,/<span class="kicker">[\s\S]*?<\/span>/,'contact label');
@@ -40,6 +57,6 @@ export function renderTickets(source,{href,event}){
  const promo=must(source,/<div class="notify-promo">[\s\S]*?<\/div>/,'existing published ticket offer');
  if(!/25%/.test(promo))throw Error('DJ-S09 original ticket offer changed; do not invent offer');
  const promoTitle=must(promo,/<strong>[\s\S]*?<\/strong>/,'ticket promo title');
- // S05 documented ticket notifications as inactive. This preview deliberately has NO form.
- return `<section class="section dj-tickets-page" id="tickets" aria-labelledby="ticket-hero-title"><div class="container"><div class="dj-tickets-hero"><div class="dj-tickets-intro"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${lead}<p class="dj-ticket-state" role="status">Tickets are not yet on sale. Ticket notifications are not accepting requests yet.</p><div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="${href('why-vegas')}">Explore Las Vegas <span aria-hidden="true">↗</span></a><a class="dj-btn dj-btn-quiet" href="${href('contact')}">Questions? Contact INFUSED <span aria-hidden="true">↗</span></a></div></div><figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure></div><aside class="dj-promo-unavailable"><span class="dj-sector-kicker">PUBLISHED EARLY-BIRD OFFER</span>${promoTitle}<p>The published incentive is not activated in this preview. Eligibility and terms must be confirmed before ticket registration opens.</p></aside><nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Hosted Buyers <span aria-hidden="true">↗</span></a></nav></div></section>`;
+ // Tickets remain unavailable. Consent-based interest is handed to a dedicated Jotform page, never posted to this preview Worker.
+ return `<section class="section dj-tickets-page" id="tickets" aria-labelledby="ticket-hero-title"><div class="container"><div class="dj-tickets-hero"><div class="dj-tickets-intro"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${lead}<p class="dj-ticket-state" role="status">Tickets are not yet on sale. You may request attendance updates; this does not reserve or purchase a ticket.</p><div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="https://form.jotform.com/263005581843052" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" data-intake-type="attendee-interest">Request attendance updates <span aria-hidden="true">↗</span></a><a class="dj-btn dj-btn-quiet" href="${href('why-vegas')}">Explore Las Vegas <span aria-hidden="true">↗</span></a></div></div><figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure></div><aside class="dj-promo-unavailable"><span class="dj-sector-kicker">PUBLISHED EARLY-BIRD OFFER</span>${promoTitle}<p>The published incentive is not activated in this preview. Eligibility and terms must be confirmed before ticket registration opens.</p></aside><nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Hosted Buyers <span aria-hidden="true">↗</span></a></nav></div></section>`;
 }

@@ -77,3 +77,21 @@ Cloudflare retains prior `infused-dropjourneytest` Worker version IDs. Roll back
 - **S09:** `src/s09-pages.mjs`, `src/s09.css` for full exhibit, sponsor, contact and tickets pages. Existing `/go/booth` and approved external Jotform only. Ticket subscriptions remain inactive.
 - **S10:** `scripts/qa_s06.mjs` through `scripts/qa_s10.mjs`, isolated CI workflow and `docs/S10_RELEASE.md` preserve responsiveness, accessibility, integrity, noindex and rollback.
 - Version `2.8.0-s10`. **No production cutover.** See `docs/S10_RELEASE.md` for acceptance evidence and remaining factual approvals.
+
+## DJ-X1 | Site finishing and portable email landers
+
+Source `dj/ux-finish-campaign-landers-20261028` stacked on the accepted S10 preview, **not production**.
+
+- Final WHAT CTA directs the visitor to exhibit options. Make and Move have source-linked related imagery; opportunities and buyer profile have editorial photography; detail pages have clearer closing actions and consistent card wrapping.
+- `content/landers.json` provides five approved fixed campaign offer variants, rendered with `src/landing-pages.mjs`, `src/landing.css`, `src/landing.js` as **standalone HTML** under `/dropjourneytest/land/<id>/`; generic `/land/` uses the discover variant.
+- The same single-file outputs are emitted under `exports/landers/infused-<id>.html` and uploaded by the CI workflow for use with HTML-hosting platforms. Static destinations cannot be changed by URL input; UTMs pass through by allowlist. No forms, external scripts, or custom analytics.
+- Light/dark are campaign styles, not duplicate canonical websites. Existing light production remains unchanged. Preview is `noindex`, not authenticated.
+- New QA checks: `scripts/qa_finish.mjs` and `scripts/qa_campaign.mjs`. Audit and limitations in `docs/REVIEW_FINDINGS.md`.
+- Version: `2.9.1-review`, isolated Cloudflare Worker `infused-dropjourneytest` only.
+
+## DJ-X1.1 | Hosted Buyer conversion handoff (2026-10-28)
+
+- Both the homepage buyer profile and standalone `/dropjourneytest/buyers/apply/` now offer a review-stage contact link to the existing preview Contact page, opened in a new tab after an optional explicit draft copy.
+- The profile stays local: **no submission, persistence, automatic prefill, email, or API call**. The link does not transmit buyer inputs. A separately approved secure application destination is still required before turning the wizard into an intake.
+- New assertions in `scripts/qa_finish.mjs` cover the two review stages, disclosure, fixed internal destination and retained copy control.
+- Version `2.9.1-review` is a design-preview patch; it does not authorize production deployment.

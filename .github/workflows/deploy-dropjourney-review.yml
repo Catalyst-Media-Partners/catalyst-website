@@ -1,0 +1,114 @@
+name: INFUSED Drop Journey DJ-X1 finish + campaign landers preview release
+
+on:
+  push:
+    branches: [dj/ux-finish-campaign-landers-20261028, infused-preview]
+    paths:
+      - 'dropjourney/**'
+      - 'src/**'
+      - '.github/workflows/deploy-dropjourney-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infused-dropjourneytest-preview
+  cancel-in-progress: false
+
+jobs:
+  validate-and-publish-preview:
+    if: github.repository == 'Catalyst-Media-Partners/catalyst-website' && (github.ref == 'refs/heads/dj/ux-finish-campaign-landers-20261028' || github.ref == 'refs/heads/infused-preview')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source without credential persistence
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prevent access to production Worker, D1 and checkout runtime
+        run: |
+          set -euo pipefail
+          grep -Fxq 'name = "infused-dropjourneytest"' dropjourney/wrangler.toml
+          grep -Fxq 'workers_dev = false' dropjourney/wrangler.toml
+          grep -Fxq 'keep_vars = true' dropjourney/wrangler.toml
+          ! grep -Eq 'AUDIENCE_DB|database_id|d1_databases|STRIPE_|infused-show"' dropjourney/wrangler.toml
+          ! grep -Eq 'AUDIENCE_DB|STRIPE_|webhook|sendEmail|infused-show"' dropjourney/worker.mjs
+      - name: Verify current unchanged production source without deploying
+        run: |
+          set -euo pipefail
+          npm run build
+          npm run check
+          npm run test:w02
+          node scripts/verify-cloudflare.mjs
+      - name: Build full isolated preview and all ten sprint regressions
+        run: |
+          set -euo pipefail
+          node --check dropjourney/worker.mjs
+          node --check dropjourney/build.mjs
+          node --check dropjourney/src/site.js
+          node --check dropjourney/src/s05-pages.mjs
+          node --check dropjourney/src/s06-pages.mjs
+          node --check dropjourney/src/s08-pages.mjs
+          node --check dropjourney/src/s09-pages.mjs
+          node dropjourney/build.mjs
+          node dropjourney/scripts/qa.mjs
+          node dropjourney/scripts/qa_s03.mjs
+          node dropjourney/scripts/qa_s04.mjs
+          node dropjourney/scripts/qa_s05.mjs
+          node dropjourney/scripts/qa_s06.mjs
+          node dropjourney/scripts/qa_s07.mjs
+          node dropjourney/scripts/qa_s08.mjs
+          node dropjourney/scripts/qa_s09.mjs
+          node dropjourney/scripts/qa_s10.mjs
+          node dropjourney/scripts/qa_finish.mjs
+          node dropjourney/scripts/qa_campaign.mjs
+          node dropjourney/scripts/qa_u0_inventory.mjs
+          node dropjourney/scripts/qa_u1.mjs
+          node dropjourney/scripts/qa_u2.mjs
+          node dropjourney/scripts/qa_u3.mjs
+          node dropjourney/scripts/qa_brand_logo.mjs
+      - name: Archive U0 structured route inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: infused-u0-route-inventory
+          path: dropjourney/reports/u0-route-inventory.json
+          if-no-files-found: error
+      - name: Package standalone campaign HTML for external hosting
+        uses: actions/upload-artifact@v4
+        with:
+          name: infused-campaign-landers-v2_9
+          path: dropjourney/exports/landers/infused-*.html
+          if-no-files-found: error
+      - name: Record production Worker deployment before changing preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'Cloudflare token missing'; exit 1; }
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-show/deployments" >/tmp/dj10_production_before.json
+          jq -r '.result.deployments[0].id' /tmp/dj10_production_before.json >/tmp/dj10_prod_id
+      - name: Deploy ONLY isolated preview Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.102.0 deploy --config dropjourney/wrangler.toml
+      - name: Verify preview deployment and unchanged production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-dropjourneytest/deployments" >/tmp/dj10_preview_after.json
+          jq -e '.success and (.result.deployments|length>0)' /tmp/dj10_preview_after.json
+          curl -fsS -H "$auth" "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/infused-show/deployments" >/tmp/dj10_production_after.json
+          test "$(cat /tmp/dj10_prod_id)" = "$(jq -r '.result.deployments[0].id' /tmp/dj10_production_after.json)"
+          echo 'S10 preview deployed. INFUSED production Worker unchanged.'
