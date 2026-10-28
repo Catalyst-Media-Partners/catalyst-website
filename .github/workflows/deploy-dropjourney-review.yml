@@ -1,8 +1,14 @@
-name: INFUSED Drop Journey DJ-X1 finish + campaign landers preview release
+name: INFUSED preview QA and isolated deployment
 
 on:
   push:
-    branches: [dj/ux-finish-campaign-landers-20261028, infused-preview]
+    branches: [infused-preview]
+    paths:
+      - 'dropjourney/**'
+      - 'src/**'
+      - '.github/workflows/deploy-dropjourney-review.yml'
+  pull_request:
+    branches: [infused-preview]
     paths:
       - 'dropjourney/**'
       - 'src/**'
@@ -17,8 +23,64 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate-preview-pr:
+    # PRE-MERGE QA ONLY: untrusted PR code never receives Cloudflare credentials or deploys.
+    if: github.event_name == 'pull_request' && github.base_ref == 'infused-preview' && github.repository == 'Catalyst-Media-Partners/catalyst-website'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out proposed change set
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enforce test Worker isolation without secrets
+        run: |
+          set -euo pipefail
+          grep -Fxq 'name = "infused-dropjourneytest"' dropjourney/wrangler.toml
+          grep -Fxq 'workers_dev = false' dropjourney/wrangler.toml
+          grep -Fxq 'keep_vars = true' dropjourney/wrangler.toml
+          ! grep -Eq 'AUDIENCE_DB|database_id|d1_databases|STRIPE_|infused-show"' dropjourney/wrangler.toml
+          ! grep -Eq 'AUDIENCE_DB|STRIPE_|webhook|sendEmail|infused-show"' dropjourney/worker.mjs
+      - name: Validate original production source without deploying
+        run: |
+          set -euo pipefail
+          npm run build
+          npm run check
+          npm run test:w02
+          node scripts/verify-cloudflare.mjs
+      - name: Build and regress isolated INFUSED preview
+        run: |
+          set -euo pipefail
+          node --check dropjourney/worker.mjs
+          node --check dropjourney/build.mjs
+          node --check dropjourney/src/site.js
+          node --check dropjourney/src/s05-pages.mjs
+          node --check dropjourney/src/s06-pages.mjs
+          node --check dropjourney/src/s08-pages.mjs
+          node --check dropjourney/src/s09-pages.mjs
+          node dropjourney/build.mjs
+          node dropjourney/scripts/qa.mjs
+          node dropjourney/scripts/qa_s03.mjs
+          node dropjourney/scripts/qa_s04.mjs
+          node dropjourney/scripts/qa_s05.mjs
+          node dropjourney/scripts/qa_s06.mjs
+          node dropjourney/scripts/qa_s07.mjs
+          node dropjourney/scripts/qa_s08.mjs
+          node dropjourney/scripts/qa_s09.mjs
+          node dropjourney/scripts/qa_s10.mjs
+          node dropjourney/scripts/qa_finish.mjs
+          node dropjourney/scripts/qa_campaign.mjs
+          node dropjourney/scripts/qa_u0_inventory.mjs
+          node dropjourney/scripts/qa_u1.mjs
+          node dropjourney/scripts/qa_u2.mjs
+          node dropjourney/scripts/qa_u3.mjs
+          node dropjourney/scripts/qa_brand_logo.mjs
+
   validate-and-publish-preview:
-    if: github.repository == 'Catalyst-Media-Partners/catalyst-website' && (github.ref == 'refs/heads/dj/ux-finish-campaign-landers-20261028' || github.ref == 'refs/heads/infused-preview')
+    if: github.repository == 'Catalyst-Media-Partners/catalyst-website' && github.ref == 'refs/heads/infused-preview' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source without credential persistence
