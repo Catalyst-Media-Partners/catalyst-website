@@ -29,9 +29,14 @@ All listed final runs completed successfully. Earlier failed attempts remain in 
 - `.github/workflows/deploy-dropjourney-s05.yml`
 - `.github/workflows/deploy-dropjourney-s10.yml`
 
-## Validation required
+## Post-merge validation — PASS
 
-The cleanup PR must pass the existing `infused-preview` pull-request QA. After merge, verify the retained general preview workflow succeeds and that its isolated `infused-dropjourneytest` deployment is healthy. The `infused-show` production Worker must remain unchanged.
+The cleanup merged through [PR #29](https://github.com/Catalyst-Media-Partners/catalyst-website/pull/29). The retained general preview workflow completed successfully in [run 40925351825](https://github.com/Catalyst-Media-Partners/catalyst-website/actions/runs/40925351825) on commit `36c953e815259c236b6b034839aae8335085a694`.
+
+Verified by the workflow:
+- All isolation checks, production-source checks, and the full isolated preview build/regression suite passed.
+- The isolated `infused-dropjourneytest` Worker deployment succeeded.
+- The workflow captured the production `infused-show` deployment before and after the preview update and confirmed the production deployment ID was unchanged.
 
 ## Branch follow-up
 
