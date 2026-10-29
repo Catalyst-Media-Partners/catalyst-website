@@ -6,13 +6,13 @@ on:
     paths:
       - 'dropjourney/**'
       - 'src/**'
-      - '.github/workflows/deploy-dropjourney-review.yml'
+      - '.github/workflows/**'
   pull_request:
     branches: [infused-preview]
     paths:
       - 'dropjourney/**'
       - 'src/**'
-      - '.github/workflows/deploy-dropjourney-review.yml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
