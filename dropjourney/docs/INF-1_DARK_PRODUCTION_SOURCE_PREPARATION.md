@@ -1,10 +1,12 @@
 # INF-1: Dark production source preparation
 
-**Status:** Source candidate prepared; automated acceptance pending  
+**Status:** Candidate corrections committed; final automated validation running on 2026-10-30  
 **Date:** 2026-10-30  
 **Candidate branch:** release/infused-dark-production-inf1-20261030  
 **Production baseline:** infused-show at 891e895913b6432162b4aa27fd49df6cc918fdbe  
 **Preview source:** infused-preview at be79fc40baf95434e7cd7f0a96c313cf9bc20c6e
+
+**Event facts:** Catalyst owner confirmed on 2026-10-30 that INFUSED Las Vegas is May 13–14, 2027 at the Las Vegas Convention Center. The event manifest records the owner confirmation; no date change was made to the published dates.
 
 ## Approved domain model
 
@@ -47,11 +49,11 @@ The production baseline and Drop Journey preview branches share the same product
 ## INF-2 prerequisites before canary deployment
 
 - Create the new infused-dark Worker from the reviewed source.
-- Add dark.infused.show to the Turnstile widget's hostname allowlist and provision a new Worker secret. Do not read or copy the existing secret.
+- A dedicated Turnstile widget has been created for dark.infused.show with a separate sitekey and secret. The existing infused.show widget remains restricted to infused.show. Bind the new secret to the canary Worker without reading or exposing it.
 - Confirm the preview D1 binding and the private SES bridge still reference the same preview database.
 - Bind BOOTH_ATTRIBUTION to the existing infused-show Worker and verify it forwards to the existing Map Dynamics destination.
 - Attach dark.infused.show only after all bindings and the TLS hostname are ready.
-- Keep SITE_MODE=canary, INTAKE_ENVIRONMENT=preview and TICKET_NOTIFY_ENABLED=false.
+- Keep SITE_MODE=canary, INTAKE_ENVIRONMENT=preview, INTAKE_TEST_MODE=true and TICKET_NOTIFY_ENABLED=false. Canary intake records must also set test_record=1 so the SES bridge fails closed to system notes.
 - Complete real-browser Turnstile, D1, SES System Notes, booth-click attribution, responsive and accessibility acceptance.
 
 ## INF-3 prerequisites before root production cutover
@@ -63,9 +65,17 @@ The production baseline and Drop Journey preview branches share the same product
 - Reassign infused.show and www.infused.show to the dark Worker only after canary acceptance and rollback rehearsal.
 - Preserve dark.infused.show as a noindex alias with canonical links to infused.show.
 
+## INF-2 execution boundary
+
+- Deploy only `infused-dark` from `wrangler.dark-canary.template.toml` after final CI validation passes.
+- Do not merge PR #33 or alter the `infused-show` Worker, apex/www custom domains, or public DNS records.
+- Attach `dark.infused.show` only after the Worker is deployed and the dedicated Turnstile secret is bound.
+- Canary submissions must use the existing `infused-intake` D1 and private `InfusedIntakeSESBridge`; `INTAKE_TEST_MODE=true` marks every canary submission as synthetic, and the bridge routes preview/test records to Lucas system notes rather than the public team inbox.
+- Keep ticket notifications disabled.
+
 ## INF-1 non-actions
 
-No DNS, custom-domain, secret, production D1, production Worker deployment, SES identity, ticket-notification, Stripe, Map Dynamics or event-content changes were made in INF-1. No event dates, pricing or program claims were edited.
+No DNS, custom-domain, secret, production D1, production Worker deployment, SES identity, ticket-notification, Stripe, Map Dynamics or event-content changes were made in INF-1. No event dates, pricing or program claims were changed. The existing May 13–14, 2027 dates were explicitly owner-confirmed on 2026-10-30.
 
 ## Acceptance evidence expected
 
