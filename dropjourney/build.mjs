@@ -192,8 +192,8 @@ function cleanHome(html){
  if(/id="buyer-dialog"|id="buyer-form"|data-open-buyer/.test(html))throw Error('DJ-U3 obsolete homepage buyer wizard remains');
  const robotsContent=INDEXABLE?'index, follow':'noindex, nofollow, noarchive';
  if(/<meta name="robots"[^>]*>/i.test(html))html=html.replace(/<meta name="robots"[^>]*>/i,'<meta name="robots" content="'+robotsContent+'">');
- else html=html.replace('</head>','<meta name="robots" content="'+robotsContent+'">\\n</head>');
- html=html.replace('</head>','<meta name="infused-base" content="'+BASE+'">'+(INDEXABLE?'<link rel="canonical" href="https://infused.show/">':'')+'\\n</head>');
+ else html=html.replace('</head>','<meta name="robots" content="'+robotsContent+'">\n</head>');
+ html=html.replace('</head>','<meta name="infused-base" content="'+BASE+'">'+(INDEXABLE?'<link rel="canonical" href="https://infused.show/">':'')+'\n</head>');
  return html;
 }
 async function write(rel,content){const file=path.join(output,rel);await mkdir(path.dirname(file),{recursive:true});await writeFile(file,content,'utf8');}
