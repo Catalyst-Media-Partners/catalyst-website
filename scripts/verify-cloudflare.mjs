@@ -13,7 +13,15 @@ assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
 const orig = readFileSync('public/index.html', 'utf8');
 const sample = async (hostname, pathname = '/', extra = {}) => worker.fetch(
   new Request(`https://${hostname}${pathname}`),
-  { ASSETS: { fetch: async () => new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} }) }, ...extra }
+  { ASSETS: { fetch: async request => {
+    const u = new URL(request.url);
+    if (u.pathname.endsWith('/sitemap.xml')) {
+      const canonicalHost = u.hostname === 'light.infused.show' ? 'light.infused.show' : 'infused.show';
+      const urls = Array.from({length:15},(_,i)=>`<url><loc>https://${canonicalHost}${i===0?'/':'/market/'}</loc></url>`).join('');
+      return new Response('<?xml version="1.0"?><urlset>'+urls+'</urlset>', {status:200,headers:{'Content-Type':'application/xml'}});
+    }
+    return new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} });
+  } }, ...extra }
 );
 const preview = await sample('infused-show.cannacon-org-s-account.workers.dev');
 const previewHTML = await preview.text();
