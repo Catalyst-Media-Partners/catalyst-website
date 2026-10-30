@@ -164,11 +164,22 @@ assert.ok(flush.attempted>0,'Pending outbox must be eligible for scheduled retry
 assert.ok(flush.accepted>0,'Mock transport should report accepted');
 assert.equal(store.prepare('SELECT COUNT(*) n FROM intake_submissions_v1 WHERE id=?').get(receipt).n,1);
 
+// Canary mode marks every receipt as synthetic. The private SES bridge then
+// routes it to system notes even if an environment value is accidentally wrong.
+const canaryTest=payload('attendee','Industry buyer');
+const canaryResponse=await handleIntake(request(canaryTest),{...env,INTAKE_TEST_MODE:'true'},siteOK);
+assert.equal(canaryResponse.status,200);
+const canaryReceipt=(await canaryResponse.json()).receiptId;
+const canaryRow=store.prepare('SELECT environment,test_record FROM intake_submissions_v1 WHERE id=?').get(canaryReceipt);
+assert.equal(canaryRow.environment,ENVIRONMENT);
+assert.equal(canaryRow.test_record,1,'canary receipt must be marked synthetic');
+
 const pages=['buyers/apply','contact'];
 for(const id of pages){
  const html=await readFile(path.join(root,'dist',DIST,id,'index.html'),'utf8');
  assert.match(html,/cf-turnstile/);
  assert.match(html,/class="dj-intake-form"/);
+ assert.ok(html.includes('data-sitekey="0x4AAAAAAFtS3fhXx5j6zfT8"'),'canary form must use the dedicated Turnstile widget');
  assert.ok(html.includes('action="'+BASE+'api/intake"'),'form action must match selected build base');
  assert.doesNotMatch(html,/jotform/i);
 }
