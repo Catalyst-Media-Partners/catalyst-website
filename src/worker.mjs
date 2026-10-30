@@ -153,7 +153,7 @@ export default {
         const html = (await response.text())
           .replace('<meta name="robots" content="noindex, nofollow, noarchive">',
             '<meta name="robots" content="index, follow">')
-          .replace('</head>', '<link rel="canonical" href="${canonicalHost}/tickets/">\n</head>');
+          .replace('</head>', `<link rel="canonical" href="https://${canonicalHost}/tickets/">\n</head>`);
         const headers = headersFor(true, response.headers);
         headers.delete('Content-Length'); headers.delete('Content-Encoding'); headers.delete('ETag');
         return new Response(html, {status: response.status, headers});
