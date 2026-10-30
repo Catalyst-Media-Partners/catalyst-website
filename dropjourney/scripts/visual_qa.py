@@ -12,6 +12,8 @@ OUT=ROOT/'screenshots'/MODE
 OUT.mkdir(parents=True,exist_ok=True)
 css=(DIST/'assets/site.css').read_text()
 js=(DIST/'assets/site.js').read_text()
+intake_js=(DIST/'assets/intake.js').read_text()
+ticket_js=(DIST/'assets/ticket-notify.js').read_text()
 lookup={}
 def media(link):
     p=link.split('?')[0]
@@ -30,7 +32,11 @@ def prepare(route):
     else:
         markup=markup.replace('<link rel="stylesheet" href="'+BASE+'assets/site.css">','<style>'+css+'</style>')
         markup=markup.replace('<script src="'+BASE+'assets/site.js" defer></script>','')
-        markup=markup.replace('</body>','<script>'+js+'</script></body>')
+        markup=markup.replace('<script src="'+BASE+'assets/intake.js" defer></script>','')
+        markup=markup.replace('<script src="'+BASE+'assets/ticket-notify.js" defer></script>','')
+        extra='<script>'+js+'</script><script>'+intake_js+'</script>'
+        if route=='tickets':extra+='<script>'+ticket_js+'</script>'
+        markup=markup.replace('</body>',extra+'</body>')
     markup=re.sub(r'src="((?:/dropjourneytest/)?assets/images/[^"#?]+)"',lambda m:'src="'+media(m[1])+'"',markup)
     return markup
 cases=[
