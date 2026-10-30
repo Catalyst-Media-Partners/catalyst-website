@@ -71,7 +71,7 @@ jobs:
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-before.json
           jq -e '.success == true' /tmp/domains-before.json >/dev/null
           jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-before.json >/dev/null
-          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 0' /tmp/domains-before.json >/dev/null
+          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service != "infused-dark")] | length) == 0 and ([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) <= 1' /tmp/domains-before.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-show/deployments?per_page=1" > /tmp/infused-public-before.json
           jq -e '.success == true and .result.deployments[0].id == "c79682ae-15cf-420e-88d9-6dc7e8a6558e"' /tmp/infused-public-before.json >/dev/null
 
@@ -102,7 +102,7 @@ jobs:
           jq -e '.success == true and (.result.deployments | length > 0) and (.result.deployments[0].versions | any(.percentage == 100))' /tmp/infused-dark-deployments.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-after.json
           jq -e '.success == true' /tmp/domains-after.json >/dev/null
-          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 0' /tmp/domains-after.json >/dev/null
+          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-after.json >/dev/null
           jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-after.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-show/deployments?per_page=1" > /tmp/infused-public-after.json
           jq -e '.success == true and .result.deployments[0].id == "c79682ae-15cf-420e-88d9-6dc7e8a6558e"' /tmp/infused-public-after.json >/dev/null
