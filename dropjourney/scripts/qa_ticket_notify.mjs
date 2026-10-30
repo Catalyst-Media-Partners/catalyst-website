@@ -70,6 +70,11 @@ const unsub=new Request('https://infused.show/dropjourneytest/tickets/api/unsubs
 assert.equal((await handleTicketRequest(unsub,env,fetcher)).status,200);
 assert.equal(store.prepare('SELECT state FROM infused_ticket_notify_v1').get().state,'unsubscribed');
 assert.equal(sends,1);
+const darkEnv={...env,SITE_BASE_PATH:'/',SITE_ALLOWED_HOSTS:'dark.infused.show',TICKET_NOTIFY_ENABLED:'false'};
+const darkStatus=await handleTicketRequest(new Request('https://dark.infused.show/tickets/api/status'),darkEnv,fetcher);
+assert.deepEqual(await darkStatus.json(),{enabled:false},'ticket notifications remain disabled on the root-path canary');
+const darkSubscribe=await handleTicketRequest(new Request('https://dark.infused.show/tickets/api/subscribe',{method:'POST',headers:{Origin:'https://dark.infused.show','Content-Type':'application/json'},body:JSON.stringify({email:'ticket-qa@example.com',turnstile:'synthetic-test-token'})}),darkEnv,fetcher);
+assert.equal(darkSubscribe.status,503,'root-path canary must not activate ticket notifications');
 const ticket=await readFile(path.join(root,'dist/dropjourneytest/tickets/index.html'),'utf8');
 assert.match(ticket,/id="ticket-notify-form"/);
 assert.match(ticket,/name="email" type="email"/);
