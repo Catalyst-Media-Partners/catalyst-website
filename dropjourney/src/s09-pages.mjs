@@ -61,7 +61,7 @@ export function renderTickets(source,{href,event,base=href('')}){
  <div class="dj-tickets-hero">
   <div class="dj-tickets-intro"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${lead}
    <p class="dj-ticket-state" role="status">Tickets are not yet on sale. Get notified and reserve your 25% early-bird code.</p>
-   <form class="dj-ticket-notify-form" id="ticket-notify-form" action="'+base+'tickets/api/subscribe" method="post" novalidate aria-describedby="ticket-notify-details">
+   <form class="dj-ticket-notify-form" id="ticket-notify-form" action="${base}tickets/api/subscribe" method="post" novalidate aria-describedby="ticket-notify-details">
     <label for="ticket-notify-email">Email address</label>
     <div class="dj-ticket-notify-row">
      <input id="ticket-notify-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="you@example.com">
@@ -76,5 +76,5 @@ export function renderTickets(source,{href,event,base=href('')}){
   <figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure>
  </div>
  <nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Need Hosted Buyer access? <span aria-hidden="true">↗</span></a></nav>
- </div></section><script src="'+base+'assets/ticket-notify.js" defer></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
+ </div></section><script src="${base}assets/ticket-notify.js" defer></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
 }
