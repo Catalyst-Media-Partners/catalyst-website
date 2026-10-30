@@ -1,7 +1,7 @@
 /* S02 shared interactions: accessible navigation, safe attribution, buyer flow and gentle water. */
 (()=>{
 'use strict';
-const root='/dropjourneytest/';
+const root=document.querySelector('meta[name="infused-base"]')?.content||'/dropjourneytest/';
 const drawer=document.getElementById('dj-drawer');
 const trigger=document.querySelector('.dj-explore');
 function closeNav({focus=false}={}){
