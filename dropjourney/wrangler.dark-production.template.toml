@@ -1,0 +1,42 @@
+# INF-3 production template. NOT DEPLOYABLE until INF-2 creates the production D1
+# and updates InfusedIntakeSESBridge to select the production D1 for production receipts.
+name = "infused-dark"
+main = "./worker.mjs"
+compatibility_date = "2026-10-26"
+workers_dev = false
+preview_urls = false
+keep_vars = true
+
+[assets]
+directory = "./dist/production"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "404-page"
+
+[[d1_databases]]
+binding = "INTAKE_DB"
+database_name = "infused-intake-production"
+database_id = "REPLACE_WITH_PRODUCTION_D1_ID"
+
+[[services]]
+binding = "INTAKE_SES"
+service = "catalyst-revenue"
+entrypoint = "InfusedIntakeSESBridge"
+
+[[services]]
+binding = "BOOTH_ATTRIBUTION"
+service = "infused-show"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+SITE_BASE_PATH = "/"
+SITE_MODE = "production"
+SITE_ALLOWED_HOSTS = "infused.show,dark.infused.show,www.infused.show"
+INTAKE_ENVIRONMENT = "production"
+INTAKE_CONSENT_VERSION = "infused-intake-2026-10-28-v1"
+TICKET_NOTIFY_ENABLED = "false"
+
+# TURNSTILE_SECRET must be configured as a Worker secret, never committed here.
+# Assign infused.show and dark.infused.show only during the approved root cutover.
