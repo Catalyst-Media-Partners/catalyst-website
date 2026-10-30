@@ -8,11 +8,14 @@ import {renderBuyers} from './src/s08-pages.mjs';
 import {renderOpportunities,renderContact,renderTickets} from './src/s09-pages.mjs';
 import {renderIntakeForm} from './src/intake-form.mjs';
 
-// Separate site, generated exclusively beneath /dropjourneytest/. No production build edits.
+// Two explicit build modes share one source tree. Preview remains the default.
 const root=path.dirname(fileURLToPath(import.meta.url));
+const mode=process.env.INFUSED_MODE||'preview';
+if(!['preview','production'].includes(mode))throw Error('INFUSED_MODE must be preview or production');
 const source=process.env.INFUSED_SRC?path.resolve(process.env.INFUSED_SRC):path.resolve(root,'../src');
-const output=path.join(root,'dist','dropjourneytest');
-const BASE='/dropjourneytest/';
+const output=path.join(root,'dist',mode==='production'?'production':'dropjourneytest');
+const BASE=mode==='production'?'/':'/dropjourneytest/';
+const INDEXABLE=mode==='production';
 const load=(rel)=>readFile(path.join(root,rel),'utf8');
 const prod=(rel)=>readFile(path.join(source,rel),'utf8');
 const esc=(s)=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -75,7 +78,7 @@ function links(){return [
  ];}
 const menuHref=id=>id==='sponsor'?href('opportunities')+'#sponsorship':href(id);
 function noScriptNav(){return `<noscript><nav class="dj-nojs" aria-label="Explore INFUSED without JavaScript"><p>Explore INFUSED</p><a href="${BASE}#why">Why INFUSED</a><a href="${BASE}#who">Who attends</a><a href="${BASE}#when">When</a><a href="${BASE}#where">Where</a><a href="${BASE}#what">What to do</a>${links().map(([key,label])=>`<a href="${menuHref(key)}">${esc(label)}</a>`).join('')}</nav></noscript>`;}
-function head(title,description){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.9.2-native-intake"><title>${esc(title)} | INFUSED Las Vegas</title><link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script><script src="${BASE}assets/intake.js" defer></script></head>`;}
+function head(title,description,pagePath=BASE){const robots=INDEXABLE?'index, follow':'noindex,nofollow,noarchive';const canonical=INDEXABLE?`<link rel="canonical" href="https://infused.show${pagePath}">`:'';return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="robots" content="${robots}"><meta name="infused-base" content="${BASE}"><meta name="theme-color" content="#100e17"><meta name="description" content="${esc(description)}"><meta name="dropjourney-site-version" content="2.9.2-native-intake"><title>${esc(title)} | INFUSED Las Vegas</title>${canonical}<link rel="stylesheet" href="${BASE}assets/site.css"><script src="${BASE}assets/site.js" defer></script><script src="${BASE}assets/intake.js" defer></script></head>`;}
 function header(id){return `<a class="dj-skip" href="#main">Skip to content</a><header class="dj-header" id="top"><a class="dj-logo" href="${BASE}" aria-label="INFUSED journey home"><img src="${logo}" alt="INFUSED" width="1588" height="358"></a><div class="dj-header-actions"><button type="button" class="dj-explore" aria-expanded="false" aria-controls="dj-drawer"><span class="dj-menu-mark" aria-hidden="true"><i></i><i></i></span>Explore</button><a class="dj-top-action" href="${shop}">Reserve a booth <span aria-hidden="true">↗</span></a></div><nav id="dj-drawer" class="dj-drawer" aria-label="Explore INFUSED" hidden><span class="dj-menu-eyebrow">Discover your way through INFUSED</span><a href="${BASE}" class="dj-menu-home">The journey <span aria-hidden="true">↗</span></a>${links().map(([key,label])=>`<a href="${menuHref(key)}" ${key===id?'aria-current="page"':''}>${esc(label)} <span aria-hidden="true">↗</span></a>`).join('')}<div class="dj-drawer-foot"><span>FROM ROOTS TO RETAIL</span><span>LAS VEGAS ${startDate.year}</span></div></nav></header>`;}
 function footer(){return `<footer class="dj-footer"><div><a href="${BASE}" class="dj-footer-logo"><img src="${logo}" alt="INFUSED" width="1588" height="358"></a><p>The national business event for the entire infused-products ecosystem.</p></div><div class="dj-footer-links"><a href="${href('ecosystem')}">Ecosystem</a><a href="${href('opportunities')}">Exhibit</a><a href="${href('buyers')}">Hosted buyers</a><a href="${href('tickets')}">Tickets</a><a href="${href('contact')}">Contact</a></div><p class="dj-footer-date">${esc(event.dateLabel)}<br>${esc(event.venue)}</p></footer>`;}
 function introNav(route){return `<div class="dj-wayfinder"><a href="${BASE}#${route.chapter.toLowerCase()}" class="dj-back">← ${route.chapter.toLowerCase()} / The journey</a><div class="dj-current"><span>${route.num}</span> / ${route.chapter} <span class="dj-wayline"></span> ${esc(route.label)}</div><a class="dj-inline-nav" href="${href(route.next)}">Explore next <span aria-hidden="true">↗</span></a></div>`;}
@@ -116,21 +119,21 @@ async function detailPage(route){
  if(route.id==='buyers')content=renderBuyers(content,{href});
  if(route.id==='opportunities')content=renderOpportunities(content,{href,event,photo:imagesRoot+route.photo});
  if(route.id==='contact')content=renderContact(content,{href,event});
- if(route.id==='tickets')content=renderTickets(content,{href,event});
+ if(route.id==='tickets')content=renderTickets(content,{href,event,base:BASE});
  const heading=route.label==='The ecosystem'?'The full value stream':route.label;
- return head(heading,'INFUSED Las Vegas. '+heading+'. Explore the connected infused-products ecosystem.')+
+ return head(heading,'INFUSED Las Vegas. '+heading+'. Explore the connected infused-products ecosystem.',href(route.id))+
  `<body class="dj-detail dj-${route.id}" data-page="${route.id}" data-chapter="${route.chapter.toLowerCase()}">${header(route.id)}${noScriptNav()}<div class="dj-ambient" aria-hidden="true"></div>${introNav(route)}<main id="main" tabindex="-1" class="dj-main"><div class="dj-content">`+
  ((route.id==='ecosystem'||route.id==='opportunities')?`<div class="dj-cover-art" aria-hidden="true" style="background-image:url('${imagesRoot}${route.photo}')"></div>`:'')+
  `<div class="dj-source-section">${content}</div></div>${route.id==='opportunities'?'':related(route)}</main>${footer()}<canvas class="dj-water" aria-hidden="true"></canvas></body></html>`;
 }
 function applicationPage(){
- return Promise.resolve(head('Hosted Buyer Request','Submit a first-party INFUSED Hosted Buyer inquiry, reviewed by the INFUSED team.')+
+ return Promise.resolve(head('Hosted Buyer Request','Submit a first-party INFUSED Hosted Buyer inquiry, reviewed by the INFUSED team.',href('buyers/apply'))+
  '<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">'+header('buyers')+noScriptNav()+introNav({num:'02',chapter:'WHO',label:'Buyer request',next:'buyers'})+
  '<main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual"><div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / REQUEST CONSIDERATION</span><span class="dj-sector-kicker">'+event.dateLabel+' / '+event.venue+'</span>'+
  '<h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Tell INFUSED what you source and whom you want to meet. A request is not a confirmed hosted-buyer benefit, acceptance or meeting.</p>'+
  '<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#buyer-request-form" data-intake-type="hosted-buyer">Request buyer consideration <span aria-hidden="true">↘</span></a><a class="dj-btn dj-btn-quiet" href="'+href('buyers')+'">Hosted Buyer information <span aria-hidden="true">↗</span></a></div></div>'+
  '<figure class="dj-apply-photo"><img src="'+imagesRoot+'brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure></section>'+
- renderIntakeForm('buyer')+
+ renderIntakeForm('buyer',{base:BASE})+
  '<section class="dj-secure-intake" aria-label="Request process"><h2>What happens after submission?</h2><div class="dj-intake-steps"><p><strong>1 · Request received</strong> We save your sourcing priorities securely and provide a receipt.</p><p><strong>2 · Team review</strong> The INFUSED team reviews the request and may contact you.</p><p><strong>3 · No automatic acceptance</strong> Your request is not a confirmed meeting, benefit or ticket.</p></div></section>'+
  '</main>'+footer()+'<canvas class="dj-water" aria-hidden="true"></canvas></body></html>');
 }
@@ -184,9 +187,13 @@ function cleanHome(html){
  html=html.replace(lockup,`<div class="date-lockup"><strong>${monthName.toUpperCase()}<span>${startDate.day}–${endDate.day}</span></strong><div><span>${startDate.year}</span><span>${esc(event.venue.toUpperCase())}</span></div></div>`);
  html=html.replace(location,match=>match.replace(/<strong>[^<]*<\/strong>/,`<strong>${esc(event.venue)}</strong>`).replace(/(<\/strong><span>)[^<]*(<\/span>)/,(_,a,z)=>a+esc(event.city)+z));
  html=html.replace('<!-- TURNSTILE_WIDGET -->','');
- // Buyer inquiries now use the dedicated Jotform hosted form. No PII collection
- // or obsolete six-step modal remains in the preview homepage.
+ // Buyer inquiries use the native first-party request route.
+ // The homepage never embeds a second hosted form or collects PII itself.
  if(/id="buyer-dialog"|id="buyer-form"|data-open-buyer/.test(html))throw Error('DJ-U3 obsolete homepage buyer wizard remains');
+ const robotsContent=INDEXABLE?'index, follow':'noindex, nofollow, noarchive';
+ if(/<meta name="robots"[^>]*>/i.test(html))html=html.replace(/<meta name="robots"[^>]*>/i,'<meta name="robots" content="'+robotsContent+'">');
+ else html=html.replace('</head>','<meta name="robots" content="'+robotsContent+'">\\n</head>');
+ html=html.replace('</head>','<meta name="infused-base" content="'+BASE+'">'+(INDEXABLE?'<link rel="canonical" href="https://infused.show/">':'')+'\\n</head>');
  return html;
 }
 async function write(rel,content){const file=path.join(output,rel);await mkdir(path.dirname(file),{recursive:true});await writeFile(file,content,'utf8');}
@@ -220,6 +227,11 @@ for(const offer of offers){
  await writeFile(path.join(exportDir,'infused-'+offer.id+'.html'),html,'utf8');
  if(offer.id===campaignConfig.default)await write('land/index.html',html);
 }
-// Only the native /dropjourneytest/api/intake endpoint can accept first-party consented inquiries.
-await write('robots.txt','User-agent: *\nDisallow: /\n');
-console.log(`Built ${catalog.length+2} full-site routes and ${offers.length+1} campaign landers under ${BASE}; exported ${offers.length} standalone HTML files`);
+// The only native inquiry endpoint is same-origin and consented.
+await write('robots.txt',INDEXABLE?'User-agent: *\nAllow: /\nSitemap: https://infused.show/sitemap.xml\n':'User-agent: *\nDisallow: /\n');
+if(INDEXABLE){
+ const pages=['/',...catalog.map(x=>href(x.id)),href('buyers/apply')];
+ const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+pages.map(p=>'  <url><loc>https://infused.show'+p+'</loc></url>').join('\n')+'\n</urlset>\n';
+ await write('sitemap.xml',xml);
+}
+console.log('Built '+(catalog.length+2)+' full-site routes and '+(offers.length+1)+' campaign landers in '+mode+' mode under '+BASE+'; exported '+offers.length+' standalone HTML files');
