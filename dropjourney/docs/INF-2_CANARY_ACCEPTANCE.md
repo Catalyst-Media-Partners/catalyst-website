@@ -1,6 +1,6 @@
 # INF-2: INFUSED dark canary deployment and acceptance
 
-**Status:** Canary deployed and hostname attached; automated browser acceptance passed. One real-human Turnstile submission remains unverified because the headless browser did not receive a token.  
+**Status:** Canary deployed and hostname attached; automated browser acceptance and synthetic SES outbox delivery passed. One real-human Turnstile form submission remains unverified because the headless browser did not receive a token.  
 **Date:** 2026-10-30  
 **Candidate branch:** `release/infused-dark-production-inf1-20261030`  
 **Deployment workflow run:** [GitHub Actions run #1](https://github.com/Catalyst-Media-Partners/catalyst-website/actions/runs/41138439368)  
@@ -62,8 +62,10 @@ Verified against `https://dark.infused.show` after the custom domain was attache
 - A synthetic request with an invalid Turnstile token returned HTTP 403 / “Human verification failed”.
 - D1 submission count remained unchanged at five after that rejected request. No unverified submission reached D1.
 - A headless browser attempt did not receive a real Turnstile token. No live form submission was attempted and no user/customer data was created by that attempt.
-- A separate synthetic outbox record was inserted directly into the isolated preview D1 to exercise the scheduled private SES relay. Its current state at the time of this receipt was pending; the scheduled retry must reach `sent` and the matching email must be verified in Lucas system notes before notification acceptance is closed.
-- The existing October 29 SES bridge V&V remains valid: synthetic preview record routed to `lucas+system-notes@cannacon.org`, with no matching message at `info@cannacon.org`.
+- A separate synthetic outbox record was inserted directly into the isolated preview D1 (not through the web form) to exercise the canary Worker's scheduled private SES relay. The five-minute cron processed it: D1 outbox state is `sent`, attempts `1`, SES MessageId `010101a18ef86b4a-ba4f11cc-91c9-42d9-ae12-95fc62815740-000000`.
+- Gmail receipt: [INFUSED Canary Outbox QA](https://mail.google.com/mail/u/?authuser=lucas%40cannacon.org#all/1a18ef86f58bf400), delivered to `lucas+system-notes@cannacon.org` with `[SYSTEM NOTE] [TEST]` subject prefix.
+- A separate Gmail search for the same sender and inquiry subject at `info@cannacon.org` returned no messages.
+- The existing October 29 SES bridge V&V also remains valid.
 
 **Manual acceptance still required:** Open `https://dark.infused.show/contact/` in a normal browser, complete the managed Turnstile challenge and submit the clearly labeled synthetic acceptance request. Confirm the receipt, D1 row (`environment='preview'`, `test_record=1`), outbox state `sent`, and matching system-note email. Do not submit real customer data during this test.
 
