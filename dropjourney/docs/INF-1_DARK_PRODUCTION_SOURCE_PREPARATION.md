@@ -1,6 +1,6 @@
 # INF-1: Dark production source preparation
 
-**Status:** Candidate corrections committed; final automated validation running on 2026-10-30  
+**Status:** INF-1 accepted; INF-2 canary deployed and isolated on 2026-10-30. Manual real-browser Turnstile form acceptance remains open.  
 **Date:** 2026-10-30  
 **Candidate branch:** release/infused-dark-production-inf1-20261030  
 **Production baseline:** infused-show at 891e895913b6432162b4aa27fd49df6cc918fdbe  
@@ -46,15 +46,15 @@ The production baseline and Drop Journey preview branches share the same product
    - wrangler.dark-canary.template.toml uses the existing preview D1 and explicit canary mode.
    - wrangler.dark-production.template.toml contains a production D1 placeholder and is deliberately non-deployable until INF-2 completes database and SES bridge separation.
 
-## INF-2 prerequisites before canary deployment
+## INF-2 canary deployment and acceptance
 
-- Create the new infused-dark Worker from the reviewed source.
-- A dedicated Turnstile widget has been created for dark.infused.show with a separate sitekey and secret. The existing infused.show widget remains restricted to infused.show. Bind the new secret to the canary Worker without reading or exposing it.
+- Completed: created and deployed the separate `infused-dark` Worker from the reviewed source. Deployment `a56ba5e8-5ade-40fc-84ed-4c5df7fb9da7`, version `5f639b2e-f1bd-4337-bacc-aeda6f7a4af0`.
+- Completed: a dedicated Turnstile widget and secret are configured for `dark.infused.show`; the existing `infused.show` widget remains restricted to its original hostname.
 - Confirm the preview D1 binding and the private SES bridge still reference the same preview database.
 - Bind BOOTH_ATTRIBUTION to the existing infused-show Worker and verify it forwards to the existing Map Dynamics destination.
 - Attach dark.infused.show only after all bindings and the TLS hostname are ready.
 - Keep SITE_MODE=canary, INTAKE_ENVIRONMENT=preview, INTAKE_TEST_MODE=true and TICKET_NOTIFY_ENABLED=false. Canary intake records must also set test_record=1 so the SES bridge fails closed to system notes.
-- Complete real-browser Turnstile, D1, SES System Notes, booth-click attribution, responsive and accessibility acceptance.
+- Completed: responsive/interaction CI, live route/robots/canonical checks, invalid-token rejection, synthetic D1/outbox delivery to system notes, and CI booth-attribution forwarding tests passed. Outstanding: one real-browser managed Turnstile challenge and form submission; headless browser automation did not obtain a token. See `INF-2_CANARY_ACCEPTANCE.md`.
 
 ## INF-3 prerequisites before root production cutover
 
