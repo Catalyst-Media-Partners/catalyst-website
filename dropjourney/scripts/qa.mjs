@@ -71,4 +71,17 @@ for(const needle of ['name = "infused-dark"','SITE_BASE_PATH = "/"','SITE_MODE =
 const productionTemplate=await readFile(path.join(root,'wrangler.dark-production.template.toml'),'utf8');
 for(const needle of ['name = "infused-dark"','SITE_MODE = "production"','SITE_ALLOWED_HOSTS = "infused.show,dark.infused.show,www.infused.show"','INTAKE_ENVIRONMENT = "production"','REPLACE_WITH_PRODUCTION_D1_ID','TICKET_NOTIFY_ENABLED = "false"'])assert.ok(productionTemplate.includes(needle),'Dark production template missing '+needle);
 assert.equal((await readdir(path.join(dist,'assets','images'))).filter(x=>x.endsWith('.webp')).length,21,'expected 21 optimized source images');
+if(indexable){
+ const campaign=JSON.parse(await readFile(path.join(root,'content/landers.json'),'utf8'));
+ for(const offer of campaign.variants){
+  const html=await readFile(path.join(dist,'land',offer.id,'index.html'),'utf8');
+  assert.ok(!html.includes('/dropjourneytest/'),'Campaign '+offer.id+': preview path leaked into production output');
+  assert.ok(html.includes('<meta name="infused-base" content="/">'),'Campaign '+offer.id+': root base metadata missing');
+  assert.ok(html.includes('https://infused.show'+offer.destination.replace(/^\\/dropjourneytest\\//,'/')),'Campaign '+offer.id+': primary destination not mapped to production');
+  assert.ok(html.includes('https://infused.show'+offer.secondaryDestination.replace(/^\\/dropjourneytest\\//,'/')),'Campaign '+offer.id+': secondary destination not mapped to production');
+  assert.match(html,/noindex, nofollow, noarchive/,'Campaign '+offer.id+': standalone lander must remain noindex');
+ }
+ const siteJs=await readFile(path.join(root,'src/site.js'),'utf8');
+ assert.ok(siteJs.includes('meta[name="infused-base"]'),'Production navigation must read the selected site base');
+}
 console.log('PASS INFUSED '+mode+' build: '+pages+' routes, 21 optimized images, '+links+' asset links, '+images+' image references, '+(indexable?'canonical/indexable root metadata':'noindex preview metadata')+', ticket notifications remain disabled');
