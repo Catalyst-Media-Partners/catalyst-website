@@ -77,8 +77,8 @@ if(indexable){
   const html=await readFile(path.join(dist,'land',offer.id,'index.html'),'utf8');
   assert.ok(!html.includes('/dropjourneytest/'),'Campaign '+offer.id+': preview path leaked into production output');
   assert.ok(html.includes('<meta name="infused-base" content="/">'),'Campaign '+offer.id+': root base metadata missing');
-  assert.ok(html.includes('https://infused.show'+offer.destination.replace(/^\\/dropjourneytest\\//,'/')),'Campaign '+offer.id+': primary destination not mapped to production');
-  assert.ok(html.includes('https://infused.show'+offer.secondaryDestination.replace(/^\\/dropjourneytest\\//,'/')),'Campaign '+offer.id+': secondary destination not mapped to production');
+  assert.ok(html.includes('https://infused.show'+offer.destination.replace('/dropjourneytest/','/')),'Campaign '+offer.id+': primary destination not mapped to production');
+  assert.ok(html.includes('https://infused.show'+offer.secondaryDestination.replace('/dropjourneytest/','/')),'Campaign '+offer.id+': secondary destination not mapped to production');
   assert.match(html,/noindex, nofollow, noarchive/,'Campaign '+offer.id+': standalone lander must remain noindex');
  }
  const siteJs=await readFile(path.join(root,'src/site.js'),'utf8');
