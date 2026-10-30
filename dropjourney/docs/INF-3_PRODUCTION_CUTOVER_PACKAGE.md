@@ -2,7 +2,7 @@
 
 **Status:** Prepared for review. No production D1, production SES routing, light-host publication, apex/www reassignment or production deployment has been performed.  
 **Date:** 2026-10-30  
-**Prerequisite:** Complete the manual INF-2 Turnstile and system-notes acceptance in `INF-2_CANARY_ACCEPTANCE.md`.  
+**Prerequisite:** Complete the manual INF-2 Turnstile and system-notes acceptance in `INF-2_CANARY_ACCEPTANCE.md`. The synthetic SES outbox delivery is complete; the normal-browser form challenge remains open.  
 **Production event facts:** May 13–14, 2027 / Las Vegas Convention Center (owner-confirmed 2026-10-30).
 
 ## 1. Current verified state
@@ -60,8 +60,8 @@ Before production build:
 
 1. Create a separate production widget authorized for `infused.show` and `dark.infused.show`.
 2. Store its secret only as the `TURNSTILE_SECRET` Worker secret on `infused-dark`.
-3. Parameterize `dropjourney/src/intake-form.mjs` to use a build-time `TURNSTILE_SITEKEY` value rather than the currently hardcoded canary sitekey.
-4. Set the canary build to the canary sitekey and production build to the production widget sitekey.
+3. Completed source preparation: `dropjourney/src/intake-form.mjs` now accepts a build-time `TURNSTILE_SITEKEY` value and defaults to the canary sitekey when none is supplied.
+4. Keep the canary build on its default canary sitekey; set `TURNSTILE_SITEKEY` to the production widget sitekey in the production build.
 5. Do not commit either secret. Do not place secret values in GitHub source, workflow logs, build artifacts or documentation.
 
 The ticket-notification form currently has a separate legacy sitekey. Ticket notifications remain disabled; if that feature is ever enabled, its widget and hostname policy must be reviewed separately.
