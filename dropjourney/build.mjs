@@ -114,7 +114,7 @@ async function detailPage(route){
  if(route.id==='market')content=renderMarket(content,{href});
  if(route.id==='why-vegas')content=renderVegas(content,{href,event});
  if(route.id==='ecosystem')content=renderEcosystem(content,{href,taxonomy});
- if(['roots','science','make','package','move','sell','services'].includes(route.id))content=renderSector(content,route,{href,taxonomy,catalog});
+ if(['roots','science','make','package','move','sell','services'].includes(route.id))content=renderSector(content,route,{href,taxonomy,catalog,base:BASE});
  if(route.id==='opportunities') content=content.replace('<article class="detail-box green"><h3>Sponsorship</h3>','<article class="detail-box green" id="sponsorship"><h3>Sponsorship</h3>');
  if(route.id==='buyers')content=renderBuyers(content,{href});
  if(route.id==='opportunities')content=renderOpportunities(content,{href,event,photo:imagesRoot+route.photo});
