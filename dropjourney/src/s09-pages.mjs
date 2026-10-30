@@ -5,7 +5,7 @@ const must=(s,re,label)=>{const m=String(s).match(re);if(!m)throw Error('DJ-S09 
 const all=(s,re,count,label)=>{const values=[...s.matchAll(re)].map(m=>m[0]);if(values.length!==count)throw Error('DJ-S09 '+label+' count changed: '+values.length);return values;};
 const text=s=>String(s).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
 export function renderOpportunities(source,{href,event,photo}){
- if(typeof photo!=='string'||!/^\/dropjourneytest\/assets\/images\/[a-z0-9-]+\.webp$/.test(photo))throw Error('DJ-X1 unapproved opportunities photo');
+ if(typeof photo!=='string'||!/^\/(?:dropjourneytest\/)?assets\/images\/[a-z0-9-]+\.webp$/.test(photo))throw Error('DJ-X1 unapproved opportunities photo');
  const label=must(source,/<span class="kicker">[\s\S]*?<\/span>/,'opportunities label');
  const title=must(source,/<h1\b[^>]*>[\s\S]*?<\/h1>/,'opportunities headline');
  const lead=must(source,/<p class="section-lead">[\s\S]*?<\/p>/,'opportunities description');
@@ -49,9 +49,9 @@ export function renderContact(source,{href,event}){
  const booth=links.find(x=>x.includes('/go/booth'));
  if(!booth)throw Error('DJ-U3 first-party booth handoff must be preserved');
  const caption=must(original,/<p class="endline">[\s\S]*?<\/p>/,'closing line');
- return `<section class="section dj-contact-page" id="contact" aria-labelledby="contact-title"><div class="container"><div class="dj-contact-hero"><div class="dj-contact-copy">${label}<span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${message}<div class="dj-contact-actions">${booth.replace('class="btn btn-primary"','class="dj-btn dj-btn-acid"')}<a href="#contact-request-form" class="dj-btn dj-btn-quiet">Contact INFUSED <span aria-hidden="true">↘</span></a></div><p class="dj-contact-support">Exhibiting, sponsoring, or seeking more information? Choose the appropriate route above.</p>${caption}</div><figure class="dj-contact-photo">${photo}<figcaption>Exhibitors and business conversations / INFUSED</figcaption></figure></div><nav class="dj-contact-next" aria-label="More ways to engage"><a href="${href('opportunities')}">Explore exhibit opportunities <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Explore Hosted Buyers <span aria-hidden="true">↗</span></a><a href="${href('tickets')}">Attendance and tickets <span aria-hidden="true">↗</span></a></nav>${renderIntakeForm('contact')}</div></section>`;
+ return `<section class="section dj-contact-page" id="contact" aria-labelledby="contact-title"><div class="container"><div class="dj-contact-hero"><div class="dj-contact-copy">${label}<span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${message}<div class="dj-contact-actions">${booth.replace('class="btn btn-primary"','class="dj-btn dj-btn-acid"')}<a href="#contact-request-form" class="dj-btn dj-btn-quiet">Contact INFUSED <span aria-hidden="true">↘</span></a></div><p class="dj-contact-support">Exhibiting, sponsoring, or seeking more information? Choose the appropriate route above.</p>${caption}</div><figure class="dj-contact-photo">${photo}<figcaption>Exhibitors and business conversations / INFUSED</figcaption></figure></div><nav class="dj-contact-next" aria-label="More ways to engage"><a href="${href('opportunities')}">Explore exhibit opportunities <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Explore Hosted Buyers <span aria-hidden="true">↗</span></a><a href="${href('tickets')}">Attendance and tickets <span aria-hidden="true">↗</span></a></nav>${renderIntakeForm('contact',{base:href('')})}</div></section>`;
 }
-export function renderTickets(source,{href,event}){
+export function renderTickets(source,{href,event,base=href('')}){
  const title=must(source,/<h1\b[^>]*>[\s\S]*?<\/h1>/,'ticket headline');
  const photo=must(source,/<img class="hero-image"[^>]*>/,'ticket image');
  const lead=must(source,/<p class="hero-description">[\s\S]*?<\/p>/,'ticket announcement');
@@ -61,7 +61,7 @@ export function renderTickets(source,{href,event}){
  <div class="dj-tickets-hero">
   <div class="dj-tickets-intro"><span class="dj-sector-kicker">${event.dateLabel} / ${event.venue}</span>${title}${lead}
    <p class="dj-ticket-state" role="status">Tickets are not yet on sale. Get notified and reserve your 25% early-bird code.</p>
-   <form class="dj-ticket-notify-form" id="ticket-notify-form" action="/dropjourneytest/tickets/api/subscribe" method="post" novalidate aria-describedby="ticket-notify-details">
+   <form class="dj-ticket-notify-form" id="ticket-notify-form" action="'+base+'tickets/api/subscribe" method="post" novalidate aria-describedby="ticket-notify-details">
     <label for="ticket-notify-email">Email address</label>
     <div class="dj-ticket-notify-row">
      <input id="ticket-notify-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="you@example.com">
@@ -76,5 +76,5 @@ export function renderTickets(source,{href,event}){
   <figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure>
  </div>
  <nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Need Hosted Buyer access? <span aria-hidden="true">↗</span></a></nav>
- </div></section><script src="/dropjourneytest/assets/ticket-notify.js" defer></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
+ </div></section><script src="'+base+'assets/ticket-notify.js" defer></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
 }
