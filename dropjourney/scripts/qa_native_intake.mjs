@@ -169,7 +169,7 @@ for(const id of pages){
  const html=await readFile(path.join(root,'dist',DIST,id,'index.html'),'utf8');
  assert.match(html,/cf-turnstile/);
  assert.match(html,/class="dj-intake-form"/);
- assert.match(html,/action="\/dropjourneytest\/api\/intake"/);
+ assert.ok(html.includes('action="'+BASE+'api/intake"'),'form action must match selected build base');
  assert.doesNotMatch(html,/jotform/i);
 }
 assert.equal(successful,14);

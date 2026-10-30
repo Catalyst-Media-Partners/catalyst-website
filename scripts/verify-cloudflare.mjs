@@ -11,9 +11,9 @@ for (const expected of [
 assert.match(config, /binding = "AUDIENCE_DB"/);
 assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
 const orig = readFileSync('public/index.html', 'utf8');
-const sample = async (hostname, pathname = '/') => worker.fetch(
+const sample = async (hostname, pathname = '/', extra = {}) => worker.fetch(
   new Request(`https://${hostname}${pathname}`),
-  { ASSETS: { fetch: async () => new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} }) } }
+  { ASSETS: { fetch: async () => new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} }) }, ...extra }
 );
 const preview = await sample('infused-show.cannacon-org-s-account.workers.dev');
 const previewHTML = await preview.text();
