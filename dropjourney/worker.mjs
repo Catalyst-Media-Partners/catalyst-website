@@ -75,7 +75,7 @@ export default {
    html=html.replace(/<meta name="robots" content="[^"]*">/i,'<meta name="robots" content="'+robots+'">');
    const canonical='https://infused.show'+canonicalPath(sitePath);
    if(/<link rel="canonical" href="[^"]*">/i.test(html))html=html.replace(/<link rel="canonical" href="[^"]*">/i,'<link rel="canonical" href="'+canonical+'">');
-   else if(indexable)html=html.replace('</head>','<link rel="canonical" href="'+canonical+'">\n</head>');
+   else if(indexable||host==='dark.infused.show')html=html.replace('</head>','<link rel="canonical" href="'+canonical+'">\n</head>');
    headers.delete('Content-Length');headers.delete('Content-Encoding');headers.delete('ETag');
    return new Response(request.method==='HEAD'?null:html,{status:asset.status,statusText:asset.statusText,headers});
   }
