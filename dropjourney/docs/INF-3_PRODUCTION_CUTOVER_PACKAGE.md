@@ -93,6 +93,8 @@ Do not reassign the public domains during this deployment step.
 
 ## 6. Preserve the light site
 
+**Additional deployment dependency:** The PR branch contains the `LIGHT_HOST_PUBLISHED` gate and light-host canonical/robots behavior in `src/worker.mjs`, but the currently deployed `infused-show` version `f69bd0ee-3ad0-4bbb-8bc9-d756a70bfb2a` does not contain that code. The live Worker setting is also absent. Do not set the variable or attach `light.infused.show` until the light-host code has been released to the existing `infused-show` Worker. Prepare a narrow, separately reviewed light-host support release rather than merging the entire dark-site PR merely to obtain this code. The branch also contains a correction and regression test for the light-host `/tickets/` canonical URL.
+
 Before moving the public domains:
 
 1. Set `LIGHT_HOST_PUBLISHED=true` on the existing `infused-show` Worker.
