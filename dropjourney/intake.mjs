@@ -1,5 +1,11 @@
 // INFUSED native intake: isolated D1 persistence and private SES service binding.
-export const INTAKE_PATH='/dropjourneytest/api/intake';
+const normalizedBase=value=>{
+ const base=typeof value==='string'?value:'/dropjourneytest/';
+ if(!base.startsWith('/')||!base.endsWith('/')||base.includes('..')||base.includes('?'))throw new Error('Invalid site base path');
+ return base;
+};
+export const intakePath=env=>normalizedBase(env?.SITE_BASE_PATH) + 'api/intake';
+const allowedHosts=env=>(env?.SITE_ALLOWED_HOSTS||'infused.show').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
 const ALLOWED_CATEGORIES=new Set(['Finished infused products','Functional beverages','Hemp-derived products','Ingredients / formulation','Contract manufacturing / co-packing','Packaging / labeling','Distribution / wholesale','Retail solutions','General discovery','Other']);
 const BUYING_ROLES=new Set(['Purchasing decision-maker','Research / recommendations','Sourcing support','Other']);
 const ATTENDEE_ROLES=new Set(['General attendee / discovery','Industry buyer','Programming / community','Undecided']);
@@ -13,7 +19,7 @@ const value=(v,label,max,required=false)=>{
  return s;
 };
 const option=(v,allowed,label,required=false)=>{if(!v&&!required)return '';const s=value(v,label,100,required);if(!allowed.has(s))throw new InputError('Invalid '+label);return s;};
-export function normalizeSubmission(b){
+export function normalizeSubmission(b,base='/dropjourneytest/'){
  if(!b||typeof b!=='object'||Array.isArray(b))throw new InputError('Invalid submission');
  const kind=value(b.kind,'request type',30,true);
  if(!['buyer','attendee','contact'].includes(kind))throw new InputError('Unknown request type');
@@ -37,7 +43,7 @@ export function normalizeSubmission(b){
  if(website&&!/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(?:\/[^\s]*)?$/i.test(website))throw new InputError('Invalid website');
  const markets=value(b.markets??'','markets',200);
  const sourcePage=value(b.sourcePage??'','source page',190,true);
- if(!sourcePage.startsWith('/dropjourneytest/')||sourcePage.includes('?')||sourcePage.includes('://'))throw new InputError('Invalid source page');
+ if(!sourcePage.startsWith(normalizedBase(base))||sourcePage.includes('?')||sourcePage.includes('://'))throw new InputError('Invalid source page');
  if(typeof b.websiteConfirm==='string'&&b.websiteConfirm.trim())throw new InputError('Could not verify request');
  return {kind,requestKey,fullName,email,company,jobTitle,buyingRole,categories:selected,objective,website,markets,message,inquiryTopic,consentMarketing:b.consentMarketing,sourcePage};
 }
@@ -57,22 +63,24 @@ async function siteVerify(token,req,env,fetcher=fetch){
   const r=await fetcher('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',body,signal:AbortSignal.timeout(8000)});
   if(!r.ok)return false;
   const proof=await r.json();
-  return proof.success===true&&proof.hostname==='infused.show'&&(!proof.action||proof.action==='infused-intake');
+  const host=new URL(req.url).hostname.toLowerCase();
+  return proof.success===true&&allowedHosts(env).includes(host)&&proof.hostname===host&&(!proof.action||proof.action==='infused-intake');
  }catch{return false;}
 }
 export async function handleIntake(req,env,fetcher=fetch){
  if(req.method!=='POST')return json({error:'Method not allowed'},405);
- if(req.headers.get('Origin')!=='https://infused.show'||!/^application\/json(?:\s*;|$)/i.test(req.headers.get('Content-Type')||''))return json({error:'Invalid origin or content type'},403);
+ const requestUrl=new URL(req.url),host=requestUrl.hostname.toLowerCase();
+ if(requestUrl.protocol!=='https:'||!allowedHosts(env).includes(host)||req.headers.get('Origin')!==requestUrl.origin||!/^application\/json(?:\s*;|$)/i.test(req.headers.get('Content-Type')||''))return json({error:'Invalid origin or content type'},403);
  if(!env.INTAKE_DB||!env.TURNSTILE_SECRET||!env.INTAKE_SES)return json({error:'Intake temporarily unavailable'},503);
  let body,p;
- try{body=await readBounded(req);p=normalizeSubmission(body);}catch(e){return json({error:e instanceof InputError?e.message:'Invalid request'},400);}
+ try{body=await readBounded(req);p=normalizeSubmission(body,normalizedBase(env.SITE_BASE_PATH));}catch(e){return json({error:e instanceof InputError?e.message:'Invalid request'},400);}
  if(!await siteVerify(body.turnstileToken,req,env,fetcher))return json({error:'Human verification failed'},403);
  try{
   const id=crypto.randomUUID();
   const insert='INSERT INTO intake_submissions_v1 (id,request_key,kind,full_name,email,company,job_title,buying_role,categories_json,objective,website,markets,message,inquiry_topic,consent_contact,consent_marketing,consent_version,source_page,environment) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(request_key) DO NOTHING';
   const outbox='INSERT INTO intake_notification_outbox_v1(submission_id) SELECT id FROM intake_submissions_v1 WHERE request_key=? ON CONFLICT(submission_id) DO NOTHING';
   await env.INTAKE_DB.batch([
-   env.INTAKE_DB.prepare(insert).bind(id,p.requestKey,p.kind,p.fullName,p.email,p.company,p.jobTitle,p.buyingRole,JSON.stringify(p.categories),p.objective,p.website,p.markets,p.message,p.inquiryTopic,1,p.consentMarketing?1:0,'infused-intake-2026-10-28-v1',p.sourcePage,'preview'),
+   env.INTAKE_DB.prepare(insert).bind(id,p.requestKey,p.kind,p.fullName,p.email,p.company,p.jobTitle,p.buyingRole,JSON.stringify(p.categories),p.objective,p.website,p.markets,p.message,p.inquiryTopic,1,p.consentMarketing?1:0,(env.INTAKE_CONSENT_VERSION||'infused-intake-2026-10-28-v1'),p.sourcePage,(env.INTAKE_ENVIRONMENT==='production'?'production':'preview')),
    env.INTAKE_DB.prepare(outbox).bind(p.requestKey)
   ]);
   const row=await env.INTAKE_DB.prepare('SELECT id,kind FROM intake_submissions_v1 WHERE request_key=?').bind(p.requestKey).first();
