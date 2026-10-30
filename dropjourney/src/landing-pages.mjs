@@ -1,7 +1,9 @@
 /* DJ-X1: portable campaign landers compiled from allowlisted source JSON. */
 const safe=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
-const suffix='/dropjourneytest/';
-export function validateLanders(config){
+const sourceBase='/dropjourneytest/';
+const validBase=value=>value==='/'||/^\/[a-z0-9-]+\/$/.test(value);
+export function validateLanders(config,{base=sourceBase}={}){
+ if(!validBase(base))throw Error('Campaign build base is invalid');
  if(config.schemaVersion!==1||config.siteOrigin!=='https://infused.show')throw Error('Campaign site origin or schema changed');
  if(!Array.isArray(config.variants)||config.variants.length<3||config.variants.length>12)throw Error('Campaign variant manifest invalid');
  const ids=new Set();
@@ -13,14 +15,15 @@ export function validateLanders(config){
   for(const k of ['eyebrow','lead','action','secondary'])if(typeof o[k]!=='string'||!o[k].trim()||o[k].length>300)throw Error('Campaign field invalid '+o.id+':'+k);
   for(const key of ['destination','secondaryDestination']){
    const value=o[key];
-   if(typeof value!=='string'||!value.startsWith(suffix)||/\?|\/\/|\\|\.\./.test(value))throw Error('Unapproved campaign destination '+o.id+':'+key);
+   if(typeof value!=='string'||!value.startsWith(sourceBase)||/\?|\/\/|\\|\.\./.test(value))throw Error('Unapproved campaign destination '+o.id+':'+key);
    if(!/^\/dropjourneytest\/(?:[a-z-]+(?:\/[a-z-]+)?\/)?(?:#[a-z0-9-]+)?$/.test(value))throw Error('Campaign route invalid '+o.id+':'+key);
   }
  }
  if(!ids.has(config.default))throw Error('Campaign default must be a compiled variant');
- return config.variants;
+ return config.variants.map(o=>({...o,destination:base+o.destination.slice(sourceBase.length),secondaryDestination:base+o.secondaryDestination.slice(sourceBase.length)}));
 }
-export function renderLander({offer,config,logo,art,css,js}){
+export function renderLander({offer,config,logo,art,css,js,base=sourceBase}){
+ if(!validBase(base))throw Error('Campaign render base is invalid');
  if(typeof logo!=='string'||!logo.startsWith('data:image/png;base64,'))throw Error('Cannot locate approved embedded INFUSED logo');
  if(typeof art!=='string'||!art.includes('drop-specular-__DROP_ID__'))throw Error('Missing original 3D INFUSED drop artwork');
  if(typeof css!=='string'||typeof js!=='string')throw Error('Landing CSS/JS missing');
@@ -29,7 +32,7 @@ export function renderLander({offer,config,logo,art,css,js}){
  const dest=config.siteOrigin+offer.destination,secondary=config.siteOrigin+offer.secondaryDestination;
  return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex, nofollow, noarchive"><meta name="color-scheme" content="${offer.theme}">
+<meta name="robots" content="noindex, nofollow, noarchive"><meta name="infused-base" content="${safe(base)}"><meta name="color-scheme" content="${offer.theme}">
 <meta name="description" content="${safe(offer.lead)}"><meta name="theme-color" content="${offer.theme==='dark'?'#110f1b':'#f6f3ed'}">
 <meta name="dropjourney-site-version" content="2.9.2-native-intake"><title>${safe(title)} | INFUSED Las Vegas</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
@@ -42,6 +45,6 @@ export function renderLander({offer,config,logo,art,css,js}){
 <a class="lander-secondary" href="${safe(secondary)}" data-offer-link>${safe(offer.secondary)} <span aria-hidden="true">&#8599;</span></a></div></div>
 <div class="lander-art"><a class="lander-drop" href="${safe(dest)}" data-offer-link aria-label="Click the INFUSED drop: ${safe(offer.action)}">${drop}</a>
 <p class="lander-drop-instruction">CLICK THE DROP / ${safe(offer.action)}</p></div></main>
-<footer class="lander-foot"><span>INFUSED LAS VEGAS / THE FULL VALUE STREAM</span><a href="${config.siteOrigin}${suffix}" data-offer-link>Discover the full INFUSED journey</a></footer>
+<footer class="lander-foot"><span>INFUSED LAS VEGAS / THE FULL VALUE STREAM</span><a href="${config.siteOrigin}${base}" data-offer-link>Discover the full INFUSED journey</a></footer>
 <canvas class="water-canvas" aria-hidden="true"></canvas><script>${js}</script></body></html>`;
 }
