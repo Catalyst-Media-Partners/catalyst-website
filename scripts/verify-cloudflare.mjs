@@ -150,7 +150,7 @@ assert.equal(originalMapd.searchParams.has('catalyst_click_id'),false);
 assert.equal(originalMapd.searchParams.has('utm_campaign'),false);
 const invalidMethod = await worker.fetch(new Request('https://infused.show/go/booth',{method:'POST'}),{AUDIENCE_DB:clickDb});
 assert.equal(invalidMethod.status,405);
-assert.equal(recorded.length,3);
+assert.equal(recorded.length,4);
 assert.ok(orig.includes('cta-attribution.js'), 'Every page must load the no-cookie attribution enhancement');
 
 console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect and anonymous CTA tracking behavior');
