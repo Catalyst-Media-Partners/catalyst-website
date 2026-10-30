@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+const root=path.resolve(new URL('..',import.meta.url).pathname),read=p=>readFile(path.join(root,p),'utf8');
+const options=await read('dist/dropjourneytest/opportunities/index.html'),contact=await read('dist/dropjourneytest/contact/index.html'),tickets=await read('dist/dropjourneytest/tickets/index.html');
+const original=await read('../src/sections/opportunities.html'),originalContact=await read('../src/sections/contact.html');
+assert.equal((options.match(/class="dj-offer"/g)||[]).length,6,'Six source commercial options');
+for(const m of original.matchAll(/<h3>([^<]+)<\/h3>/g))assert.ok(options.includes(m[1]),'Lost source commercial offering '+m[1]);
+for(const m of original.matchAll(/<article class="detail-box[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>/g))assert.ok(options.includes(m[1]),'Lost source commercial details');
+assert.ok(options.includes('id="sponsorship"'),'Sponsor anchor missing');
+assert.match(options,/href="https:\/\/infused\.show\/go\/booth\?/,'Existing first-party booth route needed');
+assert.ok(options.includes('10×10 inline booths start at $3,000'),'Keep source pricing (not a new quote)');
+assert.ok(options.includes('10×10 corners start at $3,500'),'Keep source pricing qualifier');
+assert.match(options,/Availability and pricing may change/,'Source sale qualification must persist');
+assert.match(contact,/data-intake-kind="contact"/,'Native contact form missing');
+assert.match(contact,/href="https:\/\/infused\.show\/go\/booth\?/,'Contact booth handoff preserved');
+assert.match(contact,/INTERESTED IN INFUSED/,'Contact heading retained');
+assert.match(tickets,/ON-SALE SOON/,'Canonical ticket state retained');
+assert.match(tickets,/not yet on sale/i,'Honest ticket state');
+assert.match(tickets,/id="ticket-notify-form"/,'Email-only ticket signup missing');
+assert.match(tickets,/name="email" type="email"/,'Single ticket email field missing');
+assert.match(tickets,/action="\/dropjourneytest\/tickets\/api\/subscribe"/,'Ticket subscribe API mismatch');
+assert.match(tickets,/25% early-bird/i,'Published 25% offer must be visible');
+assert.match(tickets,/No ticket is purchased or reserved today/,'Truthful pre-sale message');
+assert.doesNotMatch(tickets,/data-intake-kind="attendee"|name="fullName"|name="company"|name="attendeeRole"|name="categories"/,'No buyer-style attendee form');
+for(const [name,html] of [['options',options],['contact',contact],['tickets',tickets]]){
+ assert.equal((html.match(/<h1\b/g)||[]).length,1,name+' one H1');
+ if(name==='options')assert.doesNotMatch(html,/<form\b/,name+' unexpected form');else assert.match(html,name==='tickets'?/class="dj-ticket-notify-form"/:/class="dj-intake-form"/,name+' intended form required');
+ assert.match(html,/noindex,nofollow,noarchive/);
+}
+console.log('PASS DJ-S09: 6 published commercial paths, first-party booth attribution, buyer/contact intake and email-only verified ticket notifications');

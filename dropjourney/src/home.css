@@ -1,0 +1,110 @@
+/* S02 intentional simplification of the original three-ring prototype. */
+body.intro-mode::after{display:none!important;content:none!important}
+.keyboard-hint{display:none!important}
+.chapter-aside{display:none!important}
+.chapter-layout{grid-template-columns:minmax(0,1.3fr) minmax(220px,.78fr);gap:clamp(25px,5vw,85px);position:relative;isolation:isolate}
+.chapter-layout:before{content:"";position:absolute;inset:-25px 0 0 23%;z-index:-1;background:var(--chapter-photo) center/cover no-repeat;mask-image:linear-gradient(90deg,transparent,black 45%,transparent);opacity:.115;pointer-events:none;filter:saturate(.7)}
+body[data-stage=why]{--chapter-photo:url('/dropjourneytest/assets/images/trade-show-product-discovery-and-buyer-conversation-04.webp')}
+body[data-stage=who]{--chapter-photo:url('/dropjourneytest/assets/images/hosted-buyer-meeting-12.webp')}
+body[data-stage=when]{--chapter-photo:url('/dropjourneytest/assets/images/professionals-meeting-and-discovering-infused-product-brands-at-a--01.webp')}
+body[data-stage=where]{--chapter-photo:url('/dropjourneytest/assets/images/welcome-to-las-vegas-sign-and-las-vegas-skyline-19.webp')}
+body[data-stage=what]{--chapter-photo:url('/dropjourneytest/assets/images/infused-exhibitors-with-attendees-at-their-show-booth-20.webp')}
+.chapter-visual{isolation:isolate}.experience-top{border:0;padding-bottom:0}.experience-overline .live-indicator{opacity:.45}.chapter-nav{margin-top:8px}.chapter-panel h2{font-size:clamp(43px,5.3vw,92px)}.chapter-panel>p:not(.chapter-lead){font-size:15px}.chapter-details{margin-top:29px}.stage-bottom{margin-top:20px}.threshold-message{font-size:clamp(13px,1.55vw,16px)}.threshold-topline{opacity:.65}.threshold-center .threshold-sub{margin-bottom:18px}.threshold-center .droplet-wrap{height:210px}.threshold-footer{font-size:10px}
+.site-nav{max-height:calc(100dvh - 105px);overflow:auto}
+.threshold-footer .plain-link{min-height:44px}.top-reserve{min-height:44px}.topbar .brand{min-height:44px;display:flex;align-items:center}
+@media(max-width:1100px){.chapter-layout{grid-template-columns:minmax(0,1fr) minmax(180px,.62fr)}.chapter-panel h2{font-size:clamp(42px,5.2vw,76px)}}
+@media(max-width:720px){.chapter-layout{grid-template-columns:1fr}.chapter-layout:before{inset:20% 0 0;opacity:.085}.chapter-visual{order:2}.chapter-copy{order:1}.chapter-panel h2{font-size:clamp(42px,10vw,62px)}.stage-bottom{margin-top:10px}.threshold-topline{font-size:9px}.threshold-footer{gap:10px}.threshold-footer>span:first-child{display:none}.topbar .brand img{width:115px}}
+@media(max-width:390px){.threshold-footer{font-size:9px}.threshold-footer>a{font-size:9px}.chapter-layout{min-height:auto}}
+@media(prefers-reduced-motion:reduce){.chapter-layout:before{opacity:.03}}
+
+/* S03: responsive layout, no sideways-scrolling metrics or chapter selectors. */
+.market-scroll{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;overflow:visible;scroll-snap-type:none;padding:0;margin:16px 0 18px}
+.market-point{min-width:0;max-width:100%;padding:16px 13px;overflow-wrap:anywhere;scroll-snap-align:none}
+.market-point strong{font-size:clamp(22px,2.1vw,30px);line-height:1.12}
+.chapter-nav{overflow:visible;scrollbar-width:auto}
+.chapter-nav ol{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));min-width:0;gap:0;width:100%}
+.chapter-nav button{width:100%;min-width:0;min-height:48px;gap:clamp(2px,.85vw,11px);padding:15px 2px;font-size:clamp(10px,1.15vw,13px);letter-spacing:.09em}
+.chapter-nav small{font-size:9px}
+.chapter-panel,.chapter-details,.chapter-copy,.chapter-layout{min-width:0;max-width:100%}
+.chapter-panel .market-scroll{width:100%;max-width:100%}
+@media(max-width:780px){.chapter-nav button{flex-direction:column;gap:3px;letter-spacing:.06em}.chapter-nav small{font-size:8px}.chapter-details{max-width:100%}}
+@media(max-width:560px){.market-scroll{grid-template-columns:repeat(auto-fit,minmax(min(100%,136px),1fr));gap:9px}.market-point strong{font-size:23px}.market-point{padding:14px 11px}.chapter-nav button{padding:12px 1px;font-size:10px}}
+@media(max-width:350px){.market-scroll{grid-template-columns:1fr}.chapter-nav small{display:none}.chapter-nav button{font-size:9px;letter-spacing:0}}
+/* No-script visitors can follow direct routes without triggering the entry animation. */
+.dj-nojs{max-width:1150px;margin:22px auto;padding:26px;display:flex;gap:15px;align-items:center;flex-wrap:wrap;border:1px solid rgba(190,250,114,.32);border-radius:14px;background:rgba(24,23,35,.96)}
+.dj-nojs p{width:100%;margin:0 0 4px;font-size:16px;font-weight:800}.dj-nojs a{color:#d3f6b1;font-weight:650;padding:10px;min-height:44px;display:flex;align-items:center;text-decoration:none}
+@media(prefers-reduced-motion:reduce){.market-scroll,.chapter-nav{scroll-behavior:auto}}
+
+/* DJ-S04: refined water-sculpture identity and editorial finish.
+   One continuous SVG contour, layered light / shadow, no faceted polygons,
+   no heavy shaders, no additional animation loops. */
+.drop-svg{display:block;width:100%;height:auto;overflow:visible;shape-rendering:geometricPrecision;backface-visibility:hidden}
+.drop-shell{isolation:isolate;filter:drop-shadow(9px 24px 19px rgba(5,28,18,.34)) drop-shadow(-6px -2px 24px rgba(180,250,109,.12));transform:translateZ(0)}
+.drop-shell .drop-svg{width:158px;height:auto;max-width:none}
+.drop-inner{isolation:isolate;filter:drop-shadow(10px 22px 22px rgba(4,31,19,.37)) drop-shadow(-2px -2px 19px rgba(186,255,106,.17))}
+.drop-inner .drop-vector{width:clamp(156px,14.2vw,194px);min-width:0;max-width:none;height:auto;transform:translateZ(0)}
+.drop-glyph{display:none!important}
+.drop-col{isolation:isolate}
+.drop-col:before{content:"";position:absolute;pointer-events:none;top:4%;left:4%;right:4%;height:82%;border-radius:50%;z-index:-1;background:radial-gradient(ellipse at 50% 52%,rgba(155,226,103,.115) 0%,rgba(155,226,103,.055) 31%,transparent 75%)}
+.orbit{border:1px solid rgba(200,248,181,.13)!important;opacity:.38!important}
+.orbit-b{border-style:solid!important;opacity:.19!important}
+.orbit-c{opacity:.17!important}
+.threshold:before{border-color:rgba(203,255,181,.075);width:min(72vw,745px);height:min(72vw,745px)}
+.threshold-center{padding-bottom:clamp(10px,3vw,35px)}
+.threshold-message{color:#cecad1;line-height:1.7;max-width:450px}
+.drop-instruction,.drop-hint{letter-spacing:.16em}
+.drop-hint{color:#baf68a;text-wrap:balance}
+/* Make each chapter an editorial composition, not a muddy full-page photo. */
+.chapter-layout:before{content:"";position:absolute;inset:-30px 0 0 0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 55% 60% at 75% 32%,rgba(94,148,84,.1),transparent 72%);opacity:1;mask-image:none;filter:none}
+.chapter-layout:after{content:"";position:absolute;z-index:-1;top:8px;right:-2.5%;width:min(51%,620px);height:min(43vw,520px);pointer-events:none;background:linear-gradient(115deg,rgba(14,11,24,.35),transparent 55%),var(--chapter-photo) center/cover no-repeat;mask-image:radial-gradient(ellipse 51% 51% at 50% 48%,#000 8%,rgba(0,0,0,.65) 50%,transparent 100%);opacity:.21;filter:saturate(.78) contrast(.97)}
+.chapter-panel h2{letter-spacing:-.075em;text-wrap:balance}
+.chapter-eyebrow{letter-spacing:.2em}
+.chapter-lead{letter-spacing:-.018em}
+.chapter-details{border-top-color:rgba(245,238,255,.19)}
+/* Market: three curated examples on the homepage, all five and sources on /market/. */
+.market-scroll{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.market-point{border-color:rgba(227,244,217,.2);border-radius:17px;background:linear-gradient(150deg,rgba(247,255,241,.052),rgba(247,255,241,.014) 80%);box-shadow:inset 0 1px rgba(255,255,255,.045);min-width:0}
+.market-point strong{font-size:clamp(23px,2.25vw,32px);font-variant-numeric:tabular-nums;letter-spacing:-.05em}
+.chapter-panel .fineprint{font-size:11px;line-height:1.55;color:#b1adb7}
+/* A connected sequence of links, not an eight-card trade-show directory. */
+.ecosystem-grid{gap:0 23px!important}
+.ecosystem-grid .ecosystem-item{min-height:72px;padding:14px 10px 13px 0;border:0;border-bottom:1px solid rgba(241,238,250,.2);border-radius:0;background:transparent;box-shadow:none;transition:padding-left .18s ease,border-color .18s ease}
+.ecosystem-grid .ecosystem-item:hover,.ecosystem-grid .ecosystem-item:focus-visible{padding-left:7px;background:transparent;border-color:rgba(191,252,112,.64)}
+.ecosystem-item strong{font-size:13px;letter-spacing:.015em}
+.ecosystem-item small{line-height:1.5;font-size:11px;color:#b5b2be}
+.buyer-prompt{border-radius:17px;background:rgba(173,228,120,.045);border-color:rgba(190,250,112,.18)}
+/* We retain one primary action per chapter and subtle directional cues. */
+.text-cta{color:#e8ffcf;transition:color .2s,padding-left .2s}
+.text-cta:hover{padding-left:3px;color:var(--acid)}
+.drop-hint{font-size:9px}
+@media(max-width:1100px){
+ .chapter-layout:after{width:62%;height:460px;opacity:.15;right:0}
+ .drop-inner .drop-vector{width:clamp(132px,16vw,174px)}
+}
+@media(max-width:720px){
+ .chapter-layout:after{top:7px;right:1%;width:96%;height:185px;opacity:.095;mask-image:radial-gradient(ellipse 50% 48% at 50% 43%,#000 8%,transparent 100%)}
+ .chapter-layout:before{inset:0}
+ .drop-col{min-height:188px;height:190px;gap:9px}
+ .journey-drop{width:178px;height:188px}
+ .drop-inner .drop-vector{width:112px}
+ .orbit-a{width:82%;height:78%}.orbit-b{width:96%;height:90%}
+ .market-scroll{grid-template-columns:1fr;gap:0;margin-top:12px}
+ .market-point{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:4px 12px;min-height:67px;padding:11px 4px;border:0;border-radius:0;border-bottom:1px solid rgba(227,244,217,.18);background:transparent;box-shadow:none}
+ .market-point span{grid-column:1;grid-row:1;font-size:11px}.market-point strong{grid-column:2;grid-row:1 / 3;font-size:clamp(24px,6.7vw,30px)}.market-point small{grid-column:1;grid-row:2;font-size:10px}
+ .ecosystem-grid{gap:0 16px!important}
+ .ecosystem-grid .ecosystem-item{min-height:78px;padding-top:12px}
+ .chapter-panel h2{text-wrap:balance}
+ .threshold:before{width:91vw;height:91vw;top:26%}
+ .drop-shell .drop-svg{width:139px}
+}
+@media(max-width:390px){
+ .drop-col{min-height:173px;height:174px}
+ .journey-drop{width:159px;height:168px}
+ .drop-inner .drop-vector{width:106px}
+ .drop-hint{max-width:110px}
+ .ecosystem-grid .ecosystem-item{min-height:79px}
+}
+@media(prefers-reduced-motion:reduce){
+ .drop-shell,.drop-inner,.drop-svg{transition:none!important}
+ .chapter-layout:after{opacity:.085}
+}

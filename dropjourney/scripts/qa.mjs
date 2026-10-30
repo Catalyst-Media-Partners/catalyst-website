@@ -1,0 +1,37 @@
+import {readFile,readdir,stat} from 'node:fs/promises';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+const root=path.resolve(new URL('..',import.meta.url).pathname),dist=path.join(root,'dist','dropjourneytest');
+const ids=['','market','ecosystem','roots','science','make','package','move','sell','services','buyers','why-vegas','opportunities','contact','tickets','buyers/apply'];
+let pages=0,links=0,images=0;
+for(const id of ids){
+ const file=path.join(dist,id,'index.html');
+ const html=await readFile(file,'utf8');const label=id||'journey';
+ assert.match(html,/<meta name="robots" content="noindex[, ]*nofollow[, ]*noarchive"/i,`${label} should be noindex`);
+ assert.match(html,/<main\b/i,`${label} missing main`);
+ const h1=(html.match(/<h1\b/g)||[]).length;assert.equal(h1,1,`${label}: exactly one h1`);
+ assert.ok(!html.includes('/dropjourneytest/dropjourneytest/'),`${label}: doubled preview prefix`);
+ assert.ok(!html.includes('AN INTERACTIVE PREVIEW'),`${label}: prototype disclaimer in public copy`);
+ assert.ok(!html.includes('action="/tickets/api/subscribe"'),`${label}: no production-origin ticket collection`);
+ assert.ok(!/jotform/i.test(html),`${label}: no Jotform dependency allowed`);
+ assert.ok(!html.includes('href="https://infused.show/"'),`${label}: no escape to old site via home logo`);
+ if(id==='tickets')assert.match(html,/class="dj-ticket-notify-form"/,`${label}: native ticket signup missing`);
+ else if(['buyers/apply','contact'].includes(id))assert.match(html,/class="dj-intake-form"/,`${label}: required native inquiry form missing`);
+ else assert.ok(!html.includes('<form'),`${label}: unexpected form`);
+ if(id==='tickets'){assert.ok(html.includes('id="ticket-notify-form"'),'email-only ticket flow required');assert.ok(html.includes('not yet on sale'),'honest ticket-not-on-sale state');}
+ for(const m of html.matchAll(/(?:href|src)="(\/dropjourneytest\/[^"?#]*)/g)){
+   const u=m[1];if(!u||u==='/'||u.endsWith('/'))continue;
+   const target=path.join(root,'dist',u.slice(1));await stat(target).catch(()=>{throw Error(`${label}: missing resource ${u}`)});links++;
+ }
+ for(const m of html.matchAll(/src="(\/dropjourneytest\/assets\/images\/[^"?#]*)/g)){const target=path.join(root,'dist',m[1].slice(1));await stat(target);images++;}
+ pages++;
+}
+const code=await readFile(path.join(root,'worker.mjs'),'utf8');
+for(const needle of ['noindex, nofollow, noarchive','if(request.method','env.ASSETS.fetch','tickets\\/api','X-DropJourney-Version'])assert.ok(code.includes(needle),`Worker missing ${needle}`);
+assert.ok(!code.includes('AUDIENCE_DB'),'No production audience binding');
+const conf=await readFile(path.join(root,'wrangler.toml'),'utf8');
+assert.ok(conf.includes('name = "infused-dropjourneytest"'),'Worker name must be isolated');
+assert.ok(conf.includes('workers_dev = false'),'No workers.dev public preview');
+assert.ok(!conf.includes('infused-show"'),'No production Worker reference');
+assert.equal((await readdir(path.join(dist,'assets','images'))).filter(x=>x.endsWith('.webp')).length,21);
+console.log(`PASS: ${pages} pages, 21 source images, ${links} asset links, ${images} image references, immutable production and protected integration boundaries`);

@@ -1,0 +1,1 @@
+{"name":"infused-dropjourney-site","private":true,"type":"module","scripts":{"build":"node build.mjs","check":"node scripts/qa.mjs","test":"node scripts/qa.mjs"}}

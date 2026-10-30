@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import {readFile,stat} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(fileURLToPath(new URL('..',import.meta.url)));
+const conf=JSON.parse(await readFile(path.join(root,'content/landers.json'),'utf8'));
+assert.equal(conf.schemaVersion,1);
+assert.equal(conf.variants.length,5);
+for(const o of conf.variants){
+ const preview=path.join(root,'dist/dropjourneytest/land',o.id,'index.html');
+ const portable=path.join(root,'exports/landers','infused-'+o.id+'.html');
+ const a=await readFile(preview,'utf8'),b=await readFile(portable,'utf8');
+ assert.equal(a,b,'Standalone HTML must match served preview');
+ assert.ok(a.includes('data-campaign="'+o.id+'"'));
+ assert.ok(a.includes('data-theme="'+o.theme+'"'));
+ assert.equal((a.match(/<h1\b/g)||[]).length,1);
+ assert.match(a,/noindex, nofollow, noarchive/);
+ assert.match(a,/name="dropjourney-site-version" content="2\.9\.2-native-intake"/,'Campaign and main site version must match');
+ assert.match(a,/http-equiv="Content-Security-Policy"/);
+ assert.match(a,/src="data:image\/png;base64,/);
+ assert.match(a,/drop-specular-lander-/);
+ assert.match(a,/class="lander-drop"/);
+ assert.match(a,/data-offer-link/);
+ assert.match(a,/prefers-reduced-motion/);
+ assert.doesNotMatch(a,/<form\b|<script src=|<link[^>]*stylesheet|\beval\(|fetch\(|navigator\.sendBeacon/i);
+ assert.ok(a.includes('https://infused.show'+o.destination));
+ assert.ok(a.includes('https://infused.show'+o.secondaryDestination));
+ assert.ok(!a.includes('window.location.search')&&!a.includes('params.get(\'next\')'),'No user-selectable redirect destination');
+ assert.ok((await stat(portable)).size<5*1024*1024,'Leadpages single-file upload limit');
+}
+console.log('PASS DJ-X1: 5 self-contained, verified single-file campaign pages with allowlisted destinations');

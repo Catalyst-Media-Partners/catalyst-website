@@ -1,0 +1,78 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {DatabaseSync} from 'node:sqlite';
+import {webcrypto} from 'node:crypto';
+import {handleTicketRequest,validEmail} from '../ticket-notify.mjs';
+globalThis.crypto??=webcrypto;
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const store=new DatabaseSync(':memory:');
+const sql=await readFile(path.join(root,'migrations/0002_ticket_email_verification.sql'),'utf8');store.exec(sql);
+const db={prepare(q){const st=store.prepare(q);let a=[];return{bind(...x){a=x;return this;},first(){return st.get(...a)||null;},run(){const r=st.run(...a);return{meta:{changes:r.changes}};}};}};
+let sends=0,mail;
+const env={
+ INTAKE_DB:db,TURNSTILE_SECRET:'SYNTHETIC-TEST-SECRET',TICKET_NOTIFY_ENABLED:'true',
+ INTAKE_SES:{async sendTicketVerification(input){
+  sends++;mail=input;
+  const row=store.prepare('SELECT email,mail_state FROM infused_ticket_notify_v1 WHERE id=?').get(input.id);
+  assert.equal(row.email,'ticket-qa@example.com');
+  assert.equal(row.mail_state,'queued');
+  assert.match(input.verifyToken,/^[a-f0-9]{64}$/);
+  store.prepare("UPDATE infused_ticket_notify_v1 SET mail_state='sent',mail_sent_at=datetime('now'),ses_message_id='mock-ses-receipt' WHERE id=?").run(input.id);
+  return {status:'accepted',messageId:'mock-ses-receipt'};
+ }}
+};
+const fetcher=async(url)=>new Response(JSON.stringify(String(url).includes('siteverify')?
+ {success:true,hostname:'infused.show',action:'infused-tickets'}:
+ {Status:0,Answer:[{type:15,data:'10 mail.example.com.'}]}),{status:200});
+const make=(email='ticket-qa@example.com',ip='198.51.100.20',headers={})=>new Request('https://infused.show/dropjourneytest/tickets/api/subscribe',{method:'POST',headers:{Origin:'https://infused.show','Content-Type':'application/json','CF-Connecting-IP':ip,...headers},body:JSON.stringify({email,turnstile:'synthetic-test-token'})});
+const count=()=>store.prepare('SELECT COUNT(*) AS n FROM infused_ticket_notify_v1').get().n;
+assert.ok(validEmail('  visitor@valid-domain.com '));
+assert.equal(validEmail('broken@domain'),null);
+assert.equal(validEmail('hello+qa@example.com')?.email,'hello+qa@example.com');
+const before=count();
+const wrongOrigin=await handleTicketRequest(make('ticket-qa@example.com','198.51.100.20',{Origin:'https://evil.example'}),env,fetcher);
+assert.equal(wrongOrigin.status,403);assert.equal(count(),before);
+const invalid=await handleTicketRequest(make('not-an-email'),env,fetcher);
+assert.equal(invalid.status,400);assert.equal(count(),before);
+const disabled=await handleTicketRequest(make(),{...env,TICKET_NOTIFY_ENABLED:'false'},fetcher);
+assert.equal(disabled.status,503);assert.equal(count(),before);
+const noMx=async url=>new Response(JSON.stringify(String(url).includes('siteverify')
+ ?{success:true,hostname:'infused.show',action:'infused-tickets'}:{Status:0,Answer:[]}),{status:200});
+const badDomain=await handleTicketRequest(make(),env,noMx);
+assert.equal(badDomain.status,400,'Reject domains without functioning MX');
+assert.equal(count(),before,'Failed domain check must not write subscriber');
+const dnsOutage=async url=>String(url).includes('siteverify')?fetcher(url):new Response(JSON.stringify({Status:2,Answer:[]}),{status:200});
+const dnsUnavailable=await handleTicketRequest(make(),env,dnsOutage);
+assert.equal(dnsUnavailable.status,503,'Transient DNS failure must not record a subscriber');
+assert.equal(count(),before,'Unverified domain cannot be saved');
+const accepted=await handleTicketRequest(make(),env,fetcher);
+assert.equal(accepted.status,200);assert.equal((await accepted.json()).ok,true);
+assert.equal(count(),before+1);assert.equal(sends,1);
+let row=store.prepare('SELECT * FROM infused_ticket_notify_v1').get();
+assert.equal(row.state,'pending');assert.equal(row.mail_state,'sent');assert.ok(row.verification_hash);
+assert.equal(row.ses_message_id,'mock-ses-receipt');
+assert.equal(row.email,'ticket-qa@example.com');assert.equal(row.promo_code,null);
+const repeated=await handleTicketRequest(make(),env,fetcher);
+assert.equal(repeated.status,200);assert.equal(count(),before+1);assert.equal(sends,1);
+const url='https://infused.show/dropjourneytest/tickets/verify?token='+mail.verifyToken;
+const verified=await handleTicketRequest(new Request(url),env,fetcher);
+assert.equal(verified.status,200);const page=await verified.text();
+assert.match(page,/Email verified/);assert.match(page,/INF25-[A-F0-9]{12}/);
+row=store.prepare('SELECT * FROM infused_ticket_notify_v1').get();
+assert.equal(row.state,'verified');assert.equal(row.verification_hash,null);assert.equal(row.promo_code,page.match(/INF25-[A-F0-9]{12}/)[0]);
+assert.equal((await handleTicketRequest(new Request(url),env,fetcher)).status,400,'Verification link must be one-use');
+assert.equal((await handleTicketRequest(make(),env,fetcher)).status,200);assert.equal(sends,1,'Do not resend a verified address');
+const unsubUrl='https://infused.show/dropjourneytest/tickets/unsubscribe?token='+mail.unsubscribeToken;
+assert.equal((await handleTicketRequest(new Request(unsubUrl),env,fetcher)).status,200);
+const unsub=new Request('https://infused.show/dropjourneytest/tickets/api/unsubscribe',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'token='+mail.unsubscribeToken});
+assert.equal((await handleTicketRequest(unsub,env,fetcher)).status,200);
+assert.equal(store.prepare('SELECT state FROM infused_ticket_notify_v1').get().state,'unsubscribed');
+assert.equal(sends,1);
+const ticket=await readFile(path.join(root,'dist/dropjourneytest/tickets/index.html'),'utf8');
+assert.match(ticket,/id="ticket-notify-form"/);
+assert.match(ticket,/name="email" type="email"/);
+assert.doesNotMatch(ticket,/name="fullName"|name="company"|name="attendeeRole"|name="categories"|data-intake-kind="attendee"/);
+assert.match(ticket,/VERIFY|Notify me/i);
+console.log('PASS DJ-ticket-verify: single email signup, Turnstile & MX validation, SES relay, D1 consent, one-time code, unsubscribe, no duplicate sends');
