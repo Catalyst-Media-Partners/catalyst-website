@@ -8,6 +8,10 @@ import {normalizeSubmission,handleIntake,flushIntakeOutbox} from '../intake.mjs'
 
 globalThis.crypto ??= webcrypto;
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const BASE=process.env.SITE_BASE_PATH||'/dropjourneytest/';
+const SITE_HOST=process.env.SITE_HOST||'infused.show';
+const ENVIRONMENT=process.env.INTAKE_ENVIRONMENT||'preview';
+const DIST=process.env.INFUSED_MODE==='production'?'production':'dropjourneytest';
 const sql=await readFile(path.join(root,'migrations/0001_infused_native_intake.sql'),'utf8');
 const store=new DatabaseSync(':memory:');
 store.exec(sql);
@@ -28,13 +32,14 @@ let gatewayCalls=0;
 const env={
  INTAKE_DB:db,
  TURNSTILE_SECRET:'SYNTHETIC-UNIT-TEST-ONLY-NOT-A-REAL-SECRET',
- INTAKE_SES:{async sendRequest(){gatewayCalls++;return {status:'accepted',messageId:'mock-only-no-email-sent'};}}
+ INTAKE_SES:{async sendRequest(){gatewayCalls++;return {status:'accepted',messageId:'mock-only-no-email-sent'};}},
+ SITE_BASE_PATH:BASE,SITE_ALLOWED_HOSTS:SITE_HOST,INTAKE_ENVIRONMENT:ENVIRONMENT
 };
-const siteOK=async()=>new Response(JSON.stringify({success:true,hostname:'infused.show',action:'infused-intake'}),{status:200});
+const siteOK=async()=>new Response(JSON.stringify({success:true,hostname:SITE_HOST,action:'infused-intake'}),{status:200});
 const siteWrongHost=async()=>new Response(JSON.stringify({success:true,hostname:'evil.example',action:'infused-intake'}),{status:200});
-const siteWrongAction=async()=>new Response(JSON.stringify({success:true,hostname:'infused.show',action:'other'}),{status:200});
+const siteWrongAction=async()=>new Response(JSON.stringify({success:true,hostname:SITE_HOST,action:'other'}),{status:200});
 const siteFail=async()=>new Response(JSON.stringify({success:false}),{status:200});
-const pathFor={buyer:'/dropjourneytest/buyers/apply/',attendee:'/dropjourneytest/tickets/',contact:'/dropjourneytest/contact/'};
+const pathFor={buyer:BASE+'buyers/apply/',attendee:BASE+'tickets/',contact:BASE+'contact/'};
 let serial=0;
 function payload(kind,role,marketing=false){
  serial++;
@@ -53,8 +58,8 @@ function payload(kind,role,marketing=false){
  };
  return base;
 }
-const request=(body,{origin='https://infused.show',contentType='application/json',method='POST'}={})=>
- new Request('https://infused.show/dropjourneytest/api/intake',{
+const request=(body,{origin='https://'+SITE_HOST,contentType='application/json',method='POST'}={})=>
+ new Request('https://'+SITE_HOST+BASE+'api/intake',{
   method,headers:{Origin:origin,'Content-Type':contentType},
   ...(method==='POST'?{body:JSON.stringify(body)}:{})
  });
@@ -80,6 +85,7 @@ for(const [kind,options] of Object.entries(roles)){
   assert.equal(row.kind,kind);
   assert.equal(row.consent_marketing,p.consentMarketing?1:0,'marketing consent must be independent');
   assert.equal(row.source_page,pathFor[kind]);
+  assert.equal(row.environment,ENVIRONMENT,'preview/canary submissions must remain preview; production submits must be explicit');
   assert.equal(row.buying_role,kind==='contact'?'':options[i]);
   assert.deepEqual(JSON.parse(row.categories_json),p.categories);
   assert.equal(count('intake_submissions_v1'),before+1);
@@ -160,7 +166,7 @@ assert.equal(store.prepare('SELECT COUNT(*) n FROM intake_submissions_v1 WHERE i
 
 const pages=['buyers/apply','contact'];
 for(const id of pages){
- const html=await readFile(path.join(root,'dist/dropjourneytest',id,'index.html'),'utf8');
+ const html=await readFile(path.join(root,'dist',DIST,id,'index.html'),'utf8');
  assert.match(html,/cf-turnstile/);
  assert.match(html,/class="dj-intake-form"/);
  assert.match(html,/action="\/dropjourneytest\/api\/intake"/);
