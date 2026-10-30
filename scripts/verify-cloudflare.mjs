@@ -22,6 +22,16 @@ assert.ok(previewHTML.includes('<meta name="robots" content="noindex, nofollow, 
 assert.ok(!previewHTML.includes('<link rel="canonical" href="https://infused.show/">'));
 const rootRobots = await sample('infused-show.cannacon-org-s-account.workers.dev', '/robots.txt');
 assert.ok((await rootRobots.text()).includes('Disallow: /'));
+const lightDisabled = await sample('light.infused.show');
+assert.equal(lightDisabled.status,404,'Light hostname must remain unpublished until explicitly enabled');
+const light = await sample('light.infused.show','/',{LIGHT_HOST_PUBLISHED:'true'});
+const lightHTML = await light.text();
+assert.equal(light.headers.get('x-robots-tag'),null);
+assert.ok(lightHTML.includes('<link rel="canonical" href="https://light.infused.show/">'));
+const lightRobots = await sample('light.infused.show','/robots.txt',{LIGHT_HOST_PUBLISHED:'true'});
+assert.ok((await lightRobots.text()).includes('Sitemap: https://light.infused.show/sitemap.xml'));
+const lightSitemap = await sample('light.infused.show','/sitemap.xml',{LIGHT_HOST_PUBLISHED:'true'});
+assert.ok((await lightSitemap.text()).includes('https://light.infused.show/market/'));
 const prod = await sample('infused.show');
 const prodHTML = await prod.text();
 assert.equal(prod.headers.get('x-robots-tag'), null);
@@ -121,6 +131,10 @@ const safeDefault = await worker.fetch(new Request(
 ), {AUDIENCE_DB:clickDb});
 assert.equal(safeDefault.status,302);
 assert.equal(recorded.length,3);
+const lightTracked = await worker.fetch(new Request('https://light.infused.show/go/booth?position=navigation&page=%2Fopportunities%2F'),{AUDIENCE_DB:clickDb,LIGHT_HOST_PUBLISHED:'true'});
+assert.equal(lightTracked.status,302);
+assert.equal(recorded.length,4);
+assert.equal(recorded[3][2],'light.infused.show','Light-site clicks retain their actual site hostname');
 const originalMapd = new URL(safeDefault.headers.get('location'));
 assert.equal(originalMapd.origin,'https://shows.map-dynamics.com');
 assert.ok(originalMapd.searchParams.has('register'));
