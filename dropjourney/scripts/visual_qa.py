@@ -84,7 +84,7 @@ with sync_playwright() as p:
             form=page.locator('form.dj-intake-form')
             if form.count()!=1:errors.append('native intake form missing')
             elif form.get_attribute('action')!=BASE+'api/intake':errors.append('native intake action has wrong base')
-            if not page.locator('input[name="consent_contact"]').count():errors.append('required inquiry consent missing')
+            if not page.locator('input[name="consentContact"]').count():errors.append('required inquiry consent missing')
         if route=='tickets':
             form=page.locator('form.dj-ticket-notify-form')
             if form.count()!=1:errors.append('ticket notice form missing')
