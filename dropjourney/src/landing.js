@@ -2,11 +2,12 @@
 (()=>{
  'use strict';
  const params=new URLSearchParams(location.search);
+ const base=document.querySelector('meta[name="infused-base"]')?.content||'/dropjourneytest/';
  const allowed=['utm_source','utm_medium','utm_campaign','utm_content','utm_term','utm_id'];
  const safe=/^[A-Za-z0-9][A-Za-z0-9._~:-]{0,95}$/;
  for(const link of document.querySelectorAll('a[data-offer-link]')){
   const url=new URL(link.href,location.href);
-  if(url.origin!=='https://infused.show'||!url.pathname.startsWith('/dropjourneytest/'))continue;
+  if(url.origin!=='https://infused.show'||!url.pathname.startsWith(base))continue;
   for(const key of allowed){const value=params.get(key);if(value&&safe.test(value)&&!url.searchParams.has(key))url.searchParams.set(key,value);}
   link.href=url.href;
  }
