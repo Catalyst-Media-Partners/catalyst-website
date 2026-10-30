@@ -40,6 +40,14 @@ const lightRobots = await sample('light.infused.show','/robots.txt',{LIGHT_HOST_
 assert.ok((await lightRobots.text()).includes('Sitemap: https://light.infused.show/sitemap.xml'));
 const lightSitemap = await sample('light.infused.show','/sitemap.xml',{LIGHT_HOST_PUBLISHED:'true'});
 assert.ok((await lightSitemap.text()).includes('https://light.infused.show/market/'));
+const lightTicketAssets = {fetch: async () => new Response(
+  '<!doctype html><html><head><meta name="robots" content="noindex, nofollow, noarchive"></head><body><form><div id="notify-submit"><!-- TURNSTILE_WIDGET --></div></form></body></html>',
+  {status:200,headers:{'Content-Type':'text/html; charset=utf-8'}}
+)};
+const lightTickets = await sample('light.infused.show','/tickets/',{LIGHT_HOST_PUBLISHED:'true',ASSETS:lightTicketAssets});
+const lightTicketsHTML = await lightTickets.text();
+assert.ok(lightTicketsHTML.includes('<link rel="canonical" href="https://light.infused.show/tickets/">'));
+assert.ok(lightTicketsHTML.includes('Ticket notification registration is not yet active.'));
 const prod = await sample('infused.show');
 const prodHTML = await prod.text();
 assert.equal(prod.headers.get('x-robots-tag'), null);
