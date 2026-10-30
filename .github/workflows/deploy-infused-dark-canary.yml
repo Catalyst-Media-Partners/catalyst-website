@@ -6,7 +6,16 @@ on:
       - release/infused-dark-production-inf1-20261030
     paths:
       - .github/workflows/deploy-infused-dark-canary.yml
-      - dropjourney/**
+      - dropjourney/build.mjs
+      - dropjourney/worker.mjs
+      - dropjourney/intake.mjs
+      - dropjourney/ticket-notify.mjs
+      - dropjourney/wrangler.dark-canary.template.toml
+      - dropjourney/src/**
+      - dropjourney/content/**
+      - dropjourney/migrations/**
+      - src/sections/**
+      - src/tickets/**
 
 permissions:
   contents: read
