@@ -6,6 +6,7 @@ on:
       - release/infused-dark-production-inf1-20261030
     paths:
       - .github/workflows/deploy-infused-dark-canary.yml
+      - dropjourney/**
 
 permissions:
   contents: read
