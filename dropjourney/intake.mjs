@@ -77,10 +77,10 @@ export async function handleIntake(req,env,fetcher=fetch){
  if(!await siteVerify(body.turnstileToken,req,env,fetcher))return json({error:'Human verification failed'},403);
  try{
   const id=crypto.randomUUID();
-  const insert='INSERT INTO intake_submissions_v1 (id,request_key,kind,full_name,email,company,job_title,buying_role,categories_json,objective,website,markets,message,inquiry_topic,consent_contact,consent_marketing,consent_version,source_page,environment) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(request_key) DO NOTHING';
+  const insert='INSERT INTO intake_submissions_v1 (id,request_key,kind,full_name,email,company,job_title,buying_role,categories_json,objective,website,markets,message,inquiry_topic,consent_contact,consent_marketing,consent_version,source_page,environment,test_record) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(request_key) DO NOTHING';
   const outbox='INSERT INTO intake_notification_outbox_v1(submission_id) SELECT id FROM intake_submissions_v1 WHERE request_key=? ON CONFLICT(submission_id) DO NOTHING';
   await env.INTAKE_DB.batch([
-   env.INTAKE_DB.prepare(insert).bind(id,p.requestKey,p.kind,p.fullName,p.email,p.company,p.jobTitle,p.buyingRole,JSON.stringify(p.categories),p.objective,p.website,p.markets,p.message,p.inquiryTopic,1,p.consentMarketing?1:0,(env.INTAKE_CONSENT_VERSION||'infused-intake-2026-10-28-v1'),p.sourcePage,(env.INTAKE_ENVIRONMENT==='production'?'production':'preview')),
+   env.INTAKE_DB.prepare(insert).bind(id,p.requestKey,p.kind,p.fullName,p.email,p.company,p.jobTitle,p.buyingRole,JSON.stringify(p.categories),p.objective,p.website,p.markets,p.message,p.inquiryTopic,1,p.consentMarketing?1:0,(env.INTAKE_CONSENT_VERSION||'infused-intake-2026-10-28-v1'),p.sourcePage,(env.INTAKE_ENVIRONMENT==='production'?'production':'preview'),(env.INTAKE_TEST_MODE==='true'?1:0)),
    env.INTAKE_DB.prepare(outbox).bind(p.requestKey)
   ]);
   const row=await env.INTAKE_DB.prepare('SELECT id,kind FROM intake_submissions_v1 WHERE request_key=?').bind(p.requestKey).first();
