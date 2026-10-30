@@ -5,8 +5,9 @@
  if(!form)return;
  const button=document.getElementById('ticket-notify-submit'),status=document.getElementById('ticket-notify-status'),email=form.querySelector('input[name="email"]');
  const tell=(message,ok=false)=>{status.textContent=message;status.dataset.state=ok?'success':'error';};
- const endpoint='/dropjourneytest/tickets/api/subscribe';
- fetch('/dropjourneytest/tickets/api/status',{credentials:'omit',cache:'no-store'}).then(r=>r.json()).then(x=>{
+ const endpoint=form.action;
+ const statusEndpoint=endpoint.replace(/\\/api\\/subscribe$/,'/api/status');
+ fetch(statusEndpoint,{credentials:'omit',cache:'no-store'}).then(r=>r.json()).then(x=>{
   if(!x.enabled){button.disabled=true;tell('Email registration is temporarily unavailable. Please check back shortly.');}
  }).catch(()=>{button.disabled=true;tell('Email registration is temporarily unavailable.');});
  let busy=false;
