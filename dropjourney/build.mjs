@@ -206,7 +206,7 @@ await write('assets/site.js',js);
  await write('assets/intake.js',await load('src/intake.js'));
 await write('assets/ticket-notify.js',await load('src/ticket-notify.js'));
 const [styleOriginal,styleOverrides,scriptOriginal]=await Promise.all([load('src/styles.css'),load('src/home.css'),load('src/app.js')]);
-const combinedHomeStyles=styleOverrides+'\n'+(await load('src/finish.css'));
+const combinedHomeStyles=(styleOverrides+'\n'+(await load('src/finish.css'))).replaceAll('/dropjourneytest/',BASE);
 let home=cleanHome(await load('src/index.html'));
 const safeScript=scriptOriginal;
 home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
