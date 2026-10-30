@@ -31,7 +31,7 @@
    try{
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
     let response;
-    try{response=await fetch('/dropjourneytest/api/intake',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',redirect:'error',body:JSON.stringify(payload),signal:controller.signal});}
+    try{response=await fetch(form.action,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',redirect:'error',body:JSON.stringify(payload),signal:controller.signal});}
     finally{clearTimeout(timer);}
     const result=await response.json();
     if(!response.ok||!result.ok)throw Error(String(result.error||'Submission failed. Please try again.'));
