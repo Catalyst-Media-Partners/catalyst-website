@@ -30,7 +30,7 @@ export function renderEcosystem(source,{href,taxonomy}){
   if(sourceCards.length!==8)throw Error('DJ-S06 ecosystem card count changed (expected eight canonical cards)');
   const byRoute=new Map();
   for(const card of sourceCards){
-    const id=card.match(/href="\/dropjourneytest\/([a-z-]+)\/"/)?.[1];
+    const id=card.match(/href="(?:\/dropjourneytest)?\/([a-z-]+)\/"/)?.[1];
     if(!id||byRoute.has(id))throw Error('DJ-S06 duplicate/unexpected ecosystem canonical link');
     byRoute.set(id,{
       title:decode(first(card,/<div class="eco-head">[\s\S]*?<\/div>/,'category title')).replace(/<[^>]+>/g,'').replace(/↗/g,'').trim(),
