@@ -3,8 +3,8 @@
 **Status:** Canary deployed and hostname attached; automated browser acceptance and synthetic SES outbox delivery passed. One real-human Turnstile form submission remains unverified because the headless browser did not receive a token.  
 **Date:** 2026-10-30  
 **Candidate branch:** `release/infused-dark-production-inf1-20261030`  
-**Latest deployment workflow run:** [GitHub Actions run #4](https://github.com/Catalyst-Media-Partners/catalyst-website/actions/runs/41140139727)  
-**Source commit used by latest deployment:** `062427422fb571475b7bbe2794df6715b01e228d`  
+**Latest deployment workflow run:** [GitHub Actions run #7](https://github.com/Catalyst-Media-Partners/catalyst-website/actions/runs/41140461798)  
+**Source commit used by latest deployment:** `7a88042c85a2fa1e38bb09d858c08a569ca0cb07`  
 **PR validation:** both final workflows passed on this source commit (runs #49 and #33).
 
 ## Deployed canary resources
@@ -12,9 +12,10 @@
 | Resource | Verified value |
 |---|---|
 | Worker | `infused-dark` |
-| Current Worker deployment | `b424727d-c052-4327-8c45-030c348225fe` |
-| Current Worker version | `2174b21d-c7da-4efa-b207-7b899d337394` at 100% |
-| Previous canary version | `16cabb4b-81d3-4b93-9227-e2ff7896348c` (retained as rollback target) |
+| Current Worker deployment | `f2fac77e-3192-4de0-aca1-879ec583b729` |
+| Current Worker version | `88ad6388-f163-4baf-ae4b-c3fcbd90c1f8` at 100% |
+| Previous canary version | `38009d62-0fbf-4101-a497-ce0d621cbcbb` (retained as rollback target) |
+| Earlier canary version | `2174b21d-c7da-4efa-b207-7b899d337394` (retained) |
 | Initial canary version | `5f639b2e-f1bd-4337-bacc-aeda6f7a4af0` (retained) |
 | Custom domain | `dark.infused.show` |
 | Worker Domain ID | `b8671e46ea9aa5aea523d566b8087a5563f74541` |
@@ -77,7 +78,7 @@ Verified against `https://dark.infused.show` after the custom domain was attache
 - The deployed Worker has a service binding to the existing `infused-show` Worker.
 - The passing `qa_dark_worker.mjs` test verified that `/go/booth` forwards to the existing light Worker and preserves the campaign parameters; the existing Worker remains responsible for the Map Dynamics redirect and click attribution.
 - No live `/go/booth` click was generated because that would create a production acquisition event.
-- The current canary deployment/version and previous version IDs above are retained as rollback anchors. A later deployment can be rolled back to version `16cabb4b-81d3-4b93-9227-e2ff7896348c` using the Worker deployment control. Detach Worker Domain ID `b8671e46ea9aa5aea523d566b8087a5563f74541` to remove the canary hostname if necessary. Do not detach or alter `infused.show` or `www.infused.show`.
+- The current canary deployment/version and previous version IDs above are retained as rollback anchors. A later deployment can be rolled back to version `38009d62-0fbf-4101-a497-ce0d621cbcbb` using the Worker deployment control. Detach Worker Domain ID `b8671e46ea9aa5aea523d566b8087a5563f74541` to remove the canary hostname if necessary. Do not detach or alter `infused.show` or `www.infused.show`.
 
 ## Production isolation confirmation
 
