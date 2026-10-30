@@ -28,7 +28,7 @@ def media(link):
 def prepare(route):
     markup=(DIST/route/'index.html').read_text()
     if route=='':
-        markup=re.sub(r'url\([\'"]((?:/dropjourneytest/)?assets/images/[^\'"\)]+)[\'"]\)',lambda m:'url("'+media(m[1])+'")',markup)
+        markup=re.sub(r'url\([\'"]((?:/dropjourneytest)?/?assets/images/[^\'"\)]+)[\'"]\)',lambda m:'url("'+media(m[1])+'")',markup)
     else:
         markup=markup.replace('<link rel="stylesheet" href="'+BASE+'assets/site.css">','<style>'+css+'</style>')
         markup=markup.replace('<script src="'+BASE+'assets/site.js" defer></script>','')
@@ -37,7 +37,7 @@ def prepare(route):
         extra='<script>'+js+'</script><script>'+intake_js+'</script>'
         if route=='tickets':extra+='<script>'+ticket_js+'</script>'
         markup=markup.replace('</body>',extra+'</body>')
-    markup=re.sub(r'src="((?:/dropjourneytest/)?assets/images/[^"#?]+)"',lambda m:'src="'+media(m[1])+'"',markup)
+    markup=re.sub(r'src="((?:/dropjourneytest)?/?assets/images/[^"#?]+)"',lambda m:'src="'+media(m[1])+'"',markup)
     return markup
 cases=[
  ('',1440,900),('',1024,768),('',768,900),('',390,844),
