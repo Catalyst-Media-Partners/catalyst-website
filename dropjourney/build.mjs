@@ -220,9 +220,9 @@ const campaignConfig=JSON.parse(await load('content/landers.json'));
 const exportDir=path.join(root,'exports','landers');
 await mkdir(exportDir,{recursive:true});
 const [landingCss,landingJs,landingArt]=await Promise.all([load('src/landing.css'),load('src/landing.js'),load('src/drop-art.svg')]);
-const offers=validateLanders(campaignConfig);
+const offers=validateLanders(campaignConfig,{base:BASE});
 for(const offer of offers){
- const html=renderLander({offer,config:campaignConfig,logo:embeddedLogo,art:landingArt,css:landingCss,js:landingJs});
+ const html=renderLander({offer,config:campaignConfig,logo:embeddedLogo,art:landingArt,css:landingCss,js:landingJs,base:BASE});
  await write('land/'+offer.id+'/index.html',html);
  await writeFile(path.join(exportDir,'infused-'+offer.id+'.html'),html,'utf8');
  if(offer.id===campaignConfig.default)await write('land/index.html',html);
