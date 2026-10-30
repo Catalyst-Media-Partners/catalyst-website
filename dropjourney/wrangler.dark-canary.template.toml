@@ -35,6 +35,7 @@ SITE_BASE_PATH = "/"
 SITE_MODE = "canary"
 SITE_ALLOWED_HOSTS = "dark.infused.show"
 INTAKE_ENVIRONMENT = "preview"
+INTAKE_TEST_MODE = "true"
 INTAKE_CONSENT_VERSION = "infused-intake-2026-10-28-v1"
 TICKET_NOTIFY_ENABLED = "false"
 
