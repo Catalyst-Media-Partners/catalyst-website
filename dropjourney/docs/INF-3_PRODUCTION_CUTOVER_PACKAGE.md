@@ -13,7 +13,7 @@
 | Public `www.infused.show` | `infused-show`, domain ID `90b7330f2221670d02094d03d7e16fde867f7d6f` |
 | Public Worker deployment | `c79682ae-15cf-420e-88d9-6dc7e8a6558e` |
 | Public Worker version | `f69bd0ee-3ad0-4bbb-8bc9-d756a70bfb2a` at 100% |
-| Dark canary | `infused-dark`, deployment `b424727d-c052-4327-8c45-030c348225fe`, version `2174b21d-c7da-4efa-b207-7b899d337394` |
+| Dark canary | `infused-dark`, current deployment `f2fac77e-3192-4de0-aca1-879ec583b729`, version `88ad6388-f163-4baf-ae4b-c3fcbd90c1f8` |
 | Canary hostname | `dark.infused.show`, domain ID `b8671e46ea9aa5aea523d566b8087a5563f74541` |
 | Preview D1 | `infused-intake`, ID `13188d57-a463-445d-b341-9479ac3a4558`, US jurisdiction |
 | Production intake D1 | Not created |
