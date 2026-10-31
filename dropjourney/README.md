@@ -1,79 +1,55 @@
-# INFUSED Drop Journey | Production candidate
+# INFUSED Drop Journey | Single-Worker production source
 
-The Drop Journey is the primary INFUSED brand experience. The original light experience is retained as one standalone landing page, not as a second site. The production routing contract is deliberately simple: dark at the root, light only at `/lander/`.
+The Drop Journey is the primary INFUSED brand experience. The original light experience is one landing page within the same site, not a second website or Worker.
 
-## Domain architecture
+## Current domain and Worker architecture
 
-| Hostname / path | Intended experience | Routing |
+| Hostname / path | Experience | Routing |
 |---|---|---|
-| `infused.show/` | Dark-green Drop Journey, canonical brand site | Primary production homepage on `infused-dark` |
-| `infused.show/lander/` | Original light landing page | Served by the dark Worker through the `LIGHT_SITE` service binding |
-| `www.infused.show` | Canonical hostname alias | 308 redirect to `infused.show` |
-| `dark.infused.show` | Dark experience canary/alias | Dark Worker alias; noindex and canonicalized to the root |
-| `light.infused.show` | Retired hostname alias | 308 redirect to `https://infused.show/lander/`; never serves a separate copy |
+| infused.show/ | Dark-green Drop Journey | The single public infused-dark Worker |
+| infused.show/lander/ | Original light landing page | Static lander/index.html in the same Worker asset bundle |
+| www.infused.show | Canonical alias | 308 redirect to infused.show |
+| dark.infused.show | Dark alias | Same Worker; noindex and canonicalized to apex |
+| light.infused.show | Retired hostname alias | Same Worker; 308 redirect to https://infused.show/lander/ |
 
-The dark Worker owns the root homepage and all normal site routes. Only `/lander/` invokes the existing `infused-show` Worker to render the original light homepage asset. The page base keeps normal navigation pointed at the dark site; its CSS, scripts and images are rewritten and proxied beneath `/lander/assets/`, so the light design does not depend on the dark site's asset bundle. Its canonical URL is `https://infused.show/lander/`. The light Worker remains available internally for this page and the existing booth-attribution handoff. It does not own the public root after INF-3. The production root is indexable only when SITE_MODE=production and the request hostname is infused.show. dark.infused.show remains noindex.
+There is no infused-show website Worker. The light page is built from the existing root src/ source, copied into dropjourney/dist/{mode}/lander/index.html, and served by the same ASSETS binding as the dark site. It uses the same /assets/images/ files, plus the light site's /assets/css/site.css and /assets/js/cta-attribution.js. Its base points to the current site root so its navigation continues into the dark site's pages.
 
-## Source of truth and branch boundaries
+Booth attribution is implemented in dropjourney/booth-attribution.mjs and called directly by dropjourney/worker.mjs. It uses the existing INTAKE_DB binding to catalyst-audience-prod; there is no BOOTH_ATTRIBUTION service binding or second audience database. The only Worker service binding is INTAKE_SES to the shared catalyst-revenue backend.
+
+## Source of truth
 
 - Repository: Catalyst-Media-Partners/catalyst-website.
-- Production baseline: infused-show, based on commit 891e895913b6432162b4aa27fd49df6cc918fdbe.
-- Drop Journey preview source: infused-preview, which contains the separate dropjourney/ implementation.
-- INF-1 candidate branch: release/infused-dark-production-inf1-20261030, created from the production baseline and populated only with the Drop Journey source subtree plus narrowly scoped production-host support. It does not merge the preview branch history wholesale.
-- Existing preview Worker and config remain infused-dropjourneytest and dropjourney/wrangler.toml. They remain the preview route and are not renamed or overwritten.
+- Production source branch: infused-show. It contains both the light landing-page source and the Drop Journey source.
+- Production Worker: infused-dark.
+- Production D1: catalyst-audience-prod, ID 4fc7440c-bacd-4ef2-8902-265eda67e4d1.
+- The root wrangler.toml is the only production Worker configuration.
+- The former deploy-infused.yml, dark canary workflow, separate Worker templates, and preview Worker configuration are retired. A single validated workflow deploys the public site.
 
-## Build modes
+## Build and QA
 
-Node 22 is required. No framework or CMS is introduced.
+Run from the repository root:
 
-Preview remains the default. Run from the repository root:
-
-    node dropjourney/build.mjs
-    node dropjourney/scripts/qa.mjs
-    node dropjourney/scripts/qa_native_intake.mjs
-    node dropjourney/scripts/qa_ticket_notify.mjs
-
-Production-root candidate:
-
+    npm run build
+    npm run check
+    npm run test:w02
     INFUSED_MODE=production node dropjourney/build.mjs
     INFUSED_MODE=production node dropjourney/scripts/qa.mjs
-    INFUSED_MODE=production SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=preview node dropjourney/scripts/qa_native_intake.mjs
     node dropjourney/scripts/qa_dark_worker.mjs
+    node scripts/verify-cloudflare.mjs
 
-PowerShell equivalent:
-
-    $env:INFUSED_MODE = "production"
-    node dropjourney/build.mjs
-    node dropjourney/scripts/qa.mjs
-    $env:SITE_BASE_PATH = "/"
-    $env:SITE_HOST = "dark.infused.show"
-    $env:INTAKE_ENVIRONMENT = "preview"
-    node dropjourney/scripts/qa_native_intake.mjs
-    node dropjourney/scripts/qa_dark_worker.mjs
-    Remove-Item Env:INFUSED_MODE, Env:SITE_BASE_PATH, Env:SITE_HOST, Env:INTAKE_ENVIRONMENT
-
-Output directories are dropjourney/dist/dropjourneytest/ for preview and dropjourney/dist/production/ for the root-path production candidate. INFUSED_MODE accepts only preview or production. Generated files are not edited manually.
+The Drop Journey build requires the root light-site build first because it embeds the generated light homepage and copies its CSS and attribution script into the shared asset directory. Generated public/ and dropjourney/dist/ output are not edited manually.
 
 ## Production configuration and protected integrations
 
-- wrangler.dark-canary.template.toml defines the new infused-dark Worker for a canary on dark.infused.show. It uses the existing preview D1 database and routes notifications through the current private InfusedIntakeSESBridge. All canary submissions remain environment=preview and route to the System Notes recipient.
-- wrangler.dark-production.template.toml is intentionally not deployable yet. INF-2 must provision a separate production intake D1 database and update the private SES bridge to select the correct database for production receipts.
-- The dark Worker forwards /go/booth through the BOOTH_ATTRIBUTION service binding to the existing infused-show Worker. This preserves the current Map Dynamics redirect and anonymous acquisition-click logging without duplicating the audience database.
-- Native intake uses the base path, allowed host list and INTAKE_ENVIRONMENT from explicit Worker configuration. Turnstile verification checks the request hostname and the allowlist.
-- Ticket notification/verification remains disabled. TICKET_NOTIFY_ENABLED=false is retained in both canary and production templates until its separate workflow is accepted.
-- light.infused.show support is prepared in the existing light Worker source. It returns 404 until LIGHT_HOST_PUBLISHED=true is deliberately set and the hostname is assigned.
+- One D1 binding: INTAKE_DB -> catalyst-audience-prod.
+- One service binding: INTAKE_SES -> catalyst-revenue / InfusedIntakeSESBridge.
+- Turnstile secrets remain encrypted Worker secrets and are preserved by keep_vars = true.
+- TICKET_NOTIFY_ENABLED=false remains in production until its independent email-verification workflow passes end-to-end acceptance.
+- Stripe, Map Dynamics checkout, Jotform, DNS and existing event facts are not changed by the single-Worker consolidation.
 
-## INF-1 release boundary
+## Historical rollout notes
 
-INF-1 is source preparation and automated QA only. It does not:
-- create or change DNS records or Worker custom domains;
-- deploy a new Worker or change the current root Worker assignment;
-- create a production D1 database or apply production intake migrations;
-- read, copy, or change Turnstile/SES secrets;
-- activate ticket notifications;
-- change event facts, pricing, booth checkout, or Map Dynamics configuration.
-
-INF-2 will provision the isolated canary's Turnstile secret/hostname allowlist and run real-browser canary tests. INF-3 deploys the production dark Worker, transfers `infused.show` and `www.infused.show` to `infused-dark`, and retains `light.infused.show` only as a redirect. The dark Worker serves the single light page at `/lander/` through its service binding to `infused-show`.
+The remaining INF-1, INF-2, S03-S10 and DJ-X1 sections below are retained as historical acceptance records. Any instructions below that refer to a separate infused-show Worker, LIGHT_SITE or BOOTH_ATTRIBUTION service binding, infused-dropjourneytest, infused-intake, or infused-intake-production are superseded by the current architecture above and must not be executed.
 
 ## Visual/interaction QA
 - Structural: all 16 pages, 21 images, no doubled route prefixes, one H1, privacy and Worker isolation checks.
