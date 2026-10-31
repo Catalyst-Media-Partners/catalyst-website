@@ -43,4 +43,4 @@ INTAKE_CONSENT_VERSION = "infused-intake-2026-10-28-v1"
 TICKET_NOTIFY_ENABLED = "false"
 
 # TURNSTILE_SECRET_PRODUCTION must be configured as a Worker secret, never committed here.
-# Assign infused.show and dark.infused.show only during the approved root cutover.
+# The production workflow assigns infused.show and www.infused.show to this Worker; light.infused.show remains a redirect to /lander/.
