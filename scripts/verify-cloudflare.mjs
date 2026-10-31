@@ -10,10 +10,19 @@ for (const expected of [
 ]) assert.ok(config.includes(expected), `Missing Cloudflare contract: ${expected}`);
 assert.match(config, /binding = "AUDIENCE_DB"/);
 assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
+assert.match(config, /LIGHT_HOST_PUBLISHED = "true"/,'Light host is prepared but remains unpublished until its Worker domain is attached');
 const orig = readFileSync('public/index.html', 'utf8');
-const sample = async (hostname, pathname = '/') => worker.fetch(
+const sample = async (hostname, pathname = '/', extra = {}) => worker.fetch(
   new Request(`https://${hostname}${pathname}`),
-  { ASSETS: { fetch: async () => new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} }) } }
+  { ASSETS: { fetch: async request => {
+    const u = new URL(request.url);
+    if (u.pathname.endsWith('/sitemap.xml')) {
+      const canonicalHost = u.hostname === 'light.infused.show' ? 'light.infused.show' : 'infused.show';
+      const urls = Array.from({length:15},(_,i)=>`<url><loc>https://${canonicalHost}${i===0?'/':'/market/'}</loc></url>`).join('');
+      return new Response('<?xml version="1.0"?><urlset>'+urls+'</urlset>', {status:200,headers:{'Content-Type':'application/xml'}});
+    }
+    return new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} });
+  } }, ...extra }
 );
 const preview = await sample('infused-show.cannacon-org-s-account.workers.dev');
 const previewHTML = await preview.text();
@@ -22,6 +31,24 @@ assert.ok(previewHTML.includes('<meta name="robots" content="noindex, nofollow, 
 assert.ok(!previewHTML.includes('<link rel="canonical" href="https://infused.show/">'));
 const rootRobots = await sample('infused-show.cannacon-org-s-account.workers.dev', '/robots.txt');
 assert.ok((await rootRobots.text()).includes('Disallow: /'));
+const lightDisabled = await sample('light.infused.show');
+assert.equal(lightDisabled.status,404,'Light hostname must remain unpublished until explicitly enabled');
+const light = await sample('light.infused.show','/',{LIGHT_HOST_PUBLISHED:'true'});
+const lightHTML = await light.text();
+assert.equal(light.headers.get('x-robots-tag'),null);
+assert.ok(lightHTML.includes('<link rel="canonical" href="https://light.infused.show/">'));
+const lightRobots = await sample('light.infused.show','/robots.txt',{LIGHT_HOST_PUBLISHED:'true'});
+assert.ok((await lightRobots.text()).includes('Sitemap: https://light.infused.show/sitemap.xml'));
+const lightSitemap = await sample('light.infused.show','/sitemap.xml',{LIGHT_HOST_PUBLISHED:'true'});
+assert.ok((await lightSitemap.text()).includes('https://light.infused.show/market/'));
+const lightTicketAssets = {fetch: async () => new Response(
+  '<!doctype html><html><head><meta name="robots" content="noindex, nofollow, noarchive"></head><body><form><div id="notify-submit"><!-- TURNSTILE_WIDGET --></div></form></body></html>',
+  {status:200,headers:{'Content-Type':'text/html; charset=utf-8'}}
+)};
+const lightTickets = await sample('light.infused.show','/tickets/',{LIGHT_HOST_PUBLISHED:'true',ASSETS:lightTicketAssets});
+const lightTicketsHTML = await lightTickets.text();
+assert.ok(lightTicketsHTML.includes('<link rel="canonical" href="https://light.infused.show/tickets/">'));
+assert.ok(lightTicketsHTML.includes('Ticket notification registration is not yet active.'));
 const prod = await sample('infused.show');
 const prodHTML = await prod.text();
 assert.equal(prod.headers.get('x-robots-tag'), null);
@@ -121,6 +148,10 @@ const safeDefault = await worker.fetch(new Request(
 ), {AUDIENCE_DB:clickDb});
 assert.equal(safeDefault.status,302);
 assert.equal(recorded.length,3);
+const lightTracked = await worker.fetch(new Request('https://light.infused.show/go/booth?position=navigation&page=%2Fopportunities%2F'),{AUDIENCE_DB:clickDb,LIGHT_HOST_PUBLISHED:'true'});
+assert.equal(lightTracked.status,302);
+assert.equal(recorded.length,4);
+assert.equal(recorded[3][2],'light.infused.show','Light-site clicks retain their actual site hostname');
 const originalMapd = new URL(safeDefault.headers.get('location'));
 assert.equal(originalMapd.origin,'https://shows.map-dynamics.com');
 assert.ok(originalMapd.searchParams.has('register'));
@@ -128,7 +159,7 @@ assert.equal(originalMapd.searchParams.has('catalyst_click_id'),false);
 assert.equal(originalMapd.searchParams.has('utm_campaign'),false);
 const invalidMethod = await worker.fetch(new Request('https://infused.show/go/booth',{method:'POST'}),{AUDIENCE_DB:clickDb});
 assert.equal(invalidMethod.status,405);
-assert.equal(recorded.length,3);
+assert.equal(recorded.length,4);
 assert.ok(orig.includes('cta-attribution.js'), 'Every page must load the no-cookie attribution enhancement');
 
 console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect and anonymous CTA tracking behavior');

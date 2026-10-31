@@ -1,0 +1,70 @@
+name: INFUSED dark production candidate validation
+
+on:
+  pull_request:
+    branches: [infused-show]
+    paths:
+      - 'dropjourney/**'
+      - 'src/worker.mjs'
+      - 'scripts/verify-cloudflare.mjs'
+      - '.github/workflows/verify-infused-dark-pr.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out production-based candidate
+        uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up Python for visual QA
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Worker and build source syntax
+        run: |
+          node --check dropjourney/build.mjs
+          node --check dropjourney/worker.mjs
+          node --check dropjourney/intake.mjs
+          node --check dropjourney/ticket-notify.mjs
+          node --check dropjourney/src/intake-form.mjs
+          node --check dropjourney/src/intake.js
+          node --check dropjourney/src/ticket-notify.js
+      - name: Build and validate isolated preview
+        run: |
+          node dropjourney/build.mjs
+          node dropjourney/scripts/qa.mjs
+          node dropjourney/scripts/qa_native_intake.mjs
+          node dropjourney/scripts/qa_ticket_notify.mjs
+      - name: Build and validate root-path production candidate
+        env:
+          INFUSED_MODE: production
+        run: |
+          node dropjourney/build.mjs
+          node dropjourney/scripts/qa.mjs
+      - name: Validate native intake on dark canary hostname without production data
+        env:
+          INFUSED_MODE: production
+          SITE_BASE_PATH: /
+          SITE_HOST: dark.infused.show
+          INTAKE_ENVIRONMENT: preview
+        run: node dropjourney/scripts/qa_native_intake.mjs
+      - name: Validate root-path ticket API remains disabled
+        run: node dropjourney/scripts/qa_dark_worker.mjs
+      - name: Install Chromium for visual QA
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Verify dark journey at desktop, tablet and mobile widths
+        env:
+          INFUSED_MODE: production
+        run: python dropjourney/scripts/visual_qa.py
+
+# This workflow is validation only. It never deploys a Worker, changes DNS,
+# provisions D1, or writes secrets.

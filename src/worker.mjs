@@ -7,6 +7,7 @@ import ticketNotifications from './tickets/notifications.mjs';
  */
 const HOST = 'infused.show';
 const WWW = 'www.infused.show';
+const LIGHT_HOST = 'light.infused.show';
 // Only verified legacy WordPress entry routes. Do not invent a privacy policy,
 // speaker form, or hosted-buyer application to replace missing content.
 const LEGACY_REDIRECTS = Object.freeze({
@@ -51,7 +52,7 @@ function trackingInput(url) {
   const requestedPath = params.get('page');
   const knownPath = routes.includes(requestedPath) ? requestedPath : '/';
   const rawHost = (params.get('referrer_host') || '').toLowerCase();
-  const referrerHost = HOST_PATTERN.test(rawHost) && !['infused.show','www.infused.show'].includes(rawHost)
+  const referrerHost = HOST_PATTERN.test(rawHost) && !['infused.show','www.infused.show','light.infused.show','dark.infused.show'].includes(rawHost)
     ? rawHost : null;
   const utm = Object.fromEntries(UTM_KEYS.map(key => [key, vettedToken(params.get(key))]));
   return {
@@ -78,7 +79,7 @@ function checkoutRedirect(url, clickId = null, utm = {}) {
     }
   });
 }
-async function boothClick(request, env, url, isProduction) {
+async function boothClick(request, env, url, isProduction, siteHost = HOST) {
   if (request.method !== 'GET') {
     return new Response('Method not allowed', {status:405,headers:{'Allow':'GET'}});
   }
@@ -93,7 +94,7 @@ async function boothClick(request, env, url, isProduction) {
       'utm_source,utm_medium,utm_campaign,utm_content,utm_term) ' +
       'VALUES (?,?,?,?,?,?,?,?,?,?,?)'
     ).bind(
-      clickId,'LV27','infused.show',input.page,input.position,input.referrerHost,
+      clickId,'LV27',siteHost,input.page,input.position,input.referrerHost,
       input.utm.utm_source,input.utm.utm_medium,input.utm.utm_campaign,
       input.utm.utm_content,input.utm.utm_term
     ).run();
@@ -115,9 +116,15 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
-    const isProduction = host === HOST || host === WWW;
+    const isLightHost = host === LIGHT_HOST;
+    const lightHostEnabled = env.LIGHT_HOST_PUBLISHED === 'true';
+    if (isLightHost && !lightHostEnabled) {
+      return new Response('Not found', {status:404,headers:headersFor(false,{'Content-Type':'text/plain; charset=utf-8'})});
+    }
+    const isProduction = host === HOST || host === WWW || (isLightHost && lightHostEnabled);
+    const canonicalHost = isLightHost ? LIGHT_HOST : HOST;
     if (url.pathname === '/go/booth' || url.pathname === '/go/booth/') {
-      return boothClick(request, env, url, isProduction);
+      return boothClick(request, env, url, isProduction, canonicalHost);
     }
     if (host === WWW) {
       const next = new URL(request.url);
@@ -146,7 +153,7 @@ export default {
         const html = (await response.text())
           .replace('<meta name="robots" content="noindex, nofollow, noarchive">',
             '<meta name="robots" content="index, follow">')
-          .replace('</head>', '<link rel="canonical" href="https://infused.show/tickets/">\n</head>');
+          .replace('</head>', `<link rel="canonical" href="https://${canonicalHost}/tickets/">\n</head>`);
         const headers = headersFor(true, response.headers);
         headers.delete('Content-Length'); headers.delete('Content-Encoding'); headers.delete('ETag');
         return new Response(html, {status: response.status, headers});
@@ -161,7 +168,7 @@ export default {
       return Response.redirect(next.toString(), 301);
     }
     if (url.pathname === '/robots.txt') {
-      const rules = isProduction ? 'User-agent: *\nAllow: /\nSitemap: https://infused.show/sitemap.xml\n' : 'User-agent: *\nDisallow: /\n';
+      const rules = isProduction ? `User-agent: *\nAllow: /\nSitemap: https://${canonicalHost}/sitemap.xml\n` : 'User-agent: *\nDisallow: /\n';
       return new Response(rules, {
         headers: headersFor(isProduction, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' })
       });
@@ -170,7 +177,7 @@ export default {
       if (!isProduction) return new Response('Not found', { status: 404, headers: headersFor(false, { 'Content-Type': 'text/plain' }) });
       const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-        routes.map(route => `  <url><loc>https://${HOST}${route}</loc></url>`).join('\n') +
+        routes.map(route => `  <url><loc>https://${canonicalHost}${route}</loc></url>`).join('\n') +
         '\n</urlset>\n';
       return new Response(xml, { headers: headersFor(true, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }) });
     }
@@ -183,7 +190,7 @@ export default {
       html = html.replace('<meta name="robots" content="noindex, nofollow, noarchive">', '<meta name="robots" content="index, follow">');
       const cleanPath = url.pathname.replace(/\/index\.html$/, '/');
       const canonicalPath = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
-      const canonical = `https://${HOST}${canonicalPath}`;
+      const canonical = `https://${canonicalHost}${canonicalPath}`;
       html = html.replace('</head>', `<link rel="canonical" href="${canonical}">\n</head>`);
       headers.delete('Content-Length');
       headers.delete('Content-Encoding');

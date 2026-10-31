@@ -1,0 +1,43 @@
+# INF-2 canary template. Do not deploy until Turnstile allowlist and secret are configured.
+# Uses the existing preview intake D1 so all canary submissions remain preview/system-notes traffic.
+name = "infused-dark"
+main = "./worker.mjs"
+compatibility_date = "2026-10-26"
+workers_dev = false
+preview_urls = false
+keep_vars = true
+
+[assets]
+directory = "./dist/production"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "404-page"
+
+[[d1_databases]]
+binding = "INTAKE_DB"
+database_name = "infused-intake"
+database_id = "13188d57-a463-445d-b341-9479ac3a4558"
+
+[[services]]
+binding = "INTAKE_SES"
+service = "catalyst-revenue"
+entrypoint = "InfusedIntakeSESBridge"
+
+[[services]]
+binding = "BOOTH_ATTRIBUTION"
+service = "infused-show"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+SITE_BASE_PATH = "/"
+SITE_MODE = "canary"
+SITE_ALLOWED_HOSTS = "dark.infused.show"
+INTAKE_ENVIRONMENT = "preview"
+INTAKE_TEST_MODE = "true"
+INTAKE_CONSENT_VERSION = "infused-intake-2026-10-28-v1"
+TICKET_NOTIFY_ENABLED = "false"
+
+# TURNSTILE_SECRET must be configured as a Worker secret, never committed here.
+# No custom domain is assigned by this file. INF-2 will attach dark.infused.show after acceptance.

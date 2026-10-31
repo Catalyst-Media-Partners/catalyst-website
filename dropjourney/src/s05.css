@@ -1,0 +1,117 @@
+/* DJ-S05: only the Market and Las Vegas detail pages. No framework or new runtime. */
+.dj-market-section,.dj-vegas-section{--dj-evidence-border:rgba(228,224,235,.21)}
+.dj-market-section .container,.dj-vegas-section .container{min-width:0}
+.dj-market-lede{display:grid;grid-template-columns:minmax(0,.91fr) minmax(0,1.09fr);gap:clamp(34px,5vw,92px);align-items:center;min-width:0;min-height:470px;margin:0 0 clamp(72px,9vw,145px)}
+.dj-market-intro,.dj-market-visual{min-width:0;position:relative}
+.dj-market-intro .section-head{margin:0;max-width:none}
+.dj-market-intro .section-head h1{font-size:clamp(49px,6.3vw,107px);line-height:.97;letter-spacing:-.07em;max-width:12ch}
+.dj-market-intro .section-lead{max-width:630px;font-size:clamp(18px,1.83vw,25px);line-height:1.47}
+.dj-page-actions{display:flex;flex-wrap:wrap;align-items:center;gap:clamp(12px,2vw,24px);margin:clamp(22px,3.1vw,42px) 0 0;min-width:0}
+.dj-page-actions .dj-btn{white-space:normal;text-align:center;min-width:0}
+.dj-text-link{display:inline-flex;align-items:center;gap:10px;color:#eee9f0;text-decoration:none;border-bottom:1px solid rgba(205,244,185,.35);padding:12px 0;min-height:44px;font-size:13px;font-weight:720;transition:border-color .2s,color .2s}
+.dj-text-link:hover,.dj-text-link:focus-visible{color:var(--dj-acid);border-color:var(--dj-acid)}
+.dj-market-visual .photo-ribbon{display:grid;grid-template-columns:minmax(0,1.43fr) minmax(0,.88fr);grid-template-rows:repeat(2,minmax(0,1fr));gap:12px;height:clamp(320px,38.5vw,540px);margin:0;overflow:visible;min-width:0}
+.dj-market-visual .photo-ribbon img{width:100%;height:100%;min-height:0;min-width:0;object-fit:cover;display:block;border-radius:16px 16px 34px 16px;box-shadow:0 26px 65px rgba(0,0,0,.25);filter:saturate(.89)}
+.dj-market-visual .photo-ribbon img:first-child{grid-row:span 2;border-radius:32px 32px 88px 32px}
+.dj-market-visual .photo-ribbon img:last-child{grid-column:auto}
+.dj-market-image-label{font-size:10px!important;letter-spacing:.15em;font-weight:780;color:#d5ccd8!important;margin:14px 2px 0;text-transform:uppercase}
+.dj-market-data-head{display:flex;justify-content:space-between;gap:20px;align-items:end;border-top:1px solid var(--dj-evidence-border);padding-top:30px;margin-bottom:24px}
+.dj-market-data-head h2,.dj-vegas-why-heading h2{font-size:clamp(38px,4.3vw,72px);line-height:1.04;letter-spacing:-.064em;margin:0;max-width:850px}
+.dj-market-data-head em,.dj-vegas-why-heading em{color:var(--dj-acid);font-style:normal}
+.dj-market-method-link{min-height:44px;display:inline-flex;align-items:center;gap:14px;color:#eee8ee;text-decoration:none;font-weight:780;font-size:12px;white-space:nowrap;border-bottom:1px solid var(--dj-evidence-border);padding-bottom:10px}
+.dj-market-method-link:hover{color:var(--dj-acid)}
+.dj-evidence-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));column-gap:clamp(18px,2.4vw,42px);row-gap:clamp(12px,3vw,40px);margin:0 0 clamp(50px,7vw,110px);min-width:0}
+.dj-evidence{grid-column:span 2;min-width:0;display:flex;flex-direction:column;padding:21px 0 27px;border-top:1px solid var(--dj-evidence-border);border-bottom:1px solid var(--dj-edge2);transition:border-color .2s}
+.dj-evidence:nth-child(n+4){grid-column:span 3}
+.dj-evidence:hover{border-top-color:var(--dj-acid)}
+.dj-evidence-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 17px}
+.dj-evidence-index{font-size:10px;line-height:1.3;letter-spacing:.2em;font-weight:850;color:var(--dj-pink)}
+.dj-evidence-accent{width:35px;height:1px;background:linear-gradient(90deg,var(--dj-acid),transparent)}
+.dj-evidence h3{font-size:clamp(19px,1.45vw,25px);letter-spacing:-.02em;margin:0 0 13px;color:#faf7f8}
+.dj-evidence-number{font-size:clamp(48px,6.2vw,96px)!important;font-weight:840;letter-spacing:-.08em;line-height:1!important;white-space:nowrap;overflow-wrap:normal!important;color:var(--dj-acid)!important;margin:0 0 8px}
+.dj-evidence-basis{font-size:14px!important;line-height:1.5!important;color:#eee8ed!important;font-weight:650;margin:0}
+.dj-evidence-forecast{margin:8px 0 21px!important;font-size:13px!important;color:#b8b0bc!important}
+.dj-evidence-source{margin-top:auto;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;text-decoration:none;color:var(--dj-ink);font-size:11px;line-height:1.5;padding:11px 0 0;border-top:1px solid var(--dj-edge2);overflow-wrap:anywhere;min-width:0}
+.dj-evidence-source:hover{color:var(--dj-acid)}
+.dj-evidence-source-label{color:var(--dj-pink);font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.dj-evidence-source-publisher{flex:1 1 160px;color:inherit;min-width:0}
+.dj-evidence-source>[aria-hidden]{color:var(--dj-acid)}
+.dj-market-bottom{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(25px,5vw,85px);align-items:start;padding:clamp(32px,4vw,70px) 0;border-top:1px solid var(--dj-evidence-border)}
+.dj-market-takeaway .why-stat{margin:0;border:0;padding:0}
+.dj-market-takeaway .why-stat strong{font-size:clamp(25px,2.7vw,43px);line-height:1.14;letter-spacing:-.04em;display:block;max-width:16ch}
+.dj-market-takeaway .why-stat p{max-width:510px;margin:16px 0 24px}
+.dj-market-takeaway>a{min-height:44px;display:inline-flex;align-items:center;gap:12px;color:var(--dj-acid);font-size:13px;font-weight:800;text-decoration:none;border-bottom:1px solid rgba(198,255,139,.5)}
+.dj-market-methodology{margin:0;border-top:1px solid var(--dj-evidence-border);border-bottom:1px solid var(--dj-evidence-border);min-width:0}
+.dj-market-methodology summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:18px;align-items:center;min-height:62px;padding:13px 0;font-size:14px;color:#f4edf5;font-weight:770}
+.dj-market-methodology summary::-webkit-details-marker{display:none}
+.dj-market-methodology .dj-method-symbol{font-size:24px;color:var(--dj-acid);font-weight:300;transition:transform .18s}
+.dj-market-methodology[open] .dj-method-symbol{transform:rotate(45deg)}
+.dj-market-methodology .stats-note,.dj-market-methodology .dj-source-method-copy{font-size:12px;line-height:1.75;color:var(--dj-muted);max-width:510px;margin:0 0 17px}
+.dj-market-methodology .dj-source-method-copy{margin-bottom:23px}
+
+/* Vegas: image has real depth, text contrast is protected, reasons retain source copy. */
+.dj-vegas-hero{min-height:clamp(520px,57vw,690px);border-radius:clamp(20px,3.2vw,48px);position:relative;display:grid;align-items:end;overflow:hidden;isolation:isolate;background:#1b1225;box-shadow:0 30px 95px rgba(0,0,0,.29)}
+.dj-vegas-photo,.dj-vegas-photo::after{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.dj-vegas-photo img{height:100%;width:100%;min-height:100%;object-fit:cover;object-position:50% 49%;filter:saturate(.9) brightness(.73);display:block;border:0;border-radius:0;box-shadow:none}
+.dj-vegas-photo::after{content:"";background:linear-gradient(90deg,rgba(12,10,18,.88) 0%,rgba(12,10,18,.63) 51%,rgba(12,10,18,.09) 100%),linear-gradient(0deg,rgba(14,9,20,.72),transparent 65%);z-index:1}
+.dj-vegas-hero-copy{position:relative;z-index:1;max-width:815px;padding:clamp(30px,5.6vw,95px);min-width:0}
+.dj-vegas-hero .kicker{color:var(--dj-acid)}
+.dj-vegas-hero h1{font-size:clamp(61px,8vw,128px);max-width:11ch;color:#faf9f6;line-height:.93;letter-spacing:-.075em;margin:0 0 clamp(16px,2.5vw,30px);text-shadow:0 1px 36px #0005}
+.dj-vegas-hero .section-lead{font-size:clamp(19px,2.3vw,30px);line-height:1.4;max-width:620px;color:#f3edf4;margin:0}
+.dj-vegas-hero .dj-page-actions{margin-top:clamp(26px,3vw,42px)}
+.dj-vegas-photo-credit{position:absolute;bottom:clamp(21px,2.8vw,40px);right:clamp(24px,3vw,46px);z-index:1;letter-spacing:.15em;font-size:10px;font-weight:850;color:rgba(252,246,253,.83);text-shadow:0 1px 12px #000}
+.dj-vegas-event{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);align-items:start;gap:clamp(20px,5vw,75px);padding:clamp(48px,7vw,100px) 0;border-bottom:1px solid var(--dj-edge)}
+.dj-vegas-event h2{font-size:clamp(35px,4.2vw,72px);line-height:1.02;letter-spacing:-.06em;margin:0;max-width:530px}
+.dj-vegas-facts{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(15px,2.5vw,30px)}
+.dj-vegas-facts>div{min-width:0;border-top:1px solid var(--dj-edge);padding:16px 0 0}
+.dj-vegas-facts dt{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dj-pink);font-weight:900;margin:0 0 14px}
+.dj-vegas-facts dd{font-size:clamp(17px,1.6vw,23px);line-height:1.25;letter-spacing:-.028em;font-weight:760;color:var(--dj-ink);margin:0;overflow-wrap:break-word}
+.dj-vegas-why{display:grid;grid-template-columns:minmax(0,.6fr) minmax(0,1.4fr);gap:clamp(24px,5vw,80px);padding:clamp(66px,9vw,132px) 0;min-width:0}
+.dj-vegas-why-heading{min-width:0}
+.dj-vegas-reason-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,2vw,25px) clamp(20px,3.1vw,48px);min-width:0}
+.dj-vegas-reason-grid .dj-vegas-reason{display:grid;align-content:start;grid-template-columns:34px minmax(0,1fr);column-gap:13px;border-top:1px solid var(--dj-evidence-border);padding:24px 0 15px;min-width:0;overflow-wrap:anywhere}
+.dj-vegas-reason .dj-reason-index{grid-row:span 2;color:var(--dj-pink);font-size:10px;letter-spacing:.13em;font-weight:850;padding-top:4px}
+.dj-vegas-reason-grid .dj-vegas-reason h3{font-size:clamp(20px,1.8vw,28px);margin:0 0 10px}
+.dj-vegas-reason-grid .dj-vegas-reason p{font-size:14px;line-height:1.65;margin:0;color:var(--dj-muted)}
+.dj-vegas-next{border-top:1px solid var(--dj-evidence-border);padding:clamp(34px,5vw,70px) 0 15px}
+.dj-vegas-next p{font-size:clamp(22px,2.4vw,36px);color:var(--dj-ink);letter-spacing:-.035em;max-width:750px;line-height:1.35;margin:0}
+.dj-vegas-next .dj-page-actions{margin-top:22px}
+@media(max-width:1100px){
+ .dj-market-lede{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:35px;min-height:0}
+ .dj-market-intro .section-head h1{font-size:clamp(48px,6vw,79px)}
+ .dj-evidence-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 35px}
+ .dj-evidence,.dj-evidence:nth-child(n+4){grid-column:auto}
+ .dj-vegas-event,.dj-vegas-why{grid-template-columns:1fr}
+}
+@media(max-width:850px){
+ .dj-market-lede{grid-template-columns:1fr;gap:clamp(24px,5vw,48px);margin-bottom:clamp(50px,8vw,80px)}
+ .dj-market-visual .photo-ribbon{height:clamp(250px,47vw,385px)}
+ .dj-market-data-head{align-items:start;flex-direction:column}
+ .dj-vegas-hero{min-height:620px}
+ .dj-vegas-photo::after{background:linear-gradient(90deg,rgba(12,10,18,.86),rgba(12,10,18,.28)),linear-gradient(0deg,rgba(14,9,20,.6),transparent 75%)}
+ .dj-vegas-facts{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .dj-market-bottom{grid-template-columns:1fr;gap:28px}
+}
+@media(max-width:620px){
+ .dj-evidence-grid{grid-template-columns:1fr;gap:0}
+ .dj-evidence,.dj-evidence:nth-child(n+4){grid-column:1;}
+ .dj-evidence-number{font-size:clamp(52px,16vw,80px)!important}
+ .dj-market-intro .section-head h1{font-size:clamp(40px,11vw,62px)}
+ .dj-market-visual .photo-ribbon{height:245px;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);gap:7px}
+ .dj-market-visual .photo-ribbon img,.dj-market-visual .photo-ribbon img:first-child{border-radius:11px}
+ .dj-market-visual .photo-ribbon img:first-child{border-bottom-right-radius:43px}
+ .dj-market-image-label{font-size:9px!important;letter-spacing:.12em}
+ .dj-market-data-head h2,.dj-vegas-why-heading h2{font-size:clamp(36px,9vw,53px)}
+ .dj-vegas-hero{min-height:640px;border-radius:20px}
+ .dj-vegas-hero-copy{padding:clamp(24px,6vw,42px);padding-bottom:65px}
+ .dj-vegas-hero h1{font-size:clamp(54px,13vw,76px)}
+ .dj-vegas-hero .section-lead{font-size:clamp(18px,5vw,23px)}
+ .dj-vegas-hero .dj-page-actions{align-items:stretch}
+ .dj-vegas-photo-credit{font-size:8px;bottom:21px;right:21px}
+ .dj-vegas-facts{grid-template-columns:1fr;gap:20px}
+ .dj-vegas-facts dt{margin-bottom:6px}
+ .dj-vegas-reason-grid{grid-template-columns:1fr;gap:5px}
+ .dj-vegas-reason-grid .dj-vegas-reason{padding:22px 0}
+ .dj-vegas-why{padding-block:60px}
+}
+@media(prefers-reduced-motion:reduce){.dj-text-link,.dj-evidence,.dj-market-methodology .dj-method-symbol{transition:none!important}}
