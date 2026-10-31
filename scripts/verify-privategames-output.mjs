@@ -6,7 +6,7 @@ for (const path of ['index.html','game.js']) {
 }
 const html=readFileSync('public/privategames/index.html','utf8');
 const client=readFileSync('public/privategames/game.js','utf8');
-assert.match(html,/src="\/privategames\/game\.js"/);
+assert.match(html,/src="\/privategames\/game\.js\?v=2"/);
 assert.match(html,/name="robots" content="noindex, nofollow"/);
 assert.doesNotMatch(html,/const WORDS|word:'adventure'/,'Server word bank must not be shipped in game HTML');
 assert.doesNotMatch(client,/word:'adventure'|const WORDS/,'Server word bank must not be shipped in client');

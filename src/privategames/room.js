@@ -1,4 +1,5 @@
-import { applyAction, assertStoredGame, createGame, publicState } from './game.mjs';
+import { applyAction, createGame, joinPlayer, migrateGame, publicState, refreshPlayers, reserveEntry } from './game.mjs';
+import { nextAlarmAt } from './turns.mjs';
 
 export const STORAGE_KEY = 'hangman-state-v1';
 const MAX_CONNECTIONS = 64;
@@ -16,6 +17,13 @@ const ERROR_MESSAGES = {
   round_complete: 'This round has ended. Start another word to keep playing.',
   rate_limited: 'Too many actions at once. Wait a moment and try again.',
   save_failed: 'That move could not be saved. Please try it again.',
+  client_update_required: 'Game updated. Refresh this page to use the turn order.',
+  join_required: 'Join the room before taking a turn.',
+  identity_locked: 'This connection has already joined. Refresh to reconnect.',
+  waiting_for_cycle: 'You will join when the current round of players finishes.',
+  out_of_turn: 'Please wait for your highlighted turn.',
+  stale_turn: 'The turn has changed. Your screen has been refreshed.',
+  room_full: 'The room has 64 players. Please wait a moment before joining.',
 };
 
 const json = (value, status = 200) => Response.json(value, {
@@ -42,13 +50,32 @@ export class HangmanRoom {
     this.queue = Promise.resolve();
     this.ready = ctx.blockConcurrencyWhile(async () => {
       const stored = await ctx.storage.get(STORAGE_KEY);
-      if (stored !== undefined) {
-        this.game = assertStoredGame(stored);
-      } else {
-        const initial = createGame();
-        await ctx.storage.put(STORAGE_KEY, initial);
-        this.game = initial;
+      let next = stored === undefined ? createGame() : migrateGame(stored);
+      let changed = next !== stored;
+      // Old, already-open sockets did not have entry timestamps. Their existing
+      // connected order is the deterministic migration order; the live word,
+      // guesses, bag, and score are never reconstructed from a captured snapshot.
+      for (const socket of this.sockets()) {
+        const info = socket.deserializeAttachment();
+        if (!info || info.joined === false || !UUID.test(info.clientId || '')) continue;
+        const id = info.clientId.toLowerCase();
+        const name = cleanName(info.name) || 'Guest';
+        let member = [...next.turn.order, ...next.turn.waiting].find(player => player.id === id);
+        if (!member) {
+          next = reserveEntry(next);
+          changed = true;
+        }
+        const entryOrder = member?.entryOrder || next.turn.nextEntry;
+        const joined = joinPlayer(next, { id, name, entryOrder });
+        next = joined.state;
+        changed = changed || joined.changed;
+        socket.serializeAttachment({ ...info, clientId: id, name, entryOrder, joined: true });
       }
+      const refreshed = refreshPlayers(next, this.connectedIds());
+      next = refreshed.state;
+      changed = changed || refreshed.changed;
+      await this.persist(next, changed);
+      this.game = next;
     });
     if (typeof WebSocketRequestResponsePair !== 'undefined') {
       ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
@@ -71,13 +98,47 @@ export class HangmanRoom {
       socket.readyState === 1 && !socket.deserializeAttachment()?.closed);
   }
 
+  connectedIds() {
+    return new Set(this.sockets().filter(socket => socket.deserializeAttachment()?.joined === true)
+      .map(socket => socket.deserializeAttachment().clientId));
+  }
+
+  async persist(next, writeState = true) {
+    const storage = this.ctx.storage;
+    const deadline = nextAlarmAt(next.turn);
+    // This namespace is SQLite-backed. Its transaction covers both the board
+    // and the alarm, including direct storage operations in the closure.
+    await storage.transaction(async () => {
+      if (writeState) await storage.put(STORAGE_KEY, next);
+      const currentAlarm = await storage.getAlarm();
+      if (deadline !== currentAlarm) {
+        if (deadline === null) await storage.deleteAlarm();
+        else await storage.setAlarm(deadline);
+      }
+    });
+  }
+
+  async commit(next) {
+    await this.persist(next);
+    this.game = next;
+  }
+
+  async refreshConnections() {
+    const result = refreshPlayers(this.game, this.connectedIds());
+    if (result.changed) {
+      await this.commit(result.state);
+      this.broadcast();
+    }
+    return result.changed;
+  }
+
   envelope() {
     const players = new Map();
     for (const socket of this.sockets()) {
       const attachment = socket.deserializeAttachment();
-      if (attachment) players.set(attachment.clientId, { id: attachment.clientId, name: attachment.name });
+      if (attachment?.joined) players.set(attachment.clientId, { id: attachment.clientId, name: attachment.name });
     }
-    return { type: 'state', state: publicState(this.game), players: [...players.values()] };
+    return { type: 'state', state: publicState(this.game, this.connectedIds()), players: [...players.values()] };
   }
 
   send(socket, value) {
@@ -87,6 +148,9 @@ export class HangmanRoom {
     } catch {
       this.markClosed(socket);
       try { socket.close(1011, 'Please reconnect'); } catch {}
+      // A send failure may precede its close event. Reconcile it even if the
+      // platform does not deliver a separate close callback promptly.
+      if (this.ctx.waitUntil) this.ctx.waitUntil(this.serial(() => this.refreshConnections()));
     }
   }
 
@@ -106,10 +170,13 @@ export class HangmanRoom {
 
   async fetch(request) {
     try {
-      return await this.serial(() => {
+      return await this.serial(async () => {
         const url = new URL(request.url);
         if (request.method !== 'GET') return json({ error: 'Method not allowed' }, 405);
-        if (url.pathname.endsWith('/state')) return json(this.envelope());
+        if (url.pathname.endsWith('/state')) {
+          await this.refreshConnections();
+          return json(this.envelope());
+        }
         if (!url.pathname.endsWith('/socket')) return json({ error: 'Not found' }, 404);
         if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {
           return json({ error: 'WebSocket upgrade required' }, 426);
@@ -120,12 +187,15 @@ export class HangmanRoom {
         if (this.sockets().length >= MAX_CONNECTIONS) {
           return json({ error: 'The room is full. Please try again later.' }, 503);
         }
+        await this.refreshConnections();
+        await this.commit(reserveEntry(this.game));
+        const entryOrder = this.game.turn.nextEntry;
         const pair = new WebSocketPair();
         const [client, server] = Object.values(pair);
         const connectionId = globalThis.crypto.randomUUID();
         this.ctx.acceptWebSocket(server);
         server.serializeAttachment({
-          connectionId, clientId: connectionId, name: 'Guest', closed: false,
+          connectionId, clientId: connectionId, name: 'Guest', closed: false, joined: false, entryOrder,
           rateStart: Date.now(), rateCount: 0,
         });
         this.broadcast();
@@ -150,7 +220,7 @@ export class HangmanRoom {
           this.error(socket, 'invalid_message');
           this.markClosed(socket);
           socket.close(1009, 'Message too large or unsupported');
-          this.broadcast();
+          await this.refreshConnections();
           return;
         }
         const now = Date.now();
@@ -179,33 +249,48 @@ export class HangmanRoom {
             this.error(socket, 'invalid_join');
             return;
           }
-          attachment.clientId = action.clientId.toLowerCase();
+          const id = action.clientId.toLowerCase();
+          if (attachment.joined && attachment.clientId !== id) {
+            this.error(socket, 'identity_locked');
+            return;
+          }
+          const refreshed = refreshPlayers(this.game, this.connectedIds(), { now });
+          const joined = joinPlayer(refreshed.state, { id, name, entryOrder: attachment.entryOrder }, { now });
+          if (refreshed.changed || joined.changed) await this.commit(joined.state);
+          if (joined.code) {
+            this.error(socket, joined.code);
+            this.broadcast();
+            return;
+          }
+          attachment.clientId = id;
           attachment.name = name;
+          attachment.joined = true;
+          attachment.entryOrder = [...this.game.turn.order, ...this.game.turn.waiting].find(player => player.id === id).entryOrder;
           socket.serializeAttachment(attachment);
           // Tabs on the same device count as one player and share its name.
           for (const other of this.sockets()) {
             const info = other.deserializeAttachment();
-            if (info.clientId === attachment.clientId) {
+            if (info.joined && info.clientId === attachment.clientId) {
               other.serializeAttachment({ ...info, name });
             }
           }
           this.broadcast();
           return;
         }
-        const result = applyAction(this.game, action, { player: attachment.name, now });
+        await this.refreshConnections();
+        const result = applyAction(this.game, action, { playerId: attachment.joined ? attachment.clientId : null, now });
         if (!result.changed) {
           if (result.code) this.error(socket, result.code);
           this.send(socket, this.envelope());
           return;
         }
         try {
-          await this.ctx.storage.put(STORAGE_KEY, result.state);
+          await this.commit(result.state);
         } catch {
           this.error(socket, 'save_failed');
           this.send(socket, this.envelope());
           return;
         }
-        this.game = result.state;
         this.broadcast();
       });
     } catch {
@@ -214,18 +299,25 @@ export class HangmanRoom {
   }
 
   async webSocketClose(socket, code) {
-    await this.serial(() => {
+    await this.serial(async () => {
       this.markClosed(socket);
       try { socket.close(code === 1000 || code === 1001 ? code : 1000, 'Disconnected'); } catch {}
-      this.broadcast();
+      await this.refreshConnections();
     });
   }
 
   async webSocketError(socket) {
-    await this.serial(() => {
+    await this.serial(async () => {
       this.markClosed(socket);
       try { socket.close(1011, 'Please reconnect'); } catch {}
-      this.broadcast();
+      await this.refreshConnections();
+    });
+  }
+
+  async alarm() {
+    await this.serial(async () => {
+      const changed = await this.refreshConnections();
+      if (!changed) await this.persist(this.game, false);
     });
   }
 }
