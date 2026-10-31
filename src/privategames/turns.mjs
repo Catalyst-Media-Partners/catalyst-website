@@ -211,7 +211,7 @@ export function validTurns(turn, { legacy = false } = {}) {
   const uint = value => Number.isSafeInteger(value) && value >= 0;
   const validPlayer = player => player && typeof player.id === 'string' &&
     player.id.length > 0 && player.id.length <= 80 && typeof player.name === 'string' &&
-    [...player.name].length > 0 && [...player.name].length <= 24 &&
+    [...player.name].length > 0 && [...player.name].length <= 64 &&
     uint(player.entryOrder) && player.entryOrder > 0 && player.entryOrder <= turn.nextEntry &&
     (player.disconnectedAt === null || uint(player.disconnectedAt)) && (legacy || typeof player.pushEnabled === 'boolean');
   if (!turn || !uint(turn.cycle) || turn.cycle < 1 || typeof turn.token !== 'string' ||
@@ -239,6 +239,6 @@ export function validTurns(turn, { legacy = false } = {}) {
     new Set(vote.voterIds).size === vote.voterIds.length &&
     vote.required === Math.max(2, Math.floor(vote.eligibleIds.length / 2) + 1) &&
     (pass === null || pass && typeof pass.playerId === 'string' && pass.playerId.length <= 80 &&
-      typeof pass.name === 'string' && [...pass.name].length <= 24 &&
+      typeof pass.name === 'string' && [...pass.name].length <= 64 &&
       ['voluntary', 'vote', 'timeout', 'offline'].includes(pass.reason) && uint(pass.at));
 }
