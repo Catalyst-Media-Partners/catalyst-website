@@ -86,6 +86,12 @@
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     @media(max-width:700px){.shell{padding:22px 18px 18px}.play-area{grid-template-columns:205px minmax(0,1fr);gap:20px;padding:22px}.drawing-panel{min-height:285px;padding:13px}.drawing-panel svg{width:180px;height:225px}.word{gap:3px}.word.long .letter{font-size:13px;height:36px}.letter{height:43px;font-size:18px}.strike-area{padding:0 22px 21px}.keyboard-area{padding:21px 22px}.keyboard{gap:5px}.key{font-size:13px}.score{gap:18px}}
     @media(max-width:540px){.shell{padding:17px 14px 16px}header{margin-bottom:22px}.brand{font-size:10px}.level{font-size:9px}.intro{align-items:center;margin-bottom:19px;gap:12px}.intro p{font-size:12px;max-width:230px}.score{gap:13px}.score strong{font-size:21px}.score span{font-size:9px}.score-item{min-width:30px}main{border-radius:20px}.play-area{display:flex;flex-direction:column;gap:21px;padding:18px 17px 12px}.drawing-panel{min-height:182px;height:182px;padding:8px}.drawing-panel svg{width:153px;height:175px;margin-top:-3px}.drawing-tag{top:14px;left:14px;font-size:8px}.drawing-foot{position:absolute;bottom:12px;left:14px;font-size:8px;max-width:60px;text-align:left;line-height:1.5}.idle-note{font-size:17px}.puzzle-panel{padding:0}.round-meta{margin-bottom:11px}.word{gap:4px;margin-bottom:14px}.letter{height:43px;font-size:21px}.word.long{gap:3px}.word.long .letter{height:36px;font-size:15px}.feedback{min-height:36px;font-size:12px}.status{font-size:17px}.hint-area{margin-top:9px;min-height:39px}.clue{font-size:12px}.strike-area{padding:3px 17px 19px}.strike-track{gap:4px}.keyboard-area{padding:18px 17px 20px}.keyboard{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.key{height:43px;font-size:14px}.keyboard-help{font-size:10px}.actions{gap:12px;margin-top:19px}.new-word{padding:10px 14px;font-size:12px;gap:8px}.rule-note{font-size:10px;max-width:145px}footer{font-size:9px}}
+    .word.phrase{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 18px;max-width:100%;padding:4px 0}
+    .phrase-group{display:flex;gap:3px;max-width:100%;min-width:0}
+    .word.phrase .letter{width:clamp(18px,3.1vw,31px);height:41px;flex:0 1 auto;font-size:18px}
+    .floating-turn{position:fixed;z-index:1000;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:min(92vw,660px);padding:9px 16px;border-radius:999px;background:#fffef5;border:1px solid #809878;box-shadow:0 3px 14px #14292030;font-size:13px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+    .floating-turn.is-mine{background:var(--lime);border-color:#61823e}
+    @media(max-width:540px){.word.phrase{gap:9px 10px}.word.phrase .letter{width:clamp(16px,6vw,24px);height:35px;font-size:15px}.floating-turn{font-size:11px;max-width:94vw}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
     .room-panel{background:#eeefe4;border:1px solid var(--line);border-radius:15px;padding:14px 17px;margin-bottom:16px}
@@ -157,12 +163,12 @@
   <div class="shell">
     <header><div class="brand"><span class="brandmark" aria-hidden="true">W</span> WORD LAB</div><span class="level" id="level-label">Shared room · Middle school</span></header>
     <div class="intro">
-      <div><h1>Hangman.</h1><p>One word. One team. Play together from any phone.</p></div>
+      <div><h1>Hangman.</h1><p>Words or phrases. One team. Play together from any phone.</p></div>
       <div class="score" aria-label="Shared room score"><div class="score-item"><strong id="wins">0</strong><span>Wins</span></div><div class="score-item"><strong id="losses">0</strong><span>Losses</span></div></div>
     </div>
     <section class="room-panel" aria-label="Shared game room">
       <div class="room-top"><div class="connection" id="connection" role="status"><span class="connection-dot" aria-hidden="true"></span><span id="connection-label">Connecting…</span></div><button class="share-button" id="share-room" type="button">Share room ↗</button></div>
-      <div class="room-bottom"><form id="name-form" class="name-form"><label for="player-name">Your name</label><input id="player-name" name="name" maxlength="24" placeholder="Guest" autocomplete="nickname"><button type="submit">Save</button></form><div class="players" id="players" aria-label="Players in the room"></div></div>
+      <div class="room-bottom"><form id="name-form" class="name-form"><label for="player-name">Your name</label><input id="player-name" name="name" maxlength="64" placeholder="Guest" autocomplete="nickname"><button type="submit">Save</button></form><div class="players" id="players" aria-label="Players in the room"></div></div>
       <p class="room-note" id="room-note">Everyone at this link shares the same word, guesses, and score.</p>
       <div class="room-tools">
         <button class="small-button" id="push-enable" type="button" disabled>Enable turn alerts</button>
@@ -174,7 +180,7 @@
       <p class="push-status" id="push-status" role="status">Optional phone alerts when it is your turn.</p>
       <details class="install-help" id="install-help" hidden><summary>Enable alerts on iPhone</summary><p>Open this link in Safari. Tap Share, then Add to Home Screen. Open the new Hangman icon, tap Enable turn alerts, and choose Allow.</p></details>
     </section>
-    <p class="notice" id="notice" role="status" hidden></p>
+    <p class="notice" id="notice" role="status" hidden></p><div id="floating-turn" class="floating-turn" role="status" aria-live="off" hidden></div>
     <main aria-label="Hangman game">
       <div class="play-area">
         <section class="drawing-panel" aria-label="Hangman drawing">
@@ -198,8 +204,8 @@
           <div class="idle-note" id="idle-note" aria-hidden="true">Make your first guess.</div>
           <p class="drawing-foot">10 strikes. Make them count.</p>
         </section>
-        <section class="puzzle-panel" aria-label="Your word">
-          <div class="round-meta"><span class="eyebrow">The mystery word</span><span class="length-badge" id="word-length"></span></div>
+        <section class="puzzle-panel" aria-label="Your puzzle">
+          <div class="round-meta"><span class="eyebrow">The mystery puzzle</span><span class="length-badge" id="word-length"></span></div>
           <div class="word" id="word" aria-hidden="true"></div>
           <div id="announcement" role="status" aria-live="polite" aria-atomic="true"><h2 class="status" id="status">Find the hidden word.</h2><p class="feedback" id="feedback">Connecting to the shared game…</p><div class="sr-only" id="accessible-word"></div></div>
           <div class="hint-area"><button class="hint-toggle" id="hint-toggle" aria-controls="clue" aria-expanded="false">Need a clue? <span aria-hidden="true">↗</span></button><p class="clue" id="clue" hidden><strong>Your clue</strong><span id="clue-text"></span></p></div>
@@ -210,13 +216,13 @@
         <div class="turn-controls" aria-label="Turn controls"><span class="turn-clock" id="turn-clock">Group vote</span><div class="turn-buttons"><button class="small-button" id="pass-turn" type="button" disabled>Pass my turn</button><button class="small-button" id="vote-skip" type="button" disabled>Vote to skip</button></div><p class="vote-status" id="vote-status" role="status"></p></div>
         <div class="keyboard-header"><span class="eyebrow">Pick a letter</span><span class="keyboard-help">Tap a key or use A–Z</span></div>
         <div class="keyboard" id="keyboard"></div>
-        <details class="game-settings" id="game-settings"><summary>New game settings <span id="settings-summary">Middle school · 3–15 letters</span></summary><fieldset id="settings-fields" disabled><legend class="sr-only">Settings for the next word</legend><div class="settings-grid"><label>Vocabulary<select id="vocabulary"><option value="easy">Easy</option><option value="middle" selected>Middle school</option><option value="advanced">Advanced</option><option value="dictionary">Full dictionary</option></select></label><label>Shortest word<select id="min-length" aria-label="Shortest word"></select></label><label>Longest word<select id="max-length" aria-label="Longest word"></select></label><label>Turn rule<select id="turn-rule"><option value="vote">Group vote · 90s fallback</option><option value="timer:60">60-second timer</option><option value="timer:90">90-second timer</option><option value="timer:120">120-second timer</option></select></label></div></fieldset><p class="settings-note" id="pool-count">Loading dictionary…</p><p class="settings-note">Applies to the next word. Vocabulary levels estimate familiarity. A skip vote needs at least two players; small groups use a 90-second timer.</p></details>
-        <div class="actions"><button class="new-word" id="new-word"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h3c4 0 4 10 8 10h3M3 15h3c1.5 0 2.5-1.5 3.4-3M10.6 8C11.5 6.5 12.5 5 14 5h3M14 2l3 3-3 3M14 12l3 3-3 3"/></svg><span id="new-word-label">New random word</span></button><p class="rule-note">One letter per turn.<br>Clues stay on once enabled.</p></div>
+        <details class="game-settings" id="game-settings"><summary>New game settings <span id="settings-summary">Middle school · 3–15 letters</span></summary><fieldset id="settings-fields" disabled><legend class="sr-only">Settings for the next word</legend><div class="settings-grid"><label>Puzzle type<select id="puzzle-mode"><option value="word" selected>Single words</option><option value="phrase">Phrases</option><option value="mixed">Words + phrases</option></select></label><label>Vocabulary<select id="vocabulary"><option value="easy">Easy</option><option value="middle" selected>Middle school</option><option value="advanced">Advanced</option><option value="dictionary">Full dictionary</option></select></label><label>Shortest word<select id="min-length" aria-label="Shortest word"></select></label><label>Longest word<select id="max-length" aria-label="Longest word"></select></label><label>Turn rule<select id="turn-rule"><option value="vote">Group vote · 90s fallback</option><option value="timer:60">60-second timer</option><option value="timer:90">90-second timer</option><option value="timer:120">120-second timer</option></select></label></div></fieldset><p class="settings-note" id="pool-count">Loading dictionary…</p><p class="settings-note">Applies to the next word. Vocabulary levels estimate familiarity. A skip vote needs at least two players; small groups use a 90-second timer.</p></details>
+        <div class="actions"><button class="new-word" id="new-word"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h3c4 0 4 10 8 10h3M3 15h3c1.5 0 2.5-1.5 3.4-3M10.6 8C11.5 6.5 12.5 5 14 5h3M14 2l3 3-3 3M14 12l3 3-3 3"/></svg><span id="new-word-label">New random puzzle</span></button><p class="rule-note">One letter per turn.<br>Clues reset for each new puzzle.</p></div>
       </section>
     </main>
     <footer><span id="dictionary-footer">Dictionary words · 3–15 letters · 10 strikes</span><a href="/privategames/dictionary.html" target="_blank" rel="noopener">Dictionary sources &amp; word levels</a></footer>
     <noscript><p>This game needs JavaScript enabled in your browser.</p></noscript>
   </div>
-  <script src="/privategames/game.js?v=3" type="module"></script>
+  <script src="/privategames/game.js?v=4" type="module"></script>
 </body>
 </html>
