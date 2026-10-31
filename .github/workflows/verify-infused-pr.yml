@@ -41,7 +41,7 @@ jobs:
           node --check dropjourney/ticket-notify.mjs
           node dropjourney/build.mjs
           node dropjourney/scripts/qa.mjs
-          node dropjourney/scripts/qa_native_intake.mjs
+          SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=production INTAKE_TEST_MODE=true node dropjourney/scripts/qa_native_intake.mjs
           node dropjourney/scripts/qa_ticket_notify.mjs
           node dropjourney/scripts/qa_dark_worker.mjs
           node scripts/verify-cloudflare.mjs
