@@ -104,6 +104,19 @@
     .new-word svg{flex-shrink:0}
     .share-button:focus-visible,.name-form button:focus-visible{outline-offset:1px}
     @media(max-width:540px){.room-panel{padding:12px;margin-bottom:13px}.name-form{gap:6px}.name-form input{width:118px}.room-note{font-size:10px}.connection{font-size:11px}.share-button{font-size:11px}.players{font-size:9px}.level{max-width:160px;text-align:right;line-height:1.5}.actions .new-word{flex-shrink:0;max-width:155px}.rule-note{max-width:140px}}
+
+    .drawing-panel{padding-top:86px;min-height:380px}
+    .turn-notice{position:absolute;top:35px;left:14px;right:14px;padding:8px 10px;background:#fffef5;border:1px solid #c6d2b7;border-radius:9px;text-align:center;z-index:1;box-shadow:0 2px 6px #23382f08}
+    .turn-notice.is-mine{background:#e3efb5;border-color:#6d8c45;box-shadow:0 0 0 2px #8ba65e20}
+    .turn-label{display:block;font-size:8px;font-weight:800;letter-spacing:.14em;color:var(--green);line-height:1.3}
+    #turn-player{display:block;font-size:17px;font-weight:800;line-height:1.35;margin:1px 0;color:#264632;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .turn-detail{display:block;font-size:10px;line-height:1.35;color:var(--muted)}
+    .player-chip.current{background:#e3efb5;border-color:#789252;color:#264632;font-weight:750}
+    .player-chip.waiting{border-style:dashed;background:#f5f2e9;color:#706551}
+    .player-chip.disconnected{opacity:.65}
+    .idle-note{top:60%;font-size:16px}
+    @media(max-width:700px){.drawing-panel{padding-top:86px;min-height:365px}.turn-notice{left:9px;right:9px}#turn-player{font-size:15px}.turn-detail{font-size:9px}}
+    @media(max-width:540px){.drawing-panel{height:260px;min-height:260px;padding:84px 8px 8px}.drawing-panel svg{height:165px;width:144px;margin-top:0}.turn-notice{top:32px;left:12px;right:12px;padding:7px 10px}.turn-label{font-size:8px}#turn-player{font-size:16px}.turn-detail{font-size:10px}.idle-note{top:64%}.room-note{min-height:28px}}
   </style>
 </head>
 <body>
@@ -122,7 +135,8 @@
     <main aria-label="Hangman game">
       <div class="play-area">
         <section class="drawing-panel" aria-label="Hangman drawing">
-          <span class="drawing-tag">ONE PIECE PER MISS</span>
+          <span class="drawing-tag" id="turn-cycle">PLAYER CYCLE</span>
+          <div class="turn-notice" id="turn-notice" role="status" aria-live="polite" aria-atomic="true"><span class="turn-label" id="turn-label">TURN ORDER</span><strong id="turn-player">Joining the game…</strong><span class="turn-detail" id="turn-detail">One letter per player.</span></div>
           <svg viewBox="0 0 230 270" role="img" aria-labelledby="drawing-title">
             <title id="drawing-title">Hangman: 0 of 10 pieces drawn</title>
             <g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
@@ -152,12 +166,12 @@
       <section class="keyboard-area" aria-label="Guess a letter">
         <div class="keyboard-header"><span class="eyebrow">Pick a letter</span><span class="keyboard-help">Tap a key or use A–Z</span></div>
         <div class="keyboard" id="keyboard"></div>
-        <div class="actions"><button class="new-word" id="new-word"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h3c4 0 4 10 8 10h3M3 15h3c1.5 0 2.5-1.5 3.4-3M10.6 8C11.5 6.5 12.5 5 14 5h3M14 2l3 3-3 3M14 12l3 3-3 3"/></svg><span id="new-word-label">New random word</span></button><p class="rule-note">Your guesses count for everyone.<br>Every round starts with 10.</p></div>
+        <div class="actions"><button class="new-word" id="new-word"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h3c4 0 4 10 8 10h3M3 15h3c1.5 0 2.5-1.5 3.4-3M10.6 8C11.5 6.5 12.5 5 14 5h3M14 2l3 3-3 3M14 12l3 3-3 3"/></svg><span id="new-word-label">New random word</span></button><p class="rule-note">One letter per turn.<br>Clues stay on once enabled.</p></div>
       </section>
     </main>
     <footer><span>50 words · Up to 15 letters · 10 strikes</span><span>Saved after every move. Ready when you return.</span></footer>
     <noscript><p>This game needs JavaScript enabled in your browser.</p></noscript>
   </div>
-  <script src="/privategames/game.js" defer></script>
+  <script src="/privategames/game.js?v=2" defer></script>
 </body>
 </html>

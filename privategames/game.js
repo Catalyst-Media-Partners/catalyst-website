@@ -4,7 +4,7 @@
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const keys = new Map();
   const parts = [...document.querySelectorAll('.drawing-part')];
-  let state = null, socket = null, live = false, pending = false;
+  let state = null, socket = null, live = false, pending = false, connectedPlayers = [];
   let retryTimer, heartbeatTimer, pendingTimer, noticeTimer, connectionTimer;
   let retry = 0, lastMessageAt = 0, stopped = false;
   const readStored = key => { try { return localStorage.getItem(key); } catch { return null; } };
@@ -24,6 +24,49 @@
     if (message) noticeTimer = setTimeout(() => { el('notice').hidden = true; }, 9000);
   }
 
+  const myTurn = () => !!state?.turn?.activePlayerId && state.turn.activePlayerId === clientId;
+  const inRoster = () => !!state?.turn?.order?.some(player => player.id === clientId);
+  const waitingIndex = () => state?.turn?.waiting?.findIndex(player => player.id === clientId) ?? -1;
+
+  function renderTurns() {
+    const turn = state?.turn;
+    const active = turn?.order?.find(player => player.id === turn.activePlayerId);
+    const mine = myTurn();
+    const queued = waitingIndex();
+    const reconnecting = !!active && active.connected === false;
+    el('turn-notice').classList.toggle('is-mine',mine && live && !reconnecting);
+    el('turn-notice').classList.toggle('is-waiting',queued >= 0);
+    el('turn-cycle').textContent = turn ? 'PLAYER CYCLE ' + turn.cycle : 'PLAYER CYCLE';
+    el('turn-label').textContent = !live ? 'CONNECTING' : reconnecting ? 'RECONNECTING' : mine ? 'YOUR TURN' : state?.status !== 'playing' ? 'NEXT WORD' : 'CURRENT TURN';
+    el('turn-player').textContent = turn?.activePlayerName || 'Waiting for players';
+    el('turn-detail').textContent = !live ? 'Reconnecting to the saved game.'
+      : queued >= 0 ? 'You join after this player cycle.'
+      : reconnecting ? 'Waiting briefly for this player to reconnect.'
+      : mine ? state.status === 'playing' ? 'Choose one letter.' : 'Start the next word for everyone.'
+      : turn?.activePlayerId ? 'One letter, then the next player.' : 'Join the game to begin.';
+    if (live) el('room-note').textContent = queued >= 0
+      ? 'You are queued for the next player cycle (waiting position ' + (queued + 1) + ').'
+      : mine ? state.status === 'playing' ? 'Your turn. Choose one letter; correct and incorrect guesses both pass the turn.' : 'Your turn. Start the next word for everyone.'
+      : turn?.activePlayerName ? turn.activePlayerName + ' has the turn. Players go in entry order.'
+      : 'Joining the turn order…';
+    el('players').replaceChildren();
+    const ordered = turn ? [
+      ...turn.order.map((player,index) => ({...player,position:index+1,waiting:false})),
+      ...turn.waiting.map(player => ({...player,waiting:true}))
+    ] : connectedPlayers;
+    for (const player of ordered.slice(0,16)) {
+      const chip = document.createElement('span');
+      chip.className = 'player-chip' + (player.id === turn?.activePlayerId ? ' current' : '') + (player.waiting ? ' waiting' : '') + (player.connected === false ? ' disconnected' : '');
+      chip.textContent = (player.position ? player.position + '. ' : '') + (player.name || 'Guest') + (player.id === clientId ? ' (you)' : '') + (player.waiting ? ' · next cycle' : player.connected === false ? ' · reconnecting' : '');
+      if (player.id === turn?.activePlayerId) chip.setAttribute('aria-current','true');
+      el('players').appendChild(chip);
+    }
+    if (ordered.length > 16) {
+      const more = document.createElement('span'); more.textContent = '+' + (ordered.length - 16) + ' more';
+      el('players').appendChild(more);
+    }
+  }
+
   function setConnection(connected, count) {
     live = connected;
     el('connection').className = 'connection ' + (connected ? 'live' : state ? 'offline' : '');
@@ -34,6 +77,7 @@
       ? 'Everyone at this link shares the same word, guesses, and score.'
       : state ? 'Reconnecting to the saved game. Your board will update automatically.'
       : 'Connecting to the shared game. Your moves are saved after every guess.';
+    renderTurns();
     updateControls();
   }
 
@@ -42,13 +86,13 @@
     const guessed = new Map((state?.guesses || []).map(g => [g.letter, g]));
     for (const [letter, button] of keys) {
       const guess = guessed.get(letter);
-      button.disabled = !available || state.status !== 'playing' || guessed.has(letter);
+      button.disabled = !available || !myTurn() || state.status !== 'playing' || guessed.has(letter);
       button.classList.toggle('correct', !!guess?.correct);
       button.classList.toggle('wrong', !!guess && !guess.correct);
       button.setAttribute('aria-label', letter + (guess ? guess.correct ? ', correct guess' : ', incorrect guess' : ', guess letter'));
     }
-    el('hint-toggle').disabled = !available || state?.status !== 'playing';
-    el('new-word').disabled = !available;
+    el('hint-toggle').disabled = !available || !inRoster() || state?.status !== 'playing';
+    el('new-word').disabled = !available || !myTurn();
   }
 
   for (const letter of letters) {
@@ -107,6 +151,7 @@
     el('hint-toggle').setAttribute('aria-expanded', String(showClue));
     el('clue').hidden = !showClue;
     el('clue-text').textContent = state.clue || '';
+    renderTurns();
     updateControls();
   }
 
@@ -116,28 +161,21 @@
     if (!Array.isArray(next.mask) || !Array.isArray(next.guesses) || next.length < 1 || next.length > 15) return;
     if (fromSocket) {
       pending = false; clearTimeout(pendingTimer);
-      const players = Array.isArray(envelope.players) ? envelope.players : [];
-      el('players').replaceChildren();
-      for (const player of players.slice(0,12)) {
-        const chip = document.createElement('span'); chip.className = 'player-chip';
-        chip.textContent = (player.name || 'Guest') + (player.id === clientId ? ' (you)' : '');
-        el('players').appendChild(chip);
-      }
-      if (players.length > 12) {
-        const more = document.createElement('span'); more.textContent = '+' + (players.length - 12) + ' more';
-        el('players').appendChild(more);
-      }
-      setConnection(true,players.length);
+      connectedPlayers = Array.isArray(envelope.players) ? envelope.players : [];
+      retry = 0;
+      setConnection(true,connectedPlayers.length);
     }
-    if (!state || next.revision > state.revision) {
+    if (!state || next.revision >= state.revision) {
       state = next; renderState();
     } else updateControls();
   }
 
   function sendAction(type, fields = {}) {
     if (!live || !state || pending || socket?.readyState !== WebSocket.OPEN) return;
+    if ((type === 'guess' || type === 'next') && !myTurn()) return;
+    if (type === 'hint' && !inRoster()) return;
     pending = true; updateControls();
-    try { socket.send(JSON.stringify({type,roundId:state.roundId,...fields})); }
+    try { socket.send(JSON.stringify({type,roundId:state.roundId,turnToken:state.turn?.token,...fields})); }
     catch { pending = false; socket.close(); return; }
     clearTimeout(pendingTimer);
     pendingTimer = setTimeout(() => {
@@ -148,7 +186,7 @@
   }
 
   function guess(letter) {
-    if (!state || state.status !== 'playing' || !/^[A-Z]$/.test(letter) || state.guesses.some(g => g.letter === letter)) return;
+    if (!state || !myTurn() || state.status !== 'playing' || !/^[A-Z]$/.test(letter) || state.guesses.some(g => g.letter === letter)) return;
     sendAction('guess',{letter});
   }
 
@@ -161,7 +199,7 @@
     const ws = new WebSocket(url); socket = ws;
     connectionTimer = setTimeout(() => { if (ws.readyState !== WebSocket.OPEN) ws.close(); },10000);
     ws.addEventListener('open',() => {
-      clearTimeout(connectionTimer); retry = 0; lastMessageAt = Date.now();
+      clearTimeout(connectionTimer); lastMessageAt = Date.now();
       ws.send(JSON.stringify({type:'join',clientId,name:playerName}));
       clearInterval(heartbeatTimer);
       heartbeatTimer = setInterval(() => {
@@ -198,7 +236,7 @@
   });
   el('hint-toggle').addEventListener('click',() => sendAction('hint'));
   el('new-word').addEventListener('click',() => {
-    if (!state || !live || pending) return;
+    if (!state || !live || !myTurn() || pending) return;
     const skip = state.status === 'playing';
     if (skip && state.guesses.length && !confirm('Start a new word for everyone? This skips the current word.')) return;
     sendAction('next',{skip});
