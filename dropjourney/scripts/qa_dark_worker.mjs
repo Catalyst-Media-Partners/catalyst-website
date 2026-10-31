@@ -7,7 +7,7 @@ const assetRequests=[];
 const assets={async fetch(request){
  const u=new URL(request.url);assetRequests.push(u.pathname);
  if(u.pathname==='/sitemap.xml')return new Response('<?xml version="1.0"?><urlset><url><loc>https://infused.show/</loc></url></urlset>',{headers:{'Content-Type':'application/xml'}});
- if(u.pathname.endsWith('/lander/index.html'))return new Response(lightPage,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'light-synthetic'}});
+ if(u.pathname.endsWith('/lander/'))return new Response(lightPage,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'light-synthetic'}});
  if(u.pathname.endsWith('/assets/css/site.css'))return new Response('body{color:#201929}',{status:200,headers:{'Content-Type':'text/css; charset=utf-8'}});
  if(u.pathname.endsWith('/assets/js/cta-attribution.js'))return new Response('/* first-party CTA */',{status:200,headers:{'Content-Type':'text/javascript; charset=utf-8'}});
  if(u.pathname.endsWith('/assets/images/light.webp'))return new Response('image',{status:200,headers:{'Content-Type':'image/webp'}});
@@ -46,7 +46,7 @@ assert.ok(landerHtml.includes('<a href="/market/">Light page link</a>'));
 assert.ok(landerHtml.includes('<link rel="canonical" href="https://infused.show/lander/">'));
 assert.ok(landerHtml.includes('<meta name="robots" content="index, follow">'));
 assert.equal(lander.headers.get('x-robots-tag'),'index, follow');
-assert.ok(assetRequests.includes('/lander/index.html'));
+assert.ok(assetRequests.includes('/lander/'));
 
 const css=await call('infused.show','/assets/css/site.css',{SITE_MODE:'production'});
 assert.equal(css.status,200);
