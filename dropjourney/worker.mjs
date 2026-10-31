@@ -22,6 +22,13 @@ const canonicalPath=pathname=>{
  return clean.endsWith('/')?clean:clean+'/';
 };
 
+async function serveLightAsset(request,env,url){
+ if(request.method!=='GET'&&request.method!=='HEAD')return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD','X-Robots-Tag':NOINDEX}});
+ if(!env.LIGHT_SITE?.fetch)return new Response('Light landing assets are temporarily unavailable.',{status:503,headers:headersFor(false,{'Cache-Control':'no-store'})});
+ const target=new URL(request.url);
+ target.pathname=url.pathname.slice('/lander'.length);
+ return env.LIGHT_SITE.fetch(new Request(target,request));
+}
 async function serveLightLander(request,env,url,indexable){
  if(request.method!=='GET'&&request.method!=='HEAD')return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD','X-Robots-Tag':NOINDEX}});
  if(!env.LIGHT_SITE?.fetch)return new Response('Light landing page is temporarily unavailable.',{status:503,headers:headersFor(false,{'Cache-Control':'no-store'})});
@@ -32,6 +39,9 @@ async function serveLightLander(request,env,url,indexable){
  const light=await env.LIGHT_SITE.fetch(lightRequest);
  if(!light.ok||!light.headers.get('Content-Type')?.includes('text/html'))return light;
  let html=await light.text();
+ // Keep the light page's navigation rooted at the dark site, but isolate its
+ // own CSS, scripts and images under /lander/assets/.
+ html=html.replaceAll('./assets/','/lander/assets/');
  const robots=indexable?'index, follow':NOINDEX;
  if(!/<base\b/i.test(html))html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'\n<base href="/">');
  if(/<meta name="robots" content="[^"]*">/i.test(html))html=html.replace(/<meta name="robots" content="[^"]*">/i,'<meta name="robots" content="'+robots+'">');
@@ -74,6 +84,14 @@ export default {
   if(host==='www.infused.show'){
    const next=new URL(request.url);next.hostname='infused.show';
    return Response.redirect(next,308);
+  }
+  // The light page's static assets are proxied beneath /lander/assets/.
+  if(p.startsWith('/lander/assets/')){
+   if(host!=='infused.show'){
+    const next=new URL(request.url);next.hostname='infused.show';
+    return Response.redirect(next.toString(),308);
+   }
+   return serveLightAsset(request,env,url);
   }
   // The dark journey owns the root. The original light homepage is served only
   // from /lander/ on the canonical hostname through the isolated light Worker.
