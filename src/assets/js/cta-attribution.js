@@ -9,7 +9,7 @@
   const TOKEN = /^[A-Za-z0-9][A-Za-z0-9._~-]{0,95}$/;
   const HOST = /^[a-z0-9](?:[a-z0-9.-]{0,118}[a-z0-9])?$/;
   const ALLOWED_PAGES = new Set([
-    '/','/market/','/ecosystem/','/roots/','/science/','/make/',
+    '/','/lander/','/market/','/ecosystem/','/roots/','/science/','/make/',
     '/package/','/move/','/sell/','/services/','/buyers/',
     '/why-vegas/','/opportunities/','/contact/'
   ]);
@@ -29,7 +29,7 @@
       if (ref.origin !== window.location.origin) referrerHost = ref.hostname.toLowerCase();
     } catch { /* Invalid external referrer is not retained. */ }
   }
-  if (HOST.test(referrerHost) && !['infused.show','www.infused.show'].includes(referrerHost)) {
+  if (HOST.test(referrerHost) && !['infused.show','www.infused.show','dark.infused.show','light.infused.show'].includes(referrerHost)) {
     campaign.set('referrer_host',referrerHost);
   }
 
