@@ -19,3 +19,6 @@ jobs:
           node-version: '22'
       - name: Verify merchant-approved content and build exact deployment
         run: npm run check
+
+      - name: Compile the shared game Worker and durable object
+        run: npx --yes wrangler@4.102.0 deploy --dry-run --outdir /tmp/catalyst-worker-dry-run
