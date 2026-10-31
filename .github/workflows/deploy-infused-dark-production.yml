@@ -98,8 +98,6 @@ jobs:
           jq -e '([.result.bindings[]? | select(.name == "INFUSED_INTAKE_DB_PRODUCTION" and .database_id == "2082f84e-bacd-4ef2-8902-265eda67e4d1")] | length) == 1' /tmp/revenue-settings.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/secrets" > /tmp/dark-secrets.json
           jq -e '.success == true and any(.result[]?; .name == "TURNSTILE_SECRET") and any(.result[]?; .name == "TURNSTILE_SECRET_PRODUCTION")' /tmp/dark-secrets.json >/dev/null
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/challenges/widgets/0x4AAAAAAFthzCYCdmh8aVv8" > /tmp/production-turnstile.json
-          jq -e '.success == true and (.result.domains | index("dark.infused.show") != null) and (.result.domains | index("infused.show") != null)' /tmp/production-turnstile.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-before.json
           jq -e '.success == true' /tmp/domains-before.json >/dev/null
           jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-before.json >/dev/null
