@@ -26,7 +26,10 @@ async function serveLightLander(request,env,url,indexable){
  if(request.method!=='GET'&&request.method!=='HEAD')return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD','X-Robots-Tag':NOINDEX}});
  if(!env.LIGHT_SITE?.fetch)return new Response('Light landing page is temporarily unavailable.',{status:503,headers:headersFor(false,{'Cache-Control':'no-store'})});
  const target=new URL('/',url);
- const light=await env.LIGHT_SITE.fetch(new Request(target,request));
+ const lightRequest=request.method==='HEAD'
+  ?new Request(target,{method:'GET',headers:request.headers})
+  :new Request(target,request);
+ const light=await env.LIGHT_SITE.fetch(lightRequest);
  if(!light.ok||!light.headers.get('Content-Type')?.includes('text/html'))return light;
  let html=await light.text();
  const robots=indexable?'index, follow':NOINDEX;
