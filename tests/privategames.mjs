@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyAction, assertStoredGame, createGame, joinPlayer, migrateGame, publicState, refreshPlayers, reserveEntry, WORD_BANK } from '../src/privategames/game.mjs';
-import { nextAlarmAt, RECONNECT_GRACE_MS } from '../src/privategames/turns.mjs';
+import { applyAction, assertStoredGame, createGame, joinPlayer, migrateGame, publicState, refreshPlayers, reserveEntry, updatePushPreference, DEFAULT_SETTINGS, RECENT_WORD_LIMIT, WORD_BANK } from '../src/privategames/game.mjs';
+import { nextAlarmAt, RECONNECT_GRACE_MS, PUSH_IDLE_MS, ROOM_IDLE_MS, VOTE_FALLBACK_MS } from '../src/privategames/turns.mjs';
 import { HangmanRoom, STORAGE_KEY } from '../src/privategames/room.js';
+import { PUSH_STORE_KEY, pushStatus } from '../src/privategames/push-store.mjs';
+import { toBase64Url, VAPID_KEY_STORAGE_KEY } from '../src/privategames/push.mjs';
 
 const IDS = ['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','44444444-4444-4444-8444-444444444444'];
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -172,7 +174,7 @@ test('word completion and Next preserve the ongoing player cycle and pending arr
 test('a clicked clue stays open across words without advancing anyone’s turn', () => {
   let game = fixture(['Alex','Sam']);
   const turnBefore = clone(game.turn);
-  game = applyAction(game, action(game, 'hint'), { playerId: IDS[1] }).state;
+  game = applyAction(game, action(game, 'hint'), { playerId: IDS[1], now: 1000 }).state;
   assert.equal(game.clueEnabled, true);
   assert.deepEqual(game.turn, turnBefore);
   game = applyAction(game, action(game, 'next', { skip: true }), { playerId: IDS[0] }).state;
@@ -197,7 +199,7 @@ test('schema1 migration preserves the exact live word, bag, guesses and score', 
     assert.deepEqual(migrated[field], legacy[field], field);
   }
   assert.equal(migrated.clueEnabled, true);
-  assert.equal(migrated.schemaVersion, 2);
+  assert.equal(migrated.schemaVersion, 3);
   assert.equal(migrated.turn.order.length, 0);
   assertStoredGame(migrated);
   assert.throws(() => migrateGame({ ...legacy, schemaVersion: 999 }), /refusing to overwrite/);
@@ -277,7 +279,7 @@ test('serialization restores game, sticky hint, cursor, token, pending roster an
   assert.deepEqual(publicState(restored, allIds(game)), publicState(game, allIds(game)));
 });
 
-test('100 word transitions preserve shuffled-cycle uniqueness and no immediate repeats', () => {
+test('dictionary transitions avoid recent words and store only bounded selection history', () => {
   let counter = 0;
   const options = { random: () => 0, makeRoundId: () => String(++counter), now: 5000, playerId: IDS[0] };
   let game = addPlayer(createGame(options), IDS[0], 'Alex');
@@ -289,6 +291,9 @@ test('100 word transitions preserve shuffled-cycle uniqueness and no immediate r
     previous = game.word;
   }
   assert.equal(new Set(firstCycle).size, 50);
+  assert.equal(game.recentWords.length, RECENT_WORD_LIMIT);
+  assert.deepEqual(game.bag, []);
+  assert.equal(new Set(game.recentWords).size, RECENT_WORD_LIMIT);
 });
 
 class FakeSocket {
@@ -303,6 +308,11 @@ class FakeSocket {
   close(code) { this.readyState = 3; this.closeCode = code; }
 }
 function roomContext(initial = fixture(['Alex','Sam'])) {
+  initial = clone(initial);
+  if (initial.schemaVersion === 3) {
+    initial.turn.lastActivityAt = Date.now();
+    if (initial.turn.deadlineAt !== null) initial.turn.deadlineAt = Date.now() + (initial.settings.turnMode === 'timer' ? initial.settings.turnSeconds * 1000 : VOTE_FALLBACK_MS);
+  }
   const stored = new Map([[STORAGE_KEY, clone(initial)]]);
   const sockets = initial.turn ? [...initial.turn.order,...initial.turn.waiting].map(player =>
     new FakeSocket(player.id,player.name,player.entryOrder)) : [];
@@ -394,7 +404,8 @@ test('hibernation restores current turn, scores, clue preference and player atta
   const before = await readState(room);
   const restored = new HangmanRoom(ctx,{});
   const after = await readState(restored);
-  assert.deepEqual(after,before);
+  assert(after.serverTime >= before.serverTime);
+  assert.deepEqual({ ...after, serverTime: 0 },{ ...before, serverTime: 0 });
   assert.equal(after.state.wins,1);
   assert.equal(after.state.roundNumber,2);
   assert.equal(after.state.clueShown,true);
@@ -411,7 +422,7 @@ test('unjoined sockets take no slot; duplicate tabs retain one identity and cann
   assert.equal(room.game.turn.order[0].name,'Alex Updated');
   await room.webSocketClose(ctx.sockets[0],1000);
   assert.equal(room.game.turn.order[0].disconnectedAt,null);
-  assert.equal(await ctx.storage.getAlarm(),null);
+  assert.equal(await ctx.storage.getAlarm(),room.game.turn.deadlineAt);
   await send(room,duplicate,{type:'join',clientId:IDS[1],name:'Impersonating Sam'});
   assert.equal(duplicate.messages.at(-1).code,'identity_locked');
   const oneToken = action(room.game,'guess',{letter:'P'});
@@ -471,7 +482,7 @@ test('bad frames do not leave a disconnected current player permanently occupyin
   assert.equal(ctx.sockets[0].messages.at(-1).code,'invalid_message');
   await room.webSocketMessage(ctx.sockets[0],'ping');
   assert.equal(ctx.sockets[0].messages.at(-1),'pong');
-  await room.webSocketMessage(ctx.sockets[0],'x'.repeat(2049));
+  await room.webSocketMessage(ctx.sockets[0],'x'.repeat(8193));
   assert.equal(ctx.sockets[0].closeCode,1009);
   assert.notEqual(room.game.turn.order[0].disconnectedAt,null);
   assert.notEqual(await ctx.storage.getAlarm(),null);
@@ -492,5 +503,361 @@ test('a transient disconnect-save failure schedules recovery instead of permanen
     assert.equal(activeId(room.game),IDS[1]);
     assert.equal(await ctx.storage.getAlarm(),null);
     assert.equal(room.game.guesses.length,0);
+  } finally { Date.now = originalNow; }
+});
+
+test('schema2 upgrade preserves the live game and ordered turn while adding default settings', () => {
+  let current = fixture(['Alex','Sam','Casey']);
+  current = guess(current,'A').state;
+  current = addPlayer(current,IDS[3],'Drew');
+  const legacy = clone(current);
+  legacy.schemaVersion = 2;
+  delete legacy.settings; delete legacy.recentWords;
+  for (const key of ['vote','deadlineAt','remainingMs','clockKind','paused','lastActivityAt','lastPass']) delete legacy.turn[key];
+  for (const player of [...legacy.turn.order,...legacy.turn.waiting]) delete player.pushEnabled;
+  const migrated = migrateGame(legacy,{now:100_000});
+  for (const field of ['roundId','roundNumber','word','clue','bag','guesses','strikes','status','wins','losses','clueShown','clueEnabled','updatedAt']) {
+    assert.deepEqual(migrated[field],legacy[field],field);
+  }
+  for (const field of ['token','cursor','cycle','started','nextEntry']) assert.equal(migrated.turn[field],legacy.turn[field],field);
+  assert.deepEqual(migrated.turn.order.map(player=>player.id),legacy.turn.order.map(player=>player.id));
+  assert.deepEqual(migrated.turn.waiting.map(player=>player.id),legacy.turn.waiting.map(player=>player.id));
+  assert.deepEqual(migrated.settings,DEFAULT_SETTINGS);
+  assert.deepEqual(migrated.recentWords,[legacy.word]);
+  assertStoredGame(migrated);
+});
+
+test('only current Next applies valid word and timer settings, without resetting scores or player cycle', () => {
+  let game = fixture(['Alex','Sam','Casey']);
+  game = guess(game,'P').state;
+  const before = clone(game);
+  const settings = { vocabulary:'dictionary',minLength:12,maxLength:15,turnMode:'timer',turnSeconds:60 };
+  const request = action(game,'next',{skip:true,settings});
+  assert.equal(applyAction(game,request,{playerId:IDS[0]}).code,'out_of_turn');
+  for (const settings of [null,[],{minLength:2},{maxLength:16},{minLength:8,maxLength:3},{vocabulary:'easy',minLength:15,maxLength:15},{turnMode:'instant'},{turnSeconds:1}]) {
+    const result = applyAction(game,action(game,'next',{skip:true,settings}),{playerId:IDS[1]});
+    assert.equal(result.code,'invalid_settings'); assert.strictEqual(result.state,game);
+  }
+  game = applyAction(game,request,{playerId:IDS[1],now:10_000}).state;
+  assert.deepEqual(game.settings,settings);
+  assert(game.word.length >=12 && game.word.length <=15);
+  assert.notEqual(game.word,before.word);
+  assert.equal(game.turn.cursor,before.turn.cursor);
+  assert.equal(game.turn.cycle,before.turn.cycle);
+  assert.equal(game.wins,before.wins); assert.equal(game.losses,before.losses);
+  assert.equal(game.turn.deadlineAt,70_000);
+  assert.deepEqual(publicState(game).settings,settings);
+});
+
+test('a democratic skip needs two distinct eligible peers and never charges a strike', () => {
+  let game = fixture(['Alex','Sam','Casey']);
+  const stale = action(game,'voteSkip');
+  assert.deepEqual(game.turn.vote.eligibleIds,[IDS[1],IDS[2]]);
+  assert.equal(game.turn.vote.required,2);
+  assert.equal(game.turn.deadlineAt,null);
+  assert.equal(applyAction(game,stale,{playerId:IDS[0]}).code,'vote_own_turn');
+  game = applyAction(game,stale,{playerId:IDS[1],now:2000}).state;
+  assert.equal(activeId(game),IDS[0]);
+  assert.deepEqual(game.turn.vote.voterIds,[IDS[1]]);
+  assert.equal(applyAction(game,stale,{playerId:IDS[1]}).changed,false);
+  game = applyAction(game,stale,{playerId:IDS[2],now:3000}).state;
+  assert.equal(activeId(game),IDS[1]);
+  assert.equal(game.turn.lastPass.reason,'vote');
+  assert.equal(game.strikes,0); assert.equal(game.guesses.length,0);
+  assert.equal(game.wins,0); assert.equal(game.losses,0);
+  assert.deepEqual(game.turn.vote.voterIds,[]);
+  assert.equal(applyAction(game,stale,{playerId:IDS[1]}).code,'stale_turn');
+});
+
+test('vote electorate tracks initial arrivals until first vote, then expires without auto-accepting an old minority', () => {
+  let game = fixture(['Alex','Sam']);
+  assert.equal(game.turn.vote.required,2);
+  game = addPlayer(game,IDS[2],'Casey');
+  assert.deepEqual(game.turn.vote.eligibleIds,[IDS[1],IDS[2]]);
+  game = addPlayer(game,IDS[3],'Drew');
+  assert.equal(game.turn.vote.required,2);
+  game = applyAction(game,action(game,'voteSkip'),{playerId:IDS[1],now:2000}).state;
+  const token = game.turn.token;
+  const online = new Set([IDS[0],IDS[1],IDS[2]]);
+  game = refreshPlayers(game,online,{now:3000}).state;
+  assert.equal(game.turn.vote.eligibleIds.length,3,'a transient disconnect does not alter an open ballot');
+  assert.deepEqual(game.turn.vote.voterIds,[IDS[1]]);
+  game = refreshPlayers(game,online,{now:3000+RECONNECT_GRACE_MS}).state;
+  assert.equal(game.turn.token,token);
+  assert.equal(activeId(game),IDS[0]);
+  assert.deepEqual(game.turn.vote.eligibleIds,[IDS[1],IDS[2]]);
+  assert.deepEqual(game.turn.vote.voterIds,[],'departure requires a fresh ballot');
+  game = guess(game,'P').state;
+  game = addPlayer(game,IDS[3],'Drew');
+  assert.equal(game.turn.waiting.length,1);
+  assert.equal(applyAction(game,action(game,'voteSkip'),{playerId:IDS[3]}).code,'waiting_for_cycle');
+});
+
+test('one peer cannot vote-skip; two-player vote mode has a 90-second fallback and voluntary pass', () => {
+  let game = fixture(['Alex','Sam']);
+  const request = action(game,'voteSkip');
+  assert.equal(applyAction(game,request,{playerId:IDS[1],now:2000}).code,'not_enough_voters');
+  assert.equal(game.turn.deadlineAt,1000+VOTE_FALLBACK_MS);
+  game = refreshPlayers(game,allIds(game),{now:game.turn.deadlineAt}).state;
+  assert.equal(activeId(game),IDS[1]);
+  assert.equal(game.turn.lastPass.reason,'timeout');
+  assert.equal(game.strikes,0);
+  game = applyAction(game,action(game,'pass'),{playerId:IDS[1],now:100_000}).state;
+  assert.equal(activeId(game),IDS[0]);
+  assert.equal(game.turn.lastPass.reason,'voluntary');
+  assert.equal(game.turn.cycle,2);
+  const solo = fixture();
+  assert.equal(solo.turn.deadlineAt,null);
+});
+
+test('timer mode uses the configured duration, invalidates old actions, and cannot vote-skip', () => {
+  let game = fixture(['Alex','Sam','Casey']);
+  game = applyAction(game,action(game,'next',{skip:true,settings:{turnMode:'timer',turnSeconds:120}}),
+    {playerId:IDS[0],now:5000}).state;
+  const request = action(game,'guess',{letter:'Z'});
+  const before = clone(game);
+  assert.equal(game.turn.deadlineAt,125_000);
+  assert.equal(applyAction(game,action(game,'voteSkip'),{playerId:IDS[1]}).code,'vote_disabled');
+  assert.equal(refreshPlayers(game,allIds(game),{now:124_999}).changed,false);
+  game = refreshPlayers(game,allIds(game),{now:125_000}).state;
+  assert.equal(activeId(game),IDS[1]);
+  assert.equal(game.turn.deadlineAt,245_000);
+  assert.equal(applyAction(game,request,{playerId:IDS[0]}).code,'stale_turn');
+  for (const field of ['word','guesses','strikes','wins','losses']) assert.deepEqual(game[field],before[field]);
+  assert.equal(refreshPlayers(game,allIds(game),{now:125_000}).changed,false,'replayed alarms do not pass twice');
+});
+
+test('background push members retain their place, but an offline owner gets only 90 seconds to return', () => {
+  let game = fixture(['Alex','Sam','Casey']);
+  game = updatePushPreference(game,IDS[0],true,{now:1000}).state;
+  const online = new Set([IDS[1],IDS[2]]);
+  game = refreshPlayers(game,online,{now:2000}).state;
+  const token = game.turn.token;
+  assert.equal(game.turn.order[0].pushEnabled,true);
+  assert.equal(game.turn.deadlineAt,2000+VOTE_FALLBACK_MS);
+  assert.equal(publicState(game,online).turn.graceEndsAt,2000+PUSH_IDLE_MS);
+  game = refreshPlayers(game,online,{now:2000+RECONNECT_GRACE_MS}).state;
+  assert.equal(game.turn.order.length,3); assert.equal(game.turn.token,token);
+  game = refreshPlayers(game,online,{now:2000+VOTE_FALLBACK_MS}).state;
+  assert.equal(activeId(game),IDS[1]);
+  assert.equal(game.turn.lastPass.reason,'offline');
+  assert.equal(game.turn.order.length,3); assert.equal(game.strikes,0);
+  game = refreshPlayers(game,online,{now:2000+PUSH_IDLE_MS}).state;
+  assert.equal(game.turn.order.some(player=>player.id===IDS[0]),false);
+});
+
+test('all-offline rooms pause timer progress and stop alarms after bounded retention expires', () => {
+  let game = fixture(['Alex','Sam']);
+  for (const id of IDS.slice(0,2)) game = updatePushPreference(game,id,true,{now:1000}).state;
+  game = applyAction(game,action(game,'next',{skip:true,settings:{turnMode:'timer',turnSeconds:60}}),
+    {playerId:IDS[0],now:2000}).state;
+  game = refreshPlayers(game,new Set(),{now:12_000}).state;
+  const token = game.turn.token;
+  assert.equal(game.turn.paused,true); assert.equal(game.turn.deadlineAt,null); assert.equal(game.turn.remainingMs,50_000);
+  assert.equal(nextAlarmAt(game.turn),12_000+PUSH_IDLE_MS);
+  game = refreshPlayers(game,new Set([IDS[0]]),{now:30_000}).state;
+  assert.equal(game.turn.token,token); assert.equal(game.turn.deadlineAt,80_000);
+  game = refreshPlayers(game,new Set(),{now:31_000}).state;
+  game = refreshPlayers(game,new Set(),{now:31_000+PUSH_IDLE_MS}).state;
+  assert.equal(game.turn.order.length,0); assert.equal(nextAlarmAt(game.turn),null);
+});
+
+test('a forgotten connected browser cannot run timers forever without deliberate activity', () => {
+  let game = fixture(['Alex','Sam']);
+  game = applyAction(game,action(game,'next',{skip:true,settings:{turnMode:'timer',turnSeconds:60}}),
+    {playerId:IDS[0],now:1000}).state;
+  let iterations = 0;
+  while (game.turn.deadlineAt !== null && ++iterations < 40) {
+    game = refreshPlayers(game,allIds(game),{now:game.turn.deadlineAt}).state;
+  }
+  assert(iterations <=30);
+  assert.equal(game.turn.paused,true);
+  assert.equal(game.turn.lastActivityAt,1000);
+  assert.equal(nextAlarmAt(game.turn),null);
+  const current = activeId(game);
+  game = applyAction(game,action(game,'pass'),{playerId:current,now:ROOM_IDLE_MS+2000}).state;
+  assert.equal(game.turn.paused,false); assert.notEqual(game.turn.deadlineAt,null);
+});
+
+test('explicit Leave removes waiting and active players fairly and preserves the board', () => {
+  let game = fixture(['Alex','Sam','Casey']);
+  game = guess(game,'P').state;
+  game = addPlayer(game,IDS[3],'Drew');
+  const token = game.turn.token;
+  const waiting = applyAction(game,action(game,'leave'),{playerId:IDS[3],now:3000});
+  assert.equal(waiting.left,true); game = waiting.state;
+  assert.equal(game.turn.waiting.length,0); assert.equal(game.turn.token,token);
+  const before = clone(game);
+  const leaving = applyAction(game,action(game,'leave'),{playerId:IDS[1],now:4000});
+  assert.equal(leaving.left,true); game = leaving.state;
+  assert.equal(activeId(game),IDS[2]); assert.equal(game.turn.cycle,before.turn.cycle);
+  for (const field of ['word','guesses','strikes','wins','losses']) assert.deepEqual(game[field],before[field]);
+});
+
+const secret = () => toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
+async function subscription(suffix = 'device') {
+  const pair = await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveBits']);
+  return { endpoint:`https://fcm.googleapis.com/fcm/send/${suffix}`,expirationTime:null,
+    keys:{p256dh:toBase64Url(await crypto.subtle.exportKey('raw',pair.publicKey)),auth:toBase64Url(crypto.getRandomValues(new Uint8Array(16)))} };
+}
+async function enablePush(room,socket,suffix = 'device') {
+  const ownerSecret = secret();
+  await send(room,socket,{type:'join',clientId:socket.attachment.clientId,name:socket.attachment.name,ownerSecret});
+  await send(room,socket,{type:'pushSubscribe',requestId:`enable-${suffix}`,subscription:await subscription(suffix)});
+  assert.equal(pushStatus(room.push,socket.attachment.clientId).enabled,true);
+  return ownerSecret;
+}
+
+test('private push identity and VAPID keys persist without appearing in any public snapshot', async () => {
+  const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+  const ownerSecret = await enablePush(room,ctx.sockets[1]);
+  const stored = clone(ctx.stored.get(PUSH_STORE_KEY));
+  const keys = clone(ctx.stored.get(VAPID_KEY_STORAGE_KEY));
+  assert(stored.owners[IDS[1]].secretHash); assert(keys.privateJwk.d);
+  assert(!JSON.stringify(stored).includes(ownerSecret),'only the digest is durable');
+  const publicJson = JSON.stringify(await readState(room));
+  for (const privateValue of [ownerSecret,stored.owners[IDS[1]].secretHash,keys.privateJwk.d,
+    stored.subscriptions[IDS[1]].subscription.endpoint,stored.subscriptions[IDS[1]].subscription.keys.auth]) {
+    assert(!publicJson.includes(privateValue));
+  }
+  const restored = new HangmanRoom(ctx,{}); await restored.ready;
+  await send(restored,ctx.sockets[1],{type:'pushStatus',requestId:'restore'});
+  const reply = ctx.sockets[1].messages.at(-1);
+  assert.equal(reply.type,'push'); assert.equal(reply.enabled,true); assert.equal(reply.publicKey,keys.publicKey);
+  assert.equal(ctx.sockets[0].messages.some(message=>message.requestId==='restore'),false);
+});
+
+test('a public player ID and a stale authorization flag cannot disable another device’s push', async () => {
+  const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+  await enablePush(room,ctx.sockets[1]);
+  const impostor = await pendingSocket(ctx,room);
+  await send(room,impostor,{type:'join',clientId:IDS[1],name:'Same public ID',ownerSecret:secret()});
+  assert.equal(impostor.attachment.pushAuthorized,false);
+  await send(room,impostor,{type:'pushUnsubscribe',requestId:'wrong-owner'});
+  assert.equal(pushStatus(room.push,IDS[1]).enabled,true);
+  assert.equal(impostor.messages.at(-1).status,'failed');
+  impostor.attachment.pushAuthorized = true;
+  impostor.attachment.pushOwnerHash = 'obsolete-owner-hash';
+  await send(room,impostor,{type:'pushUnsubscribe',requestId:'stale-owner'});
+  assert.equal(pushStatus(room.push,IDS[1]).enabled,true);
+});
+
+test('game and turn-notification outbox commit together before publication; a failed write rolls both back', async () => {
+  const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+  await enablePush(room,ctx.sockets[1]);
+  const beforeGame = clone(room.game), beforePush = clone(room.push);
+  const request = action(room.game,'guess',{letter:'P'});
+  ctx.sockets.forEach(socket=>{socket.messages=[];});
+  const originalPut = ctx.storage.put;
+  ctx.storage.put = async (key,value) => {
+    if (key === PUSH_STORE_KEY) throw new Error('outbox durable write failed');
+    await originalPut(key,value);
+  };
+  await send(room,ctx.sockets[0],request);
+  assert.deepEqual(room.game,beforeGame); assert.deepEqual(room.push,beforePush);
+  assert.deepEqual(ctx.stored.get(STORAGE_KEY),beforeGame);
+  assert.deepEqual(ctx.stored.get(PUSH_STORE_KEY),beforePush);
+  assert.equal(ctx.sockets[1].messages.length,0);
+  ctx.storage.put = originalPut;
+  await send(room,ctx.sockets[0],request);
+  assert.equal(room.game.guesses.length,1);
+  const job = room.push.outbox.find(job=>job.kind==='turn');
+  assert(job); assert.equal(job.turnToken,room.game.turn.token);
+  assert.equal(ctx.stored.get(PUSH_STORE_KEY).outbox[0].id,job.id);
+  assert.equal(ctx.sockets[1].messages.at(-1).state.turn.activePlayerId,IDS[1]);
+});
+
+test('a slow or failed notification never blocks the next guess or rolls it back', async () => {
+  const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+  await enablePush(room,ctx.sockets[1]);
+  await send(room,ctx.sockets[0],action(room.game,'guess',{letter:'P'}));
+  let release, started;
+  const gate = new Promise(resolve=>{release=resolve;});
+  const began = new Promise(resolve=>{started=resolve;});
+  room.deliverPush = async task => {
+    assert.equal(ctx.stored.get(PUSH_STORE_KEY).outbox.find(job=>job.id===task.id).attempts,1);
+    started(); await gate;
+    return {ok:false,expired:false,retryable:true,status:503,retryAfterMs:5000};
+  };
+  const delivery = room.flushPush(); await began;
+  await send(room,ctx.sockets[1],action(room.game,'guess',{letter:'A'}));
+  assert.equal(room.game.guesses.length,2);
+  assert.equal(activeId(room.game),IDS[0]);
+  release(); await delivery;
+  assert.equal(room.game.guesses.length,2);
+  assert.equal(room.push.outbox.length,0,'obsolete turn is cancelled before retry');
+  assert.equal(room.game.strikes,0);
+});
+
+test('room alarms combine push retries and player grace without resending a completed turn', async () => {
+  const originalNow = Date.now; let now = 300_000; Date.now = ()=>now;
+  try {
+    const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+    await enablePush(room,ctx.sockets[1]);
+    await send(room,ctx.sockets[0],action(room.game,'guess',{letter:'P'}));
+    let calls = 0;
+    room.deliverPush = async () => ++calls === 1
+      ? {ok:false,expired:false,retryable:true,status:503,retryAfterMs:5000}
+      : {ok:true,expired:false,retryable:false,status:201};
+    await room.flushPush();
+    assert.equal(calls,1); assert.equal(await ctx.storage.getAlarm(),now+5000);
+    now +=5000; await room.alarm();
+    assert.equal(calls,2); assert.equal(room.push.outbox.length,0);
+    await room.commit(room.game); await room.flushPush();
+    assert.equal(calls,2,'a saved turn token deduplicates future reads and restarts');
+    await room.webSocketClose(ctx.sockets[0],1000);
+    assert.equal(await ctx.storage.getAlarm(),now+RECONNECT_GRACE_MS);
+  } finally { Date.now = originalNow; }
+});
+
+test('explicit leave acknowledges every duplicate tab only after durable success', async () => {
+  const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+  const duplicate = await pendingSocket(ctx,room);
+  await send(room,duplicate,{type:'join',clientId:IDS[0],name:'Alex'});
+  const request = action(room.game,'leave');
+  const originalPut = ctx.storage.put;
+  ctx.storage.put = async()=>{throw new Error('save failed');};
+  await send(room,ctx.sockets[0],request);
+  assert.equal(ctx.sockets[0].readyState,1); assert.equal(duplicate.readyState,1);
+  assert.equal(ctx.sockets[0].messages.some(message=>message.type==='left'),false);
+  ctx.storage.put = originalPut;
+  await send(room,ctx.sockets[0],request);
+  for (const socket of [ctx.sockets[0],duplicate]) {
+    assert.equal(socket.messages.at(-1).type,'left'); assert.equal(socket.closeCode,1000);
+  }
+  assert.equal(room.game.turn.order.some(player=>player.id===IDS[0]),false);
+  assert.equal(activeId(room.game),IDS[1]);
+});
+
+test('a connected waiting newcomer cannot be stranded behind one remaining offline push player', () => {
+  let game = fixture(['Sam','Alex']);
+  game = updatePushPreference(game,IDS[1],true,{now:1000}).state;
+  game = guess(game,'P').state; // Alex's turn, after Sam started the cycle.
+  game = addPlayer(game,IDS[2],'Casey');
+  game = applyAction(game,action(game,'leave'),{playerId:IDS[0],now:3000}).state;
+  const online = new Set([IDS[2]]);
+  game = refreshPlayers(game,online,{now:4000}).state;
+  assert.equal(activeId(game),IDS[1]);
+  assert.equal(game.turn.order.length,1); assert.equal(game.turn.waiting.length,1);
+  assert(game.turn.deadlineAt >4000 && game.turn.deadlineAt <=4000+VOTE_FALLBACK_MS);
+  game = refreshPlayers(game,online,{now:game.turn.deadlineAt}).state;
+  assert.equal(game.turn.waiting.length,0);
+  assert(game.turn.order.some(player=>player.id===IDS[2]));
+  game = refreshPlayers(game,online,{now:game.turn.deadlineAt}).state;
+  assert.equal(activeId(game),IDS[2]);
+  assert.equal(game.strikes,0);
+});
+
+test('an additional due notification cannot spin immediate alarms while a delivery is in flight', async () => {
+  const originalNow = Date.now; const now = 400_000; Date.now = ()=>now;
+  try {
+    const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+    await enablePush(room,ctx.sockets[1]);
+    await send(room,ctx.sockets[0],action(room.game,'guess',{letter:'P'}));
+    assert.equal(await ctx.storage.getAlarm(),now);
+    room.dispatching = true;
+    await room.commit(room.game);
+    assert.equal(await ctx.storage.getAlarm(),now+1000);
+    room.dispatching = false;
   } finally { Date.now = originalNow; }
 });

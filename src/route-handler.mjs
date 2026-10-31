@@ -41,7 +41,12 @@ export default {
     headers.set('X-Content-Type-Options','nosniff');
     headers.set('Referrer-Policy','same-origin');
     const socketOrigin = (url.protocol === 'https:' ? 'wss://' : 'ws://') + url.host;
-    headers.set('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' " + socketOrigin + "; img-src 'self' data:; base-uri 'none'; frame-ancestors 'self'");
+    headers.set('Content-Security-Policy',"default-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' " + socketOrigin + "; img-src 'self' data:; base-uri 'none'; frame-ancestors 'self'");
+    if (url.pathname === '/privategames/sw.js') {
+      headers.set('Service-Worker-Allowed','/privategames/');
+      headers.set('Cache-Control','no-store');
+    }
+    if (url.pathname === '/privategames/manifest.webmanifest') headers.set('Content-Type','application/manifest+json; charset=utf-8');
     return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
   }
 };

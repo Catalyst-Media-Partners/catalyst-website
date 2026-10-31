@@ -1,10 +1,13 @@
+import { createTurnNotifications } from './notifications.js?v=3';
+
 (() => {
   'use strict';
   const el = id => document.getElementById(id);
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const keys = new Map();
   const parts = [...document.querySelectorAll('.drawing-part')];
-  let state = null, socket = null, live = false, pending = false, connectedPlayers = [];
+  let state = null, socket = null, live = false, pending = false, connectedPlayers = [], catalog = null;
+  let settingsRound = null, pushConnected = false, serverOffset = 0, seenPassAt = null;
   let retryTimer, heartbeatTimer, pendingTimer, noticeTimer, connectionTimer;
   let retry = 0, lastMessageAt = 0, stopped = false;
   const readStored = key => { try { return localStorage.getItem(key); } catch { return null; } };
@@ -15,7 +18,67 @@
     writeStored('privategames.clientId', clientId);
   }
   let playerName = (readStored('privategames.name') || '').slice(0,24);
+  let ownerSecret = readStored('privategames.pushOwnerSecret');
+  if (!ownerSecret || !/^[A-Za-z0-9_-]{43}$/.test(ownerSecret)) {
+    ownerSecret = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    writeStored('privategames.pushOwnerSecret',ownerSecret);
+  }
+  let leftRoom = readStored('privategames.leftRoom') === '1';
+  stopped = leftRoom;
   el('player-name').value = playerName;
+
+  const notifications = createTurnNotifications({
+    send: message => {
+      if (!live || leftRoom || socket?.readyState !== WebSocket.OPEN) throw new Error('Join the live game first.');
+      socket.send(JSON.stringify(message));
+    },
+    notice,
+  });
+  for (let length=3;length<=15;length++) for (const id of ['min-length','max-length']) {
+    const option = document.createElement('option'); option.value = length; option.textContent = length + ' letters'; el(id).appendChild(option);
+  }
+  el('min-length').value = '3'; el('max-length').value = '15';
+
+  function selectedSettings() {
+    const [mode,seconds] = el('turn-rule').value.split(':');
+    return {vocabulary:el('vocabulary').value,minLength:Number(el('min-length').value),maxLength:Number(el('max-length').value),turnMode:mode,turnSeconds:mode === 'timer' ? Number(seconds) : 90};
+  }
+
+  function selectedWordCount() {
+    if (!catalog?.levels) return null;
+    const selected = selectedSettings();
+    const level = catalog.levels.find(item => item.id === selected.vocabulary);
+    if (!level || selected.minLength > selected.maxLength) return 0;
+    let count = 0;
+    for (let n=selected.minLength;n<=selected.maxLength;n++) count += Number(level.countsByLength?.[n] || 0);
+    return count;
+  }
+
+  function renderSettings() {
+    const current = state?.settings || {vocabulary:'middle',minLength:3,maxLength:15,turnMode:'vote',turnSeconds:90};
+    if (state && settingsRound !== state.roundId) {
+      el('vocabulary').value = current.vocabulary;
+      el('min-length').value = current.minLength;
+      el('max-length').value = current.maxLength;
+      el('turn-rule').value = current.turnMode === 'timer' ? 'timer:' + current.turnSeconds : 'vote';
+      settingsRound = state.roundId;
+    }
+    const labels = {easy:'Easy',middle:'Middle school',advanced:'Advanced',dictionary:'Full dictionary'};
+    const selected = selectedSettings();
+    const lengthLabel = selected.minLength === selected.maxLength ? selected.minLength + ' letters' : selected.minLength + '–' + selected.maxLength + ' letters';
+    el('settings-summary').textContent = labels[selected.vocabulary] + ' · ' + lengthLabel;
+    el('level-label').textContent = 'Shared room · ' + labels[current.vocabulary];
+    const count = selectedWordCount();
+    el('pool-count').textContent = count === null ? 'Loading dictionary…' : count === 0 ? 'No words match. Choose another length or vocabulary level.' : count.toLocaleString() + ' matching words. ' + (myTurn() ? 'Your choices apply when you start the next word.' : 'The current player can apply settings to the next word.');
+    if (catalog?.total) el('dictionary-footer').textContent = catalog.total.toLocaleString() + ' dictionary words · 10 strikes';
+  }
+
+  function renderClock() {
+    const turn = state?.turn;
+    const seconds = turn?.deadlineAt ? Math.max(0,Math.ceil((turn.deadlineAt - Date.now() - serverOffset)/1000)) : null;
+    el('turn-clock').textContent = leftRoom ? 'You left the game' : !live ? 'Reconnecting…' : turn?.paused ? 'Turn clock paused' : seconds !== null ? seconds > 0 ? seconds + 's to play' : 'Updating turn…' : 'Group vote · no rush';
+    el('turn-clock').classList.toggle('urgent',live && seconds !== null && seconds <= 15);
+  }
 
   function notice(message) {
     clearTimeout(noticeTimer);
@@ -37,11 +100,11 @@
     el('turn-notice').classList.toggle('is-mine',mine && live && !reconnecting);
     el('turn-notice').classList.toggle('is-waiting',queued >= 0);
     el('turn-cycle').textContent = turn ? 'PLAYER CYCLE ' + turn.cycle : 'PLAYER CYCLE';
-    el('turn-label').textContent = !live ? 'CONNECTING' : reconnecting ? 'RECONNECTING' : mine ? 'YOUR TURN' : state?.status !== 'playing' ? 'NEXT WORD' : 'CURRENT TURN';
+    el('turn-label').textContent = leftRoom ? 'YOU LEFT THE GAME' : !live ? 'CONNECTING' : reconnecting ? 'WAITING FOR PLAYER' : mine ? 'YOUR TURN' : state?.status !== 'playing' ? 'NEXT WORD' : 'CURRENT TURN';
     el('turn-player').textContent = turn?.activePlayerName || 'Waiting for players';
-    el('turn-detail').textContent = !live ? 'Reconnecting to the saved game.'
+    el('turn-detail').textContent = leftRoom ? 'Tap Rejoin game when you are ready.' : !live ? 'Reconnecting to the saved game.'
       : queued >= 0 ? 'You join after this player cycle.'
-      : reconnecting ? 'Waiting briefly for this player to reconnect.'
+      : reconnecting ? active.pushEnabled ? 'Turn alert enabled. Waiting for this player.' : 'Waiting briefly for this player to reconnect.'
       : mine ? state.status === 'playing' ? 'Choose one letter.' : 'Start the next word for everyone.'
       : turn?.activePlayerId ? 'One letter, then the next player.' : 'Join the game to begin.';
     if (live) el('room-note').textContent = queued >= 0
@@ -57,7 +120,7 @@
     for (const player of ordered.slice(0,16)) {
       const chip = document.createElement('span');
       chip.className = 'player-chip' + (player.id === turn?.activePlayerId ? ' current' : '') + (player.waiting ? ' waiting' : '') + (player.connected === false ? ' disconnected' : '');
-      chip.textContent = (player.position ? player.position + '. ' : '') + (player.name || 'Guest') + (player.id === clientId ? ' (you)' : '') + (player.waiting ? ' · next cycle' : player.connected === false ? ' · reconnecting' : '');
+      chip.textContent = (player.position ? player.position + '. ' : '') + (player.name || 'Guest') + (player.id === clientId ? ' (you)' : '') + (player.waiting ? ' · next cycle' : player.connected === false ? player.pushEnabled ? ' · away' : ' · reconnecting' : '');
       if (player.id === turn?.activePlayerId) chip.setAttribute('aria-current','true');
       el('players').appendChild(chip);
     }
@@ -65,15 +128,31 @@
       const more = document.createElement('span'); more.textContent = '+' + (ordered.length - 16) + ' more';
       el('players').appendChild(more);
     }
+    const vote = turn?.vote;
+    const voters = vote?.voterIds || [];
+    const eligible = vote?.eligibleIds || [];
+    el('pass-turn').hidden = !mine || leftRoom;
+    el('vote-skip').hidden = mine || leftRoom || state?.settings?.turnMode === 'timer';
+    el('vote-skip').textContent = voters.includes(clientId) ? 'Vote recorded · ' + voters.length + '/' + vote.required : 'Vote to skip ' + (turn?.activePlayerName || 'player');
+    el('vote-status').textContent = leftRoom ? 'Your saved game remains available. Rejoining follows the normal turn order.' : queued >= 0 ? 'You can vote after joining the active player cycle.' : state?.settings?.turnMode === 'timer' ? 'The server passes the turn when time runs out. Passing costs no strike.' : eligible.length < 2 ? 'A vote needs at least two other players. Small groups use a 90-second turn timer.' : voters.length + ' of ' + (vote?.required || 2) + ' votes to pass this turn. At least two votes and a majority are required.';
+    el('rejoin-room').hidden = !leftRoom;
+    el('leave-room').hidden = leftRoom;
+    const lastPass = turn?.lastPass;
+    if (lastPass && lastPass.at !== seenPassAt) {
+      if (seenPassAt !== null) notice(lastPass.name + (lastPass.reason === 'vote' ? ' was skipped by the group vote.' : lastPass.reason === 'voluntary' ? ' passed their turn.' : ' ran out of time. The turn has passed.'));
+      seenPassAt = lastPass.at;
+    } else if (seenPassAt === null) seenPassAt = 0;
+    renderClock();
+    notifications.setTurn({mine,turnToken:turn?.token});
   }
 
   function setConnection(connected, count) {
     live = connected;
     el('connection').className = 'connection ' + (connected ? 'live' : state ? 'offline' : '');
-    el('connection-label').textContent = connected
+    el('connection-label').textContent = leftRoom ? 'You left the game' : connected
       ? 'Live · ' + count + (count === 1 ? ' player' : ' players')
       : navigator.onLine ? 'Connecting…' : 'Offline · moves paused';
-    el('room-note').textContent = connected
+    el('room-note').textContent = leftRoom ? 'Tap Rejoin game to return to the shared room.' : connected
       ? 'Everyone at this link shares the same word, guesses, and score.'
       : state ? 'Reconnecting to the saved game. Your board will update automatically.'
       : 'Connecting to the shared game. Your moves are saved after every guess.';
@@ -92,7 +171,12 @@
       button.setAttribute('aria-label', letter + (guess ? guess.correct ? ', correct guess' : ', incorrect guess' : ', guess letter'));
     }
     el('hint-toggle').disabled = !available || !inRoster() || state?.status !== 'playing';
-    el('new-word').disabled = !available || !myTurn();
+    el('new-word').disabled = !available || !myTurn() || selectedWordCount() === 0;
+    el('pass-turn').disabled = !available || !myTurn();
+    const vote = state?.turn?.vote;
+    el('vote-skip').disabled = !available || !inRoster() || myTurn() || !vote?.eligibleIds?.includes(clientId) || vote.eligibleIds.length < 2 || vote.voterIds.includes(clientId);
+    el('leave-room').disabled = !available;
+    el('settings-fields').disabled = !available || !myTurn();
   }
 
   for (const letter of letters) {
@@ -151,6 +235,7 @@
     el('hint-toggle').setAttribute('aria-expanded', String(showClue));
     el('clue').hidden = !showClue;
     el('clue-text').textContent = state.clue || '';
+    renderSettings();
     renderTurns();
     updateControls();
   }
@@ -165,14 +250,19 @@
       retry = 0;
       setConnection(true,connectedPlayers.length);
     }
+    if (Number.isFinite(envelope.serverTime)) serverOffset = envelope.serverTime - Date.now();
+    if (envelope.catalog) catalog = envelope.catalog;
     if (!state || next.revision >= state.revision) {
       state = next; renderState();
     } else updateControls();
+    if (fromSocket && !pushConnected && !leftRoom && connectedPlayers.some(player => player.id === clientId)) {
+      pushConnected = true; notifications.connected();
+    }
   }
 
   function sendAction(type, fields = {}) {
     if (!live || !state || pending || socket?.readyState !== WebSocket.OPEN) return;
-    if ((type === 'guess' || type === 'next') && !myTurn()) return;
+    if ((type === 'guess' || type === 'next' || type === 'pass') && !myTurn()) return;
     if (type === 'hint' && !inRoster()) return;
     pending = true; updateControls();
     try { socket.send(JSON.stringify({type,roundId:state.roundId,turnToken:state.turn?.token,...fields})); }
@@ -200,7 +290,7 @@
     connectionTimer = setTimeout(() => { if (ws.readyState !== WebSocket.OPEN) ws.close(); },10000);
     ws.addEventListener('open',() => {
       clearTimeout(connectionTimer); lastMessageAt = Date.now();
-      ws.send(JSON.stringify({type:'join',clientId,name:playerName}));
+      ws.send(JSON.stringify({type:'join',clientId,name:playerName,ownerSecret,protocol:3}));
       clearInterval(heartbeatTimer);
       heartbeatTimer = setInterval(() => {
         if (ws !== socket || ws.readyState !== WebSocket.OPEN) return;
@@ -213,6 +303,12 @@
       lastMessageAt = Date.now();
       if (event.data === 'pong') return;
       let message; try { message = JSON.parse(event.data); } catch { return; }
+      if (notifications.message(message)) return;
+      if (message.type === 'left') {
+        leftRoom = true; stopped = true; writeStored('privategames.leftRoom','1');
+        pending = false; pushConnected = false; clearTimeout(pendingTimer); notifications.disconnected();
+        setConnection(false,0); ws.close(1000,'Left game'); return;
+      }
       if (message.type === 'state') applySnapshot(message,true);
       if (message.type === 'error') {
         pending = false; clearTimeout(pendingTimer); updateControls();
@@ -222,7 +318,7 @@
     ws.addEventListener('close',() => {
       if (ws !== socket) return;
       clearTimeout(connectionTimer); clearInterval(heartbeatTimer); clearTimeout(pendingTimer);
-      pending = false; setConnection(false,0);
+      pending = false; pushConnected = false; notifications.disconnected(); setConnection(false,0);
       if (!stopped) retryTimer = setTimeout(connect,Math.min(15000,1000 * 2 ** Math.min(retry++,4)) + Math.random()*500);
     });
     ws.addEventListener('error',() => ws.close());
@@ -232,14 +328,30 @@
     event.preventDefault();
     playerName = el('player-name').value.trim().replace(/\s+/g,' ').slice(0,24);
     el('player-name').value = playerName; writeStored('privategames.name',playerName);
-    if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type:'join',clientId,name:playerName}));
+    if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type:'join',clientId,name:playerName,ownerSecret,protocol:3}));
   });
   el('hint-toggle').addEventListener('click',() => sendAction('hint'));
   el('new-word').addEventListener('click',() => {
     if (!state || !live || !myTurn() || pending) return;
     const skip = state.status === 'playing';
     if (skip && state.guesses.length && !confirm('Start a new word for everyone? This skips the current word.')) return;
-    sendAction('next',{skip});
+    if (selectedWordCount() === 0) { notice('Choose a word length and vocabulary level with matching words.'); return; }
+    sendAction('next',{skip,settings:selectedSettings()});
+  });
+  el('pass-turn').addEventListener('click',() => sendAction('pass'));
+  el('vote-skip').addEventListener('click',() => { if (!el('vote-skip').disabled) sendAction('voteSkip'); });
+  el('leave-room').addEventListener('click',() => {
+    if (confirm('Leave this game? You will stop receiving turn alerts until you rejoin.')) sendAction('leave');
+  });
+  el('rejoin-room').addEventListener('click',() => {
+    leftRoom = false; stopped = false; writeStored('privategames.leftRoom','0'); connect();
+  });
+  for (const id of ['vocabulary','min-length','max-length','turn-rule']) el(id).addEventListener('change',() => {
+    if (Number(el('min-length').value) > Number(el('max-length').value)) {
+      if (id === 'min-length') el('max-length').value = el('min-length').value;
+      else el('min-length').value = el('max-length').value;
+    }
+    renderSettings(); updateControls();
   });
   el('share-room').addEventListener('click',async () => {
     const url = new URL('/privategames',location.href).href;
@@ -263,7 +375,10 @@
   window.addEventListener('pagehide',() => {
     stopped = true; clearTimeout(retryTimer); clearInterval(heartbeatTimer); socket?.close(1000,'Leaving page');
   });
-  window.addEventListener('pageshow',() => { stopped = false; connect(); });
+  window.addEventListener('pageshow',() => { stopped = leftRoom; connect(); });
+  setInterval(renderClock,500);
+  renderSettings();
+  renderTurns();
   updateControls();
   fetch('/privategames/api/state',{cache:'no-store'})
     .then(r => { if (!r.ok) throw new Error('No snapshot'); return r.json(); })

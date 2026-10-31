@@ -1,119 +1,164 @@
 import { WORD_BANK } from './words.mjs';
-import { advanceTurns, createTurns, joinTurn, publicTurns, reconcileTurns, renewTurn, validTurns } from './turns.mjs';
+import { normalizeWordSettings, pickWord } from './dictionary.mjs';
+import { advanceTurns, createTurns, joinTurn, migrateTurns, publicTurns, reconcileTurns,
+  removePlayer, renewTurn, setPushPreference, syncTurnRuntime, validTurns } from './turns.mjs';
 
 export const MAX_STRIKES = 10;
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
+export const RECENT_WORD_LIMIT = 100;
+export const DEFAULT_SETTINGS = Object.freeze({ vocabulary: 'middle', minLength: 3, maxLength: 15,
+  turnMode: 'vote', turnSeconds: 90 });
 export { WORD_BANK };
 
 const nextId = () => globalThis.crypto.randomUUID();
 const noChange = (state, code) => ({ state, changed: false, code });
-
-function nextRound(previous, { now, random, makeRoundId, makeTurnToken }) {
-  let bag = previous.bag.filter(word => WORD_BANK.some(entry => entry.word === word));
-  if (!bag.length) {
-    bag = WORD_BANK.map(entry => entry.word);
-    for (let i = bag.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
-    }
-    if (bag.at(-1) === previous.word) {
-      [bag[0], bag[bag.length - 1]] = [bag.at(-1), bag[0]];
-    }
-  }
-  const word = bag.pop();
-  const entry = WORD_BANK.find(candidate => candidate.word === word);
-  return {
-    ...previous,
-    schemaVersion: SCHEMA_VERSION,
-    roundId: makeRoundId(),
-    revision: previous.revision + 1,
-    roundNumber: previous.roundNumber + 1,
-    word: entry.word,
-    clue: entry.clue,
-    bag,
-    guesses: [],
-    strikes: 0,
-    status: 'playing',
-    clueShown: previous.clueEnabled,
-    turn: renewTurn(previous.turn, makeTurnToken),
-    wins: previous.wins,
-    losses: previous.losses,
-    updatedAt: Math.max(now, previous.updatedAt),
-  };
-}
-
-export function createGame({ now = Date.now(), random = Math.random, makeRoundId = nextId, makeTurnToken = nextId } = {}) {
-  return nextRound({
-    bag: [], word: null, revision: 0, roundNumber: 0,
-    wins: 0, losses: 0, updatedAt: 0, clueEnabled: false, turn: createTurns(makeTurnToken),
-  }, { now, random, makeRoundId, makeTurnToken });
-}
-
+const onlineFromTurn = turn => new Set([...turn.order, ...turn.waiting]
+  .filter(player => player.disconnectedAt === null).map(player => player.id));
 const touch = (state, fields, now) => ({ ...state, ...fields,
   revision: state.revision + 1, updatedAt: Math.max(now, state.updatedAt) });
+
+export function normalizeGameSettings(input = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new RangeError('Invalid settings');
+  const settings = { ...DEFAULT_SETTINGS, ...input };
+  const words = normalizeWordSettings({ vocabulary: settings.vocabulary,
+    minLength: settings.minLength, maxLength: settings.maxLength });
+  if (!['vote', 'timer'].includes(settings.turnMode) || ![60, 90, 120].includes(settings.turnSeconds)) {
+    throw new RangeError('Invalid turn settings');
+  }
+  return { ...words, turnMode: settings.turnMode, turnSeconds: settings.turnSeconds };
+}
+
+function nextRound(previous, { now, random, makeRoundId, makeTurnToken, connectedIds, settings = previous.settings }) {
+  const entry = pickWord(settings, { random, excludeWords: previous.recentWords || [] });
+  const next = {
+    ...previous, schemaVersion: SCHEMA_VERSION,
+    roundId: makeRoundId(), revision: previous.revision + 1, roundNumber: previous.roundNumber + 1,
+    word: entry.word, clue: entry.clue, bag: [],
+    recentWords: [...(previous.recentWords || []), entry.word].slice(-RECENT_WORD_LIMIT), settings,
+    guesses: [], strikes: 0, status: 'playing', clueShown: previous.clueEnabled,
+    turn: renewTurn(previous.turn, makeTurnToken),
+    wins: previous.wins, losses: previous.losses, updatedAt: Math.max(now, previous.updatedAt),
+  };
+  next.turn = syncTurnRuntime(next.turn, connectedIds || onlineFromTurn(next.turn), settings, now, { activity: true });
+  return next;
+}
+
+export function createGame({ now = Date.now(), random = Math.random, makeRoundId = nextId,
+  makeTurnToken = nextId, settings = DEFAULT_SETTINGS } = {}) {
+  return nextRound({
+    bag: [], recentWords: [], word: null, revision: 0, roundNumber: 0,
+    wins: 0, losses: 0, updatedAt: 0, clueEnabled: false,
+    turn: createTurns(makeTurnToken, now), settings: normalizeGameSettings(settings),
+  }, { now, random, makeRoundId, makeTurnToken });
+}
 
 export function reserveEntry(state, now = Date.now()) {
   return touch(state, { turn: { ...state.turn, nextEntry: state.turn.nextEntry + 1 } }, now);
 }
 
 export function refreshPlayers(state, connectedIds, { now = Date.now(), makeTurnToken = nextId } = {}) {
-  const result = reconcileTurns(state.turn, connectedIds, now, makeTurnToken);
-  return result.changed ? { state: touch(state, { turn: result.turn }, now), changed: true } : noChange(state);
+  const reconciled = reconcileTurns(state.turn, connectedIds, now, makeTurnToken);
+  let turn = syncTurnRuntime(reconciled.turn, connectedIds, state.settings, now);
+  if (!turn.paused && turn.deadlineAt !== null && now >= turn.deadlineAt) {
+    const current = turn.order[turn.cursor];
+    turn = advanceTurns(turn, makeTurnToken, { now, reason: connectedIds.has(current?.id) ? 'timeout' : 'offline' });
+    turn = syncTurnRuntime(turn, connectedIds, state.settings, now);
+  }
+  return turn !== state.turn ? { state: touch(state, { turn }, now), changed: true } : noChange(state);
 }
 
-export function joinPlayer(state, player, { now = Date.now(), makeTurnToken = nextId } = {}) {
+export function joinPlayer(state, player, { now = Date.now(), makeTurnToken = nextId,
+  connectedIds = onlineFromTurn(state.turn), activity = true } = {}) {
   const result = joinTurn(state.turn, player, makeTurnToken);
-  return result.changed ? { state: touch(state, { turn: result.turn }, now), changed: true } : noChange(state, result.code);
+  if (result.code) return noChange(state, result.code);
+  const online = new Set(connectedIds); online.add(player.id);
+  const turn = syncTurnRuntime(result.turn, online, state.settings, now, { activity });
+  return turn !== state.turn ? { state: touch(state, { turn }, now), changed: true } : noChange(state);
 }
 
-export function migrateGame(state, { makeTurnToken = nextId } = {}) {
+export function updatePushPreference(state, playerId, enabled, { now = Date.now(),
+  connectedIds = onlineFromTurn(state.turn) } = {}) {
+  const next = setPushPreference(state.turn, playerId, enabled);
+  if (next === state.turn) return noChange(state);
+  const turn = syncTurnRuntime(next, connectedIds, state.settings, now);
+  return { state: touch(state, { turn }, now), changed: true };
+}
+
+export function migrateGame(state, { makeTurnToken = nextId, now = Date.now() } = {}) {
   if (state.schemaVersion === SCHEMA_VERSION) return assertStoredGame(state);
-  assertGameFields(state, 1);
-  return { ...state, schemaVersion: SCHEMA_VERSION, clueEnabled: state.clueShown,
-    turn: createTurns(makeTurnToken), revision: state.revision + 1 };
+  if (state.schemaVersion !== 1 && state.schemaVersion !== 2) {
+    throw new Error('Unsupported or damaged privategames state; refusing to overwrite it.');
+  }
+  assertGameFields(state, state.schemaVersion);
+  if (state.schemaVersion === 2 && (!validTurns(state.turn, { legacy: true }) ||
+    typeof state.clueEnabled !== 'boolean' || state.clueEnabled && !state.clueShown)) {
+    throw new Error('Unsupported or damaged privategames turn state; refusing to overwrite it.');
+  }
+  return { ...state, schemaVersion: SCHEMA_VERSION,
+    clueEnabled: state.schemaVersion === 1 ? state.clueShown : state.clueEnabled,
+    settings: { ...DEFAULT_SETTINGS }, recentWords: [state.word],
+    turn: state.schemaVersion === 1 ? createTurns(makeTurnToken, now) : migrateTurns(state.turn, now),
+    revision: state.revision + 1 };
 }
 
-// Pure transitions make an unsuccessful durable write safe: the accepted state
-// remains unchanged until the storage operation has completed successfully.
+// Pure transitions leave the accepted state untouched if a durable write fails.
 export function applyAction(state, action, {
   playerId, now = Date.now(), random = Math.random, makeRoundId = nextId, makeTurnToken = nextId,
+  connectedIds = onlineFromTurn(state.turn),
 } = {}) {
-  if (!action || typeof action !== 'object' || Array.isArray(action)) {
+  if (!action || typeof action !== 'object' || Array.isArray(action) ||
+    !['guess', 'hint', 'next', 'pass', 'voteSkip', 'leave'].includes(action.type)) {
     return noChange(state, 'invalid_action');
   }
-  if (!['guess', 'hint', 'next'].includes(action.type)) {
-    return noChange(state, 'invalid_action');
-  }
-  if (typeof action.roundId !== 'string' || action.roundId !== state.roundId) {
-    return noChange(state, 'stale_round');
-  }
-  if (action.type !== 'hint' && typeof action.turnToken !== 'string') {
-    return noChange(state, 'client_update_required');
-  }
+  if (typeof action.roundId !== 'string' || action.roundId !== state.roundId) return noChange(state, 'stale_round');
+  if (action.type !== 'hint' && typeof action.turnToken !== 'string') return noChange(state, 'client_update_required');
   const player = state.turn.order.find(member => member.id === playerId);
-  if (!player) return noChange(state,
-    state.turn.waiting.some(member => member.id === playerId) ? 'waiting_for_cycle' : 'join_required');
-  if (action.type !== 'hint') {
-    if (action.turnToken !== state.turn.token) return noChange(state, 'stale_turn');
-    if (state.turn.order[state.turn.cursor]?.id !== playerId) return noChange(state, 'out_of_turn');
+  const waiting = state.turn.waiting.find(member => member.id === playerId);
+  if (!player && !(action.type === 'leave' && waiting)) return noChange(state, waiting ? 'waiting_for_cycle' : 'join_required');
+  if (action.type !== 'hint' && action.turnToken !== state.turn.token) return noChange(state, 'stale_turn');
+  const currentId = state.turn.order[state.turn.cursor]?.id;
+  if (['guess', 'next', 'pass'].includes(action.type) && currentId !== playerId) return noChange(state, 'out_of_turn');
+  if (action.type === 'leave') {
+    const result = removePlayer(state.turn, playerId, now, makeTurnToken);
+    const online = new Set(connectedIds); online.delete(playerId);
+    const turn = syncTurnRuntime(result.turn, online, state.settings, now, { activity: true });
+    return { state: touch(state, { turn }, now), changed: true, left: true };
   }
   if (action.type === 'next') {
-    if (state.status === 'playing' && action.skip !== true) {
-      return noChange(state, 'round_in_progress');
+    if (state.status === 'playing' && action.skip !== true) return noChange(state, 'round_in_progress');
+    let settings;
+    try { settings = action.settings === undefined ? state.settings : normalizeGameSettings({ ...state.settings, ...action.settings }); }
+    catch { return noChange(state, 'invalid_settings'); }
+    if (action.settings !== undefined && (!action.settings || typeof action.settings !== 'object' || Array.isArray(action.settings))) {
+      return noChange(state, 'invalid_settings');
     }
-    return { state: nextRound(state, { now, random, makeRoundId, makeTurnToken }), changed: true };
+    return { state: nextRound(state, { now, random, makeRoundId, makeTurnToken, connectedIds, settings }), changed: true };
+  }
+  if (action.type === 'pass') {
+    const turn = syncTurnRuntime(advanceTurns(state.turn, makeTurnToken, { now, reason: 'voluntary' }),
+      connectedIds, state.settings, now, { activity: true });
+    return { state: touch(state, { turn }, now), changed: true };
+  }
+  if (action.type === 'voteSkip') {
+    if (state.settings.turnMode !== 'vote') return noChange(state, 'vote_disabled');
+    if (playerId === currentId) return noChange(state, 'vote_own_turn');
+    let turn = syncTurnRuntime(state.turn, connectedIds, state.settings, now);
+    if (!turn.vote.eligibleIds.includes(playerId) || !connectedIds.has(playerId)) return noChange(state, 'vote_ineligible');
+    if (turn.vote.eligibleIds.length < 2) return noChange(state, 'not_enough_voters');
+    if (turn.vote.voterIds.includes(playerId)) return noChange(state);
+    turn = { ...turn, vote: { ...turn.vote, voterIds: [...turn.vote.voterIds, playerId] } };
+    if (turn.vote.voterIds.length >= turn.vote.required) {
+      turn = advanceTurns(turn, makeTurnToken, { now, reason: 'vote' });
+    }
+    turn = syncTurnRuntime(turn, connectedIds, state.settings, now, { activity: true });
+    return { state: touch(state, { turn }, now), changed: true };
   }
   if (action.type === 'hint') {
     if (state.clueEnabled) return noChange(state);
-    return {
-      state: { ...state, clueShown: true, clueEnabled: true, revision: state.revision + 1,
-        updatedAt: Math.max(now, state.updatedAt) },
-      changed: true,
-    };
+    const turn = syncTurnRuntime(state.turn, connectedIds, state.settings, now, { activity: true });
+    return { state: touch(state, { clueShown: true, clueEnabled: true, turn }, now), changed: true };
   }
-  if (typeof action.letter !== 'string' || !/^[a-z]$/i.test(action.letter)) {
-    return noChange(state, 'invalid_letter');
-  }
+  if (typeof action.letter !== 'string' || !/^[a-z]$/i.test(action.letter)) return noChange(state, 'invalid_letter');
   if (state.status !== 'playing') return noChange(state, 'round_complete');
   const letter = action.letter.toUpperCase();
   if (state.guesses.some(guess => guess.letter === letter)) return noChange(state);
@@ -122,17 +167,11 @@ export function applyAction(state, action, {
   const strikes = state.strikes + (correct ? 0 : 1);
   const solved = [...state.word.toUpperCase()].every(char => guesses.some(guess => guess.letter === char));
   const status = solved ? 'won' : strikes === MAX_STRIKES ? 'lost' : 'playing';
+  const turn = syncTurnRuntime(advanceTurns(state.turn, makeTurnToken), connectedIds, state.settings, now, { activity: true });
   return {
-    state: {
-      ...state, guesses, strikes, status,
-      turn: advanceTurns(state.turn, makeTurnToken),
-      wins: state.wins + (status === 'won' ? 1 : 0),
-      losses: state.losses + (status === 'lost' ? 1 : 0),
-      clueShown: state.clueShown || status !== 'playing',
-      revision: state.revision + 1,
-      updatedAt: Math.max(now, state.updatedAt),
-    },
-    changed: true,
+    state: touch(state, { guesses, strikes, status, turn,
+      wins: state.wins + (status === 'won' ? 1 : 0), losses: state.losses + (status === 'lost' ? 1 : 0),
+      clueShown: state.clueShown || status !== 'playing' }, now), changed: true,
   };
 }
 
@@ -140,23 +179,14 @@ export function publicState(state, connectedIds = new Set()) {
   const guessed = new Set(state.guesses.map(guess => guess.letter));
   const finished = state.status !== 'playing';
   return {
-    roundId: state.roundId,
-    revision: state.revision,
-    roundNumber: state.roundNumber,
+    roundId: state.roundId, revision: state.revision, roundNumber: state.roundNumber,
     mask: [...state.word.toUpperCase()].map(letter => finished || guessed.has(letter) ? letter : null),
-    length: state.word.length,
-    strikes: state.strikes,
-    maxStrikes: MAX_STRIKES,
-    status: state.status,
+    length: state.word.length, strikes: state.strikes, maxStrikes: MAX_STRIKES, status: state.status,
     answer: finished ? state.word.toUpperCase() : null,
-    guesses: state.guesses.map(guess => ({ letter: guess.letter, correct: guess.correct,
-      player: guess.player, at: guess.at })),
-    wins: state.wins,
-    losses: state.losses,
-    clue: state.clueShown ? state.clue : null,
-    clueShown: state.clueShown,
-    updatedAt: state.updatedAt,
-    turn: publicTurns(state.turn, connectedIds),
+    guesses: state.guesses.map(guess => ({ letter: guess.letter, correct: guess.correct, player: guess.player, at: guess.at })),
+    wins: state.wins, losses: state.losses, clue: state.clueShown ? state.clue : null,
+    clueShown: state.clueShown, updatedAt: state.updatedAt,
+    settings: { ...state.settings }, turn: publicTurns(state.turn, connectedIds),
   };
 }
 
@@ -166,35 +196,33 @@ function assertGameFields(state, schemaVersion) {
   const word = value => typeof value === 'string' && /^[a-z]{1,15}$/.test(value);
   const valid = state && state.schemaVersion === schemaVersion &&
     typeof state.roundId === 'string' && state.roundId.length > 0 && state.roundId.length <= 100 &&
-    integer(state.revision) && state.revision >= 1 &&
-    integer(state.roundNumber) && state.roundNumber >= 1 &&
+    integer(state.revision) && state.revision >= 1 && integer(state.roundNumber) && state.roundNumber >= 1 &&
     word(state.word) && typeof state.clue === 'string' && state.clue.length <= 250 &&
-    Array.isArray(state.bag) && state.bag.length <= WORD_BANK.length && state.bag.every(word) &&
-    new Set(state.bag).size === state.bag.length &&
+    Array.isArray(state.bag) && state.bag.length <= WORD_BANK.length && state.bag.every(word) && new Set(state.bag).size === state.bag.length &&
     Array.isArray(state.guesses) && state.guesses.length <= 26 &&
-    state.guesses.every(guess => /^[A-Z]$/.test(guess.letter) &&
-      typeof guess.correct === 'boolean' && typeof guess.player === 'string' &&
-      [...guess.player].length <= 24 && integer(guess.at)) &&
+    state.guesses.every(guess => /^[A-Z]$/.test(guess.letter) && typeof guess.correct === 'boolean' &&
+      typeof guess.player === 'string' && [...guess.player].length <= 24 && integer(guess.at)) &&
     new Set(state.guesses.map(guess => guess.letter)).size === state.guesses.length &&
-    integer(state.strikes) && state.strikes <= MAX_STRIKES &&
-    state.strikes === state.guesses.filter(guess => !guess.correct).length &&
-    ['playing', 'won', 'lost'].includes(state.status) &&
-    typeof state.clueShown === 'boolean' &&
+    integer(state.strikes) && state.strikes <= MAX_STRIKES && state.strikes === state.guesses.filter(guess => !guess.correct).length &&
+    ['playing', 'won', 'lost'].includes(state.status) && typeof state.clueShown === 'boolean' &&
     integer(state.wins) && integer(state.losses) && integer(state.updatedAt);
   const guessLetters = valid ? new Set(state.guesses.map(guess => guess.letter)) : new Set();
   const solved = valid && [...state.word.toUpperCase()].every(letter => guessLetters.has(letter));
   const expectedStatus = solved ? 'won' : state?.strikes === MAX_STRIKES ? 'lost' : 'playing';
   if (!valid || state.status !== expectedStatus ||
     state.guesses.some(guess => guess.correct !== state.word.toUpperCase().includes(guess.letter)) ||
-    (state.status !== 'playing' && !state.clueShown)) {
-    throw new Error('Unsupported or damaged privategames state; refusing to overwrite it.');
-  }
+    (state.status !== 'playing' && !state.clueShown)) throw new Error('Unsupported or damaged privategames state; refusing to overwrite it.');
   return state;
 }
 
 export function assertStoredGame(state) {
   assertGameFields(state, SCHEMA_VERSION);
-  if (typeof state.clueEnabled !== 'boolean' || (state.clueEnabled && !state.clueShown) || !validTurns(state.turn)) {
+  let settings;
+  try { settings = normalizeGameSettings(state.settings); } catch {}
+  if (typeof state.clueEnabled !== 'boolean' || state.clueEnabled && !state.clueShown || !validTurns(state.turn) ||
+    !settings || Object.keys(settings).some(key => settings[key] !== state.settings[key]) ||
+    !Array.isArray(state.recentWords) || state.recentWords.length > RECENT_WORD_LIMIT ||
+    !state.recentWords.every(word => typeof word === 'string' && /^[a-z]{1,15}$/.test(word))) {
     throw new Error('Unsupported or damaged privategames turn state; refusing to overwrite it.');
   }
   return state;

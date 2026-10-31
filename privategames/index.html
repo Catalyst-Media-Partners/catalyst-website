@@ -4,7 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f2e9">
-  <meta name="description" content="Play Hangman with random middle-school vocabulary, words up to 15 letters, and 10 strikes per round.">
+  <meta name="description" content="Play shared Hangman with dictionary words, adjustable vocabulary and word lengths, fair turns, and phone notifications.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hangman">
+  <link rel="manifest" href="/privategames/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/privategames/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/privategames/icon.svg">
   <title>Private Games · Shared Hangman</title>
   <meta name="robots" content="noindex, nofollow">
   <style>
@@ -117,11 +123,39 @@
     .idle-note{top:60%;font-size:16px}
     @media(max-width:700px){.drawing-panel{padding-top:86px;min-height:365px}.turn-notice{left:9px;right:9px}#turn-player{font-size:15px}.turn-detail{font-size:9px}}
     @media(max-width:540px){.drawing-panel{height:260px;min-height:260px;padding:84px 8px 8px}.drawing-panel svg{height:165px;width:144px;margin-top:0}.turn-notice{top:32px;left:12px;right:12px;padding:7px 10px}.turn-label{font-size:8px}#turn-player{font-size:16px}.turn-detail{font-size:10px}.idle-note{top:64%}.room-note{min-height:28px}}
+    .room-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid #d8dece}
+    .small-button{font:inherit;font-size:11px;font-weight:650;border:1px solid #bccbb1;border-radius:8px;background:var(--white);padding:8px 11px;min-height:36px}
+    .small-button:hover:not(:disabled){background:var(--lime)}
+    .small-button:disabled,.text-button:disabled{opacity:.45}
+    .text-button{font:inherit;font-size:11px;border:0;background:none;padding:7px 4px;text-decoration:underline;text-underline-offset:3px;color:var(--muted)}
+    #leave-room{margin-left:auto}
+    .push-status{font-size:10px;line-height:1.5;color:var(--muted);margin:8px 0 0}
+    .install-help{font-size:11px;color:var(--green);margin-top:8px;line-height:1.6}
+    .install-help p{margin:6px 0 0;max-width:600px}
+    summary{cursor:pointer;touch-action:manipulation}
+    .turn-controls{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+    .turn-clock{font-size:11px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+    .turn-clock.urgent{color:var(--red)}
+    .turn-buttons{display:flex;gap:7px}
+    .vote-status{flex-basis:100%;margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
+    .game-settings{margin-top:22px;border:1px solid var(--line);border-radius:10px;background:#fffefa;padding:12px 14px}
+    .game-settings summary{font-size:12px;font-weight:700;color:var(--green)}
+    #settings-summary{display:block;font-weight:400;font-size:10px;color:var(--muted);margin:4px 0 0 15px}
+    .game-settings fieldset{border:0;padding:0;margin:14px 0 10px;min-width:0}
+    .settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .settings-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);min-width:0}
+    .settings-grid select{font:inherit;font-size:14px;width:100%;min-width:0;padding:8px 5px;color:var(--ink);border:1px solid #cdd4c3;border-radius:7px;background:white;min-height:40px}
+    .settings-grid select:focus-visible{outline:2px solid #789252;outline-offset:2px}
+    .settings-grid select:disabled{opacity:.6}
+    .settings-note{font-size:10px;line-height:1.5;color:var(--muted);margin:7px 0 0}
+    #pool-count{font-weight:650;color:var(--green)}
+    footer a{color:var(--muted);text-underline-offset:3px}
+    @media(max-width:540px){.room-tools{gap:7px}.small-button{font-size:10px;min-height:36px}.turn-controls{gap:8px;margin-bottom:17px}.turn-buttons{gap:6px}.vote-status{font-size:10px}.game-settings{padding:12px}.settings-grid select{font-size:16px}.turn-clock{font-size:10px}.text-button{font-size:10px}footer{flex-wrap:wrap}.turn-notice{min-height:60px}}
   </style>
 </head>
 <body>
   <div class="shell">
-    <header><div class="brand"><span class="brandmark" aria-hidden="true">W</span> WORD LAB</div><span class="level">Shared room · Middle school</span></header>
+    <header><div class="brand"><span class="brandmark" aria-hidden="true">W</span> WORD LAB</div><span class="level" id="level-label">Shared room · Middle school</span></header>
     <div class="intro">
       <div><h1>Hangman.</h1><p>One word. One team. Play together from any phone.</p></div>
       <div class="score" aria-label="Shared room score"><div class="score-item"><strong id="wins">0</strong><span>Wins</span></div><div class="score-item"><strong id="losses">0</strong><span>Losses</span></div></div>
@@ -130,6 +164,15 @@
       <div class="room-top"><div class="connection" id="connection" role="status"><span class="connection-dot" aria-hidden="true"></span><span id="connection-label">Connecting…</span></div><button class="share-button" id="share-room" type="button">Share room ↗</button></div>
       <div class="room-bottom"><form id="name-form" class="name-form"><label for="player-name">Your name</label><input id="player-name" name="name" maxlength="24" placeholder="Guest" autocomplete="nickname"><button type="submit">Save</button></form><div class="players" id="players" aria-label="Players in the room"></div></div>
       <p class="room-note" id="room-note">Everyone at this link shares the same word, guesses, and score.</p>
+      <div class="room-tools">
+        <button class="small-button" id="push-enable" type="button" disabled>Enable turn alerts</button>
+        <button class="small-button" id="push-test" type="button" hidden>Test alert</button>
+        <button class="text-button" id="push-disable" type="button" hidden>Turn alerts off</button>
+        <button class="text-button" id="leave-room" type="button" disabled>Leave game</button>
+        <button class="small-button" id="rejoin-room" type="button" hidden>Rejoin game</button>
+      </div>
+      <p class="push-status" id="push-status" role="status">Optional phone alerts when it is your turn.</p>
+      <details class="install-help" id="install-help" hidden><summary>Enable alerts on iPhone</summary><p>Open this link in Safari. Tap Share, then Add to Home Screen. Open the new Hangman icon, tap Enable turn alerts, and choose Allow.</p></details>
     </section>
     <p class="notice" id="notice" role="status" hidden></p>
     <main aria-label="Hangman game">
@@ -164,14 +207,16 @@
       </div>
       <section class="strike-area" aria-label="Strike counter"><div class="strike-heading"><span class="remaining" id="remaining">10 strikes left</span><span class="strike-count" id="strike-count">0 / 10 strikes</span></div><div class="strike-track" id="strike-track" aria-hidden="true"></div></section>
       <section class="keyboard-area" aria-label="Guess a letter">
+        <div class="turn-controls" aria-label="Turn controls"><span class="turn-clock" id="turn-clock">Group vote</span><div class="turn-buttons"><button class="small-button" id="pass-turn" type="button" disabled>Pass my turn</button><button class="small-button" id="vote-skip" type="button" disabled>Vote to skip</button></div><p class="vote-status" id="vote-status" role="status"></p></div>
         <div class="keyboard-header"><span class="eyebrow">Pick a letter</span><span class="keyboard-help">Tap a key or use A–Z</span></div>
         <div class="keyboard" id="keyboard"></div>
+        <details class="game-settings" id="game-settings"><summary>New game settings <span id="settings-summary">Middle school · 3–15 letters</span></summary><fieldset id="settings-fields" disabled><legend class="sr-only">Settings for the next word</legend><div class="settings-grid"><label>Vocabulary<select id="vocabulary"><option value="easy">Easy</option><option value="middle" selected>Middle school</option><option value="advanced">Advanced</option><option value="dictionary">Full dictionary</option></select></label><label>Shortest word<select id="min-length" aria-label="Shortest word"></select></label><label>Longest word<select id="max-length" aria-label="Longest word"></select></label><label>Turn rule<select id="turn-rule"><option value="vote">Group vote · 90s fallback</option><option value="timer:60">60-second timer</option><option value="timer:90">90-second timer</option><option value="timer:120">120-second timer</option></select></label></div></fieldset><p class="settings-note" id="pool-count">Loading dictionary…</p><p class="settings-note">Applies to the next word. Vocabulary levels estimate familiarity. A skip vote needs at least two players; small groups use a 90-second timer.</p></details>
         <div class="actions"><button class="new-word" id="new-word"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h3c4 0 4 10 8 10h3M3 15h3c1.5 0 2.5-1.5 3.4-3M10.6 8C11.5 6.5 12.5 5 14 5h3M14 2l3 3-3 3M14 12l3 3-3 3"/></svg><span id="new-word-label">New random word</span></button><p class="rule-note">One letter per turn.<br>Clues stay on once enabled.</p></div>
       </section>
     </main>
-    <footer><span>50 words · Up to 15 letters · 10 strikes</span><span>Saved after every move. Ready when you return.</span></footer>
+    <footer><span id="dictionary-footer">Dictionary words · 3–15 letters · 10 strikes</span><a href="/privategames/dictionary.html" target="_blank" rel="noopener">Dictionary sources &amp; word levels</a></footer>
     <noscript><p>This game needs JavaScript enabled in your browser.</p></noscript>
   </div>
-  <script src="/privategames/game.js?v=2" defer></script>
+  <script src="/privategames/game.js?v=3" type="module"></script>
 </body>
 </html>
