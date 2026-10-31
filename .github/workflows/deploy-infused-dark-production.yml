@@ -1,28 +1,18 @@
-name: Deploy INFUSED production data plane
+name: Deploy INFUSED single-site Worker
 
 on:
   push:
-    branches:
-      - infused-show
-      - release/infused-dark-production-inf1-20261030
+    branches: [infused-show]
     paths:
       - .github/workflows/deploy-infused-dark-production.yml
       - .github/workflows/deploy-infused.yml
-      - dropjourney/deploy-mode
-      - dropjourney/intake.mjs
-      - dropjourney/worker.mjs
-      - dropjourney/build.mjs
-      - dropjourney/src/**
-      - dropjourney/content/**
-      - dropjourney/scripts/qa.mjs
-      - dropjourney/scripts/qa_native_intake.mjs
-      - dropjourney/scripts/qa_dark_worker.mjs
-      - dropjourney/scripts/visual_qa.py
-      - dropjourney/wrangler.dark-canary.template.toml
-      - dropjourney/wrangler.dark-production-acceptance.template.toml
-      - dropjourney/wrangler.dark-production.template.toml
-      - src/worker.mjs
+      - .github/workflows/deploy-infused-dark-canary.yml
+      - .github/workflows/verify-infused-pr.yml
+      - build.mjs
+      - src/**
+      - dropjourney/**
       - scripts/verify-cloudflare.mjs
+      - scripts/verify-click-links.mjs
       - wrangler.toml
   workflow_dispatch:
 
@@ -30,28 +20,19 @@ permissions:
   contents: read
 
 concurrency:
-  group: infused-dark-production-rollout
+  group: infused-single-site-production
   cancel-in-progress: false
 
 jobs:
   deploy:
-    if: (github.ref == 'refs/heads/infused-show' || github.ref == 'refs/heads/release/infused-dark-production-inf1-20261030') && github.actor == 'PASS-LH'
+    if: github.ref == 'refs/heads/infused-show' && github.actor == 'PASS-LH'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Check out reviewed production candidate
+      - name: Check out the single-site source of truth
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-
-      - name: Read explicit rollout mode
-        id: mode
-        run: |
-          set -euo pipefail
-          mode="$(tr -d '[:space:]' < dropjourney/deploy-mode)"
-          [[ "$mode" == "acceptance" || "$mode" == "production" ]] || { echo "Invalid deploy-mode: $mode"; exit 1; }
-          echo "mode=$mode" >> "$GITHUB_OUTPUT"
-          echo "INFUSED rollout mode: $mode"
 
       - name: Set up Node 22
         uses: actions/setup-node@v4
@@ -63,163 +44,156 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build and validate production-root assets
-        working-directory: dropjourney
+      - name: Build the light source and the unified dark/light Worker assets
         env:
           TURNSTILE_SITEKEY: '0x4AAAAAAFthzCYCdmh8aVv8'
         run: |
           set -euo pipefail
-          node --check build.mjs
-          node --check worker.mjs
-          node --check intake.mjs
-          node --check ticket-notify.mjs
-          node --check src/intake-form.mjs
-          node --check src/intake.js
-          node --check src/ticket-notify.js
-          INFUSED_MODE=production node build.mjs
-          INFUSED_MODE=production node scripts/qa.mjs
-          INFUSED_MODE=production SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=production INTAKE_TEST_MODE=true TURNSTILE_SITEKEY="$TURNSTILE_SITEKEY" node scripts/qa_native_intake.mjs
-          node scripts/qa_dark_worker.mjs
+          npm run build
+          npm run check
+          npm run test:w02
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install chromium
+          node scripts/verify-click-links.mjs
+          node --check dropjourney/build.mjs
+          node --check dropjourney/worker.mjs
+          node --check dropjourney/booth-attribution.mjs
+          node --check dropjourney/intake.mjs
+          node --check dropjourney/ticket-notify.mjs
+          INFUSED_MODE=production TURNSTILE_SITEKEY="$TURNSTILE_SITEKEY" node dropjourney/build.mjs
+          INFUSED_MODE=production node dropjourney/scripts/qa.mjs
+          INFUSED_MODE=production SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=production INTAKE_TEST_MODE=true TURNSTILE_SITEKEY="$TURNSTILE_SITEKEY" node dropjourney/scripts/qa_native_intake.mjs
+          node dropjourney/scripts/qa_ticket_notify.mjs
+          node dropjourney/scripts/qa_dark_worker.mjs
+          node scripts/verify-cloudflare.mjs
 
       - name: Run responsive and interaction browser QA
-        working-directory: dropjourney
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install playwright==1.56.0
           python -m playwright install --with-deps chromium
-          INFUSED_MODE=production python scripts/visual_qa.py
+          INFUSED_MODE=production python dropjourney/scripts/visual_qa.py
 
-      - name: Verify production D1, SES bridge, Turnstile and domain isolation before deployment
+      - name: Verify exact production baseline and shared services
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
-          MODE: ${{ steps.mode.outputs.mode }}
         run: |
           set -euo pipefail
           [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'Missing Cloudflare API token'; exit 1; }
-          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/catalyst-revenue/settings" > /tmp/revenue-settings.json
-          jq -e '.success == true' /tmp/revenue-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "INFUSED_INTAKE_DB" and .database_id == "13188d57-a463-445d-b341-9479ac3a4558")] | length) == 1' /tmp/revenue-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "INFUSED_INTAKE_DB_PRODUCTION" and .database_id == "2082f84e-bacd-4ef2-8902-265eda67e4d1")] | length) == 1' /tmp/revenue-settings.json >/dev/null
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/secrets" > /tmp/dark-secrets.json
-          jq -e '.success == true and any(.result[]?; .name == "TURNSTILE_SECRET") and any(.result[]?; .name == "TURNSTILE_SECRET_PRODUCTION")' /tmp/dark-secrets.json >/dev/null
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/challenges/widgets/0x4AAAAAAFthzCYCdmh8aVv8" > /tmp/production-turnstile.json
-          jq -e '.success == true and (.result.domains | index("dark.infused.show") != null) and (.result.domains | index("infused.show") != null)' /tmp/production-turnstile.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-before.json
           jq -e '.success == true' /tmp/domains-before.json >/dev/null
-          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-before.json >/dev/null
-          if [[ "$MODE" == "acceptance" ]]; then
-            jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-before.json >/dev/null
-          else
-            jq -e '([.result[]? | select(.hostname == "infused.show" and (.service == "infused-show" or .service == "infused-dark"))] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and (.service == "infused-show" or .service == "infused-dark"))] | length) == 1' /tmp/domains-before.json >/dev/null
-            jq -e '([.result[]? | select(.hostname == "light.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-before.json >/dev/null
-          fi
-          # Production D1 schema, zero non-test rows, and one synthetic test
-          # submission with SES outbox state=sent were verified directly before
-          # this release. The GitHub Actions API token cannot query this D1
-          # endpoint (HTTP 403), so do not make the deployment depend on it.
+          for hostname in infused.show www.infused.show dark.infused.show; do
+            jq -e --arg host "$hostname" '([.result[]? | select(.hostname == $host and .service == "infused-dark")] | length) == 1' /tmp/domains-before.json >/dev/null
+          done
+          jq -e '([.result[]? | select(.hostname == "light.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-before.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/settings" > /tmp/dark-before.json
+          jq -e '.success == true' /tmp/dark-before.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_DB" and .database_id == "4fc7440c-c340-47c4-a75f-96f4e7ad7441")] | length) == 1' /tmp/dark-before.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_SES" and .service == "catalyst-revenue" and .entrypoint == "InfusedIntakeSESBridge")] | length) == 1' /tmp/dark-before.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/catalyst-revenue/settings" > /tmp/revenue-before.json
+          jq -e '.success == true and any(.result.bindings[]?; .name == "DB" and .database_id == "4fc7440c-c340-47c4-a75f-96f4e7ad7441")' /tmp/revenue-before.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-show/settings" > /tmp/light-before.json
+          jq -e '.success == true and any(.result.bindings[]?; .name == "AUDIENCE_DB" and .database_id == "4fc7440c-c340-47c4-a75f-96f4e7ad7441")' /tmp/light-before.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/secrets" > /tmp/dark-secrets-before.json
+          jq -e '.success == true and any(.result[]?; .name == "TURNSTILE_SECRET") and any(.result[]?; .name == "TURNSTILE_SECRET_PRODUCTION")' /tmp/dark-secrets-before.json >/dev/null
+          echo "Verified existing public routes, canonical D1, shared SES backend, and protected Turnstile secrets."
 
-      - name: Deploy synthetic production-data acceptance version
-        if: steps.mode.outputs.mode == 'acceptance'
-        working-directory: dropjourney
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx --yes wrangler@4.102.0 deploy --config wrangler.dark-production-acceptance.template.toml
-
-      - name: Deploy final production version
-        if: steps.mode.outputs.mode == 'production'
-        working-directory: dropjourney
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx --yes wrangler@4.102.0 deploy --config wrangler.dark-production.template.toml
-
-      - name: Verify production Worker and promote dark root homepage
+      - name: Deploy the single INFUSED site Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
-          MODE: ${{ steps.mode.outputs.mode }}
+        run: npx --yes wrangler@4.102.0 deploy --config wrangler.toml
+
+      - name: Verify the new Worker has no light-site or booth proxy bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
         run: |
           set -euo pipefail
-          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
           auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/settings" > /tmp/dark-settings.json
-          jq -e '.success == true' /tmp/dark-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "INTAKE_DB" and .database_id == "2082f84e-bacd-4ef2-8902-265eda67e4d1")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "INTAKE_SES" and .service == "catalyst-revenue" and .entrypoint == "InfusedIntakeSESBridge")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "BOOTH_ATTRIBUTION" and .service == "infused-show")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "LIGHT_SITE" and .service == "infused-show")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "INTAKE_ENVIRONMENT" and .text == "production")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          jq -e '([.result.bindings[]? | select(.name == "TICKET_NOTIFY_ENABLED" and .text == "false")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          if [[ "$MODE" == "acceptance" ]]; then
-            jq -e '([.result.bindings[]? | select(.name == "SITE_MODE" and .text == "canary")] | length) == 1' /tmp/dark-settings.json >/dev/null
-            jq -e '([.result.bindings[]? | select(.name == "INTAKE_TEST_MODE" and .text == "true")] | length) == 1' /tmp/dark-settings.json >/dev/null
-            jq -e '([.result.bindings[]? | select(.name == "SITE_ALLOWED_HOSTS" and .text == "dark.infused.show")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          else
-            jq -e '([.result.bindings[]? | select(.name == "SITE_MODE" and .text == "production")] | length) == 1' /tmp/dark-settings.json >/dev/null
-            jq -e '([.result.bindings[]? | select(.name == "INTAKE_TEST_MODE" and .text == "false")] | length) == 1' /tmp/dark-settings.json >/dev/null
-            jq -e '([.result.bindings[]? | select(.name == "SITE_ALLOWED_HOSTS" and .text == "infused.show,dark.infused.show,www.infused.show")] | length) == 1' /tmp/dark-settings.json >/dev/null
-          fi
-          if [[ "$MODE" == "production" ]]; then
-            # The light Worker must be live as a redirect-only hostname before the root moves.
-            light_ready=false
-            for attempt in $(seq 1 30); do
-              light_status="$(curl --silent --show-error --max-time 15 -D /tmp/light-host-headers -o /dev/null -w '%{http_code}' https://light.infused.show/ || true)"
-              light_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/light-host-headers | tail -n 1)"
-              if [[ "$light_status" == "308" && "$light_location" == "https://infused.show/lander/" ]]; then light_ready=true; break; fi
-              sleep 10
-            done
-            [[ "$light_ready" == "true" ]] || { echo "light.infused.show is not yet redirecting to the single /lander/ page"; exit 1; }
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/settings" > /tmp/dark-after.json
+          jq -e '.success == true' /tmp/dark-after.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.type == "d1")] | length) == 1' /tmp/dark-after.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_DB" and .database_id == "4fc7440c-c340-47c4-a75f-96f4e7ad7441")] | length) == 1' /tmp/dark-after.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_SES" and .service == "catalyst-revenue" and .entrypoint == "InfusedIntakeSESBridge")] | length) == 1' /tmp/dark-after.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "LIGHT_SITE" or .name == "BOOTH_ATTRIBUTION")] | length) == 0' /tmp/dark-after.json >/dev/null
+          jq -e 'any(.result.bindings[]?; .name == "ASSETS" and .type == "assets")' /tmp/dark-after.json >/dev/null
+          for name in TURNSTILE_SECRET TURNSTILE_SECRET_PRODUCTION; do
+            jq -e --arg name "$name" 'any(.result.bindings[]?; .name == $name and .type == "secret_text")' /tmp/dark-after.json >/dev/null
+          done
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/schedules" > /tmp/dark-schedules.json
+          jq -e '.success == true and any(.result.schedules[]?; .cron == "*/5 * * * *")' /tmp/dark-schedules.json >/dev/null
 
-            # Move the apex and www custom domains from the light Worker to the dark Worker.
-            # The operation is idempotent and restores the old assignment if attach fails.
-            for hostname in infused.show www.infused.show; do
-              curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains?hostname=$hostname" > /tmp/domain-current.json
-              current_service="$(jq -r '.result[0].service // empty' /tmp/domain-current.json)"
-              domain_id="$(jq -r '.result[0].id // empty' /tmp/domain-current.json)"
-              if [[ "$current_service" == "infused-dark" ]]; then
-                echo "$hostname already routes to infused-dark"
-                continue
-              fi
-              [[ "$current_service" == "infused-show" && -n "$domain_id" ]] || { echo "Unexpected Worker owner for $hostname: $current_service"; exit 1; }
-              curl --fail --silent --show-error --max-time 30 -X DELETE "${auth[@]}" "$base/workers/domains/$domain_id" > /tmp/domain-detach.json
-              jq -e '.success == true' /tmp/domain-detach.json >/dev/null
-              if ! curl --fail --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data "{\"hostname\":\"$hostname\",\"service\":\"infused-dark\"}" > /tmp/domain-attach.json || ! jq -e '.success == true' /tmp/domain-attach.json >/dev/null; then
-                curl --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data "{\"hostname\":\"$hostname\",\"service\":\"infused-show\"}" >/tmp/domain-rollback.json || true
-                echo "Failed to attach $hostname to infused-dark; attempted to restore infused-show"
-                exit 1
-              fi
-            done
-          fi
+      - name: Smoke-test dark root, embedded light landing page, and shared assets
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 30 -D /tmp/apex-headers -o /tmp/apex.html https://infused.show/
+          grep -qi '^X-DropJourney-Version: 2.9.3-single-worker' /tmp/apex-headers
+          grep -q 'FROM ROOTS' /tmp/apex.html
+          curl --fail --silent --show-error --max-time 30 -D /tmp/lander-headers -o /tmp/lander.html https://infused.show/lander/
+          grep -q '<base href="/">' /tmp/lander.html
+          grep -q 'https://infused.show/lander/' /tmp/lander.html
+          grep -q 'href="/assets/css/site.css"' /tmp/lander.html
+          grep -q 'src="/assets/js/cta-attribution.js"' /tmp/lander.html
+          grep -qi '^X-Robots-Tag: index, follow' /tmp/lander-headers
+          curl --fail --silent --show-error --max-time 30 -D /tmp/lander-css-headers -o /dev/null https://infused.show/assets/css/site.css
+          grep -qi '^content-type: text/css' /tmp/lander-css-headers
+          curl --fail --silent --show-error --max-time 30 -D /tmp/lander-js-headers -o /dev/null https://infused.show/assets/js/cta-attribution.js
+          grep -qi '^content-type:.*javascript' /tmp/lander-js-headers
+          dark_status="$(curl --silent --show-error --max-time 15 -D /tmp/dark-headers -o /dev/null -w '%{http_code}' https://dark.infused.show/)"
+          [[ "$dark_status" == "200" ]] || { echo "dark alias failed: $dark_status"; exit 1; }
+          grep -qi '^X-Robots-Tag: noindex, nofollow, noarchive' /tmp/dark-headers
+          www_status="$(curl --silent --show-error --max-time 15 -D /tmp/www-headers -o /dev/null -w '%{http_code}' https://www.infused.show/)"
+          www_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/www-headers | tail -n 1)"
+          [[ "$www_status" == "308" && "$www_location" == "https://infused.show/" ]] || { echo "www canonical redirect failed"; exit 1; }
 
+      - name: Move the light hostname to the same Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains?hostname=light.infused.show" > /tmp/light-domain.json
+          service="$(jq -r '.result[0].service // empty' /tmp/light-domain.json)"
+          domain_id="$(jq -r '.result[0].id // empty' /tmp/light-domain.json)"
+          if [[ "$service" == "infused-show" && -n "$domain_id" ]]; then
+            curl --fail --silent --show-error --max-time 30 -X DELETE "${auth[@]}" "$base/workers/domains/$domain_id" > /tmp/light-detach.json
+            jq -e '.success == true' /tmp/light-detach.json >/dev/null
+            if ! curl --fail --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data '{"hostname":"light.infused.show","service":"infused-dark"}' > /tmp/light-attach.json || ! jq -e '.success == true' /tmp/light-attach.json >/dev/null; then
+              curl --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data '{"hostname":"light.infused.show","service":"infused-show"}' > /tmp/light-rollback.json || true
+              echo "Failed to move light.infused.show; attempted to restore its previous Worker assignment" >&2
+              exit 1
+            fi
+          elif [[ "$service" != "infused-dark" ]]; then
+            echo "Unexpected light hostname service: $service" >&2
+            exit 1
+          fi
+          light_status="$(curl --silent --show-error --max-time 20 -D /tmp/light-host-headers -o /dev/null -w '%{http_code}' https://light.infused.show/ || true)"
+          light_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/light-host-headers | tail -n 1)"
+          [[ "$light_status" == "308" && "$light_location" == "https://infused.show/lander/" ]] || { echo "light hostname redirect failed"; exit 1; }
+
+      - name: Retire the old light Worker and verify one public site Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl --fail --silent --show-error --max-time 30 -X DELETE "${auth[@]}" "$base/workers/scripts/infused-show" > /tmp/old-worker-delete.json
+          jq -e '.success == true' /tmp/old-worker-delete.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts" > /tmp/workers-after.json
+          jq -e '.success == true and ([.result[]? | select(.id == "infused-show")] | length) == 0' /tmp/workers-after.json >/dev/null
           curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-after.json
           jq -e '.success == true' /tmp/domains-after.json >/dev/null
-          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-after.json >/dev/null
-          jq -e '([.result[]? | select(.hostname == "light.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-after.json >/dev/null
-          if [[ "$MODE" == "production" ]]; then
-            jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-dark")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-after.json >/dev/null
-
-            curl --fail --silent --show-error --max-time 30 -D /tmp/apex-headers -o /tmp/apex.html https://infused.show/
-            grep -qi '^X-DropJourney-Version: 2.9.2-native-intake' /tmp/apex-headers
-            grep -q 'FROM ROOTS' /tmp/apex.html
-
-            curl --fail --silent --show-error --max-time 30 -D /tmp/lander-headers -o /tmp/lander.html https://infused.show/lander/
-            grep -q '<base href="/">' /tmp/lander.html
-            grep -q 'https://infused.show/lander/' /tmp/lander.html
-            grep -qi '^X-Robots-Tag: index, follow' /tmp/lander-headers
-            curl --fail --silent --show-error --max-time 30 -D /tmp/lander-css-headers -o /dev/null https://infused.show/lander/assets/css/site.css
-            grep -qi '^content-type: text/css' /tmp/lander-css-headers
-
-            www_status="$(curl --silent --show-error --max-time 15 -D /tmp/www-headers -o /dev/null -w '%{http_code}' https://www.infused.show/)"
-            www_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/www-headers | tail -n 1)"
-            [[ "$www_status" == "308" && "$www_location" == "https://infused.show/" ]] || { echo "www canonical redirect failed"; exit 1; }
-          else
-            jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-after.json >/dev/null
-          fi
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-show/deployments?per_page=1" > /tmp/light-worker-after.json
-          jq -e '.success == true and (.result.deployments[0].versions | any(.percentage == 100))' /tmp/light-worker-after.json >/dev/null
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/deployments?per_page=1" > /tmp/dark-deployments.json
-          jq -e '.success == true and (.result.deployments[0].versions | any(.percentage == 100))' /tmp/dark-deployments.json >/dev/null
-          echo "INFUSED dark ${MODE} deployment verified; dark is the root homepage and light exists only at /lander/."
+          for hostname in infused.show www.infused.show dark.infused.show light.infused.show; do
+            jq -e --arg host "$hostname" '([.result[]? | select(.hostname == $host and .service == "infused-dark")] | length) == 1' /tmp/domains-after.json >/dev/null
+          done
+          echo "INFUSED consolidated: one public website Worker, one canonical D1, one shared Catalyst revenue backend."

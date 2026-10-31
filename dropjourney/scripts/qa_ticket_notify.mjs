@@ -75,7 +75,8 @@ const darkStatus=await handleTicketRequest(new Request('https://dark.infused.sho
 assert.deepEqual(await darkStatus.json(),{enabled:false},'ticket notifications remain disabled on the root-path canary');
 const darkSubscribe=await handleTicketRequest(new Request('https://dark.infused.show/tickets/api/subscribe',{method:'POST',headers:{Origin:'https://dark.infused.show','Content-Type':'application/json'},body:JSON.stringify({email:'ticket-qa@example.com',turnstile:'synthetic-test-token'})}),darkEnv,fetcher);
 assert.equal(darkSubscribe.status,503,'root-path canary must not activate ticket notifications');
-const ticket=await readFile(path.join(root,'dist/dropjourneytest/tickets/index.html'),'utf8');
+const buildDir=process.env.INFUSED_MODE==='production'?'production':'dropjourneytest';
+const ticket=await readFile(path.join(root,'dist',buildDir,'tickets/index.html'),'utf8');
 assert.match(ticket,/id="ticket-notify-form"/);
 assert.match(ticket,/name="email" type="email"/);
 assert.doesNotMatch(ticket,/name="fullName"|name="company"|name="attendeeRole"|name="categories"|data-intake-kind="attendee"/);

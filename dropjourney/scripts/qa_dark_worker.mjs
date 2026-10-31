@@ -1,71 +1,82 @@
 import assert from 'node:assert/strict';
 import worker from '../worker.mjs';
-const page='<!doctype html><html lang="en"><head><meta name="robots" content="noindex,nofollow,noarchive"></head><body><main><h1>INFUSED</h1></main></body></html>';
+
+const darkPage='<!doctype html><html lang="en"><head><meta name="robots" content="noindex, nofollow, noarchive"></head><body><main><h1>INFUSED DARK</h1></main></body></html>';
+const lightPage='<!doctype html><html lang="en"><head><meta name="robots" content="noindex, nofollow, noarchive"><base href="/"><link rel="stylesheet" href="/assets/css/site.css"><script src="/assets/js/cta-attribution.js" defer></script></head><body><main><h1>INFUSED LIGHT LANDER</h1><a href="/market/">Light page link</a><img src="/assets/images/light.webp" alt="Light asset"></main></body></html>';
+const assetRequests=[];
 const assets={async fetch(request){
- const u=new URL(request.url);
+ const u=new URL(request.url);assetRequests.push(u.pathname);
  if(u.pathname==='/sitemap.xml')return new Response('<?xml version="1.0"?><urlset><url><loc>https://infused.show/</loc></url></urlset>',{headers:{'Content-Type':'application/xml'}});
- return new Response(page,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'synthetic'}});
+ if(u.pathname.endsWith('/lander/index.html'))return new Response(lightPage,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'light-synthetic'}});
+ if(u.pathname.endsWith('/assets/css/site.css'))return new Response('body{color:#201929}',{status:200,headers:{'Content-Type':'text/css; charset=utf-8'}});
+ if(u.pathname.endsWith('/assets/js/cta-attribution.js'))return new Response('/* first-party CTA */',{status:200,headers:{'Content-Type':'text/javascript; charset=utf-8'}});
+ if(u.pathname.endsWith('/assets/images/light.webp'))return new Response('image',{status:200,headers:{'Content-Type':'image/webp'}});
+ return new Response(darkPage,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'dark-synthetic'}});
 }};
+const allowed='infused.show,www.infused.show,dark.infused.show,light.infused.show';
 const call=(host,path='/',extra={})=>worker.fetch(new Request('https://'+host+path),{
- SITE_BASE_PATH:'/',SITE_MODE:'canary',SITE_ALLOWED_HOSTS:'dark.infused.show,infused.show,www.infused.show',ASSETS:assets,...extra
+ SITE_BASE_PATH:'/',SITE_MODE:'canary',SITE_ALLOWED_HOSTS:allowed,ASSETS:assets,...extra
 });
+
 const canary=await call('dark.infused.show');
 const canaryHtml=await canary.text();
 assert.equal(canary.status,200);
 assert.equal(canary.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
 assert.ok(canaryHtml.includes('<meta name="robots" content="noindex, nofollow, noarchive">'));
 assert.ok(canaryHtml.includes('<link rel="canonical" href="https://infused.show/">'));
-assert.equal(canary.headers.get('x-dropjourney-version'),'2.9.2-native-intake');
+assert.equal(canary.headers.get('x-dropjourney-version'),'2.9.3-single-worker');
+
 const production=await call('infused.show','/',{SITE_MODE:'production'});
 const productionHtml=await production.text();
 assert.equal(production.status,200);
 assert.equal(production.headers.get('x-robots-tag'),'index, follow');
 assert.ok(productionHtml.includes('<meta name="robots" content="index, follow">'));
 assert.ok(productionHtml.includes('<link rel="canonical" href="https://infused.show/">'));
+
 const subpage=await call('infused.show','/market/',{SITE_MODE:'production'});
 assert.ok((await subpage.text()).includes('https://infused.show/market/'));
-const lightPage='<!doctype html><html lang="en"><head><meta name="robots" content="index, follow"><link rel="canonical" href="https://infused.show/"><link rel="stylesheet" href="/assets/css/site.css"></head><body><a href="/market/">Light page link</a><img src="/assets/images/light.webp"></body></html>';
-let lightRequestUrl='';
-const lightAssetRequestUrls=[];
-const lightSite={async fetch(request){
- const u=new URL(request.url);
- if(u.pathname.startsWith('/assets/')){
-  lightAssetRequestUrls.push(u.pathname);
-  const type=u.pathname.endsWith('.css')?'text/css':'image/webp';
-  return new Response('light asset',{status:200,headers:{'Content-Type':type}});
- }
- lightRequestUrl=request.url;
- return new Response(lightPage,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'light-synthetic'}});
-}};
-const lightLander=await call('infused.show','/lander/?utm_source=route-test',{SITE_MODE:'production',LIGHT_SITE:lightSite});
-const lightLanderHtml=await lightLander.text();
-assert.equal(lightLander.status,200);
-assert.equal(lightRequestUrl,'https://infused.show/?utm_source=route-test','Light service must receive the existing homepage asset with query parameters');
-assert.ok(lightLanderHtml.includes('<base href="/">'),'Light page navigation must resolve from the dark site root');
-assert.ok(lightLanderHtml.includes('<link rel="stylesheet" href="/lander/assets/css/site.css">'),'Absolute light CSS paths must be isolated under /lander/assets');
-assert.ok(lightLanderHtml.includes('<img src="/lander/assets/images/light.webp">'),'Absolute light image paths must be isolated under /lander/assets');
-assert.ok(lightLanderHtml.includes('<a href="/market/">Light page link</a>'),'Light page navigation must continue into the dark site');
-assert.ok(lightLanderHtml.includes('<link rel="canonical" href="https://infused.show/lander/">'),'Light page canonical must be the single /lander path');
-assert.ok(lightLanderHtml.includes('<meta name="robots" content="index, follow">'));
-assert.equal(lightLander.headers.get('x-robots-tag'),'index, follow');
-const lightCss=await call('infused.show','/lander/assets/css/site.css',{SITE_MODE:'production',LIGHT_SITE:lightSite});
-assert.equal(lightCss.status,200);
-assert.equal(lightCss.headers.get('Content-Type'),'text/css');
-assert.equal(lightAssetRequestUrls.at(-1),'/assets/css/site.css','Light stylesheet must be fetched from the original light Worker');
-const lightAsset=await call('infused.show','/lander/assets/images/light.webp',{SITE_MODE:'production',LIGHT_SITE:lightSite});
-assert.equal(lightAsset.status,200);
-assert.equal(lightAssetRequestUrls.at(-1),'/assets/images/light.webp','Light images must be fetched from the original light Worker');
-const lightNoSlash=await call('infused.show','/lander?utm_source=route-test',{SITE_MODE:'production',LIGHT_SITE:lightSite});
-assert.equal(lightNoSlash.status,308);
-assert.equal(lightNoSlash.headers.get('location'),'https://infused.show/lander/?utm_source=route-test');
-const darkAliasLander=await call('dark.infused.show','/lander/',{LIGHT_SITE:lightSite});
-assert.equal(darkAliasLander.status,308,'Dark canary alias must not publish a second light-page URL');
+
+const lander=await call('infused.show','/lander/?utm_source=route-test',{SITE_MODE:'production'});
+const landerHtml=await lander.text();
+assert.equal(lander.status,200);
+assert.ok(landerHtml.includes('<base href="/">'));
+assert.ok(landerHtml.includes('<link rel="stylesheet" href="/assets/css/site.css">'));
+assert.ok(landerHtml.includes('<script src="/assets/js/cta-attribution.js" defer>'));
+assert.ok(landerHtml.includes('<a href="/market/">Light page link</a>'));
+assert.ok(landerHtml.includes('<link rel="canonical" href="https://infused.show/lander/">'));
+assert.ok(landerHtml.includes('<meta name="robots" content="index, follow">'));
+assert.equal(lander.headers.get('x-robots-tag'),'index, follow');
+assert.ok(assetRequests.includes('/lander/index.html'));
+
+const css=await call('infused.show','/assets/css/site.css',{SITE_MODE:'production'});
+assert.equal(css.status,200);
+assert.equal(css.headers.get('Content-Type'),'text/css; charset=utf-8');
+const js=await call('infused.show','/assets/js/cta-attribution.js',{SITE_MODE:'production'});
+assert.equal(js.status,200);
+assert.match(await js.text(),/first-party CTA/);
+const image=await call('infused.show','/assets/images/light.webp',{SITE_MODE:'production'});
+assert.equal(image.status,200);
+assert.equal(image.headers.get('Content-Type'),'image/webp');
+
+const landerNoSlash=await call('infused.show','/lander?utm_source=route-test',{SITE_MODE:'production'});
+assert.equal(landerNoSlash.status,308);
+assert.equal(landerNoSlash.headers.get('location'),'https://infused.show/lander/?utm_source=route-test');
+const landerIndex=await call('infused.show','/lander/index.html',{SITE_MODE:'production'});
+assert.equal(landerIndex.status,308);
+assert.equal(landerIndex.headers.get('location'),'https://infused.show/lander/');
+const noLanderSubpage=await call('infused.show','/lander/market/',{SITE_MODE:'production'});
+assert.equal(noLanderSubpage.status,404);
+
+const lightAlias=await call('light.infused.show','/anything/?utm_source=route-test',{SITE_MODE:'production'});
+assert.equal(lightAlias.status,308);
+assert.equal(lightAlias.headers.get('location'),'https://infused.show/lander/?utm_source=route-test');
+const darkAliasLander=await call('dark.infused.show','/lander/',{SITE_MODE:'production'});
+assert.equal(darkAliasLander.status,308);
 assert.equal(darkAliasLander.headers.get('location'),'https://infused.show/lander/');
-const noLightBinding=await call('infused.show','/lander/',{SITE_MODE:'production'});
-assert.equal(noLightBinding.status,503,'Light route must fail closed if its Worker service binding is absent');
 const www=await call('www.infused.show','/',{SITE_MODE:'production'});
 assert.equal(www.status,308);
 assert.equal(www.headers.get('location'),'https://infused.show/');
+
 const unknown=await call('evil.example');
 assert.equal(unknown.status,421);
 const canaryRobots=await call('dark.infused.show','/robots.txt');
@@ -79,29 +90,51 @@ assert.equal(productionSitemap.status,200);
 const legacy=await call('infused.show','/getting-started/',{SITE_MODE:'production'});
 assert.equal(legacy.status,301);
 assert.equal(legacy.headers.get('location'),'https://infused.show/');
-let boothTarget='';
-const booth=await worker.fetch(new Request('https://dark.infused.show/go/booth?position=hero&utm_campaign=inf1'),{
- SITE_BASE_PATH:'/',SITE_MODE:'canary',SITE_ALLOWED_HOSTS:'dark.infused.show',
- BOOTH_ATTRIBUTION:{async fetch(request){boothTarget=request.url;return Response.redirect('https://shows.map-dynamics.com/infusedlv2027/?register=',302);}}
-});
-assert.equal(booth.status,302);
-assert.equal(new URL(boothTarget).hostname,'infused.show');
-assert.equal(new URL(boothTarget).searchParams.get('utm_campaign'),'inf1');
-const noBoothBinding=await call('infused.show','/go/booth',{SITE_MODE:'production'});
-assert.equal(noBoothBinding.status,503);
+
+const recorded=[];
+const clickDb={prepare(sql){
+ assert.match(sql,/INSERT INTO web_acquisition_clicks_v1/);
+ return {bind(...values){return {async run(){recorded.push(values);return {success:true};}};}};
+}};
+const tracked=await call('infused.show','/go/booth?position=navigation&page=%2Flander%2F&utm_source=qa&utm_campaign=single-worker',{SITE_MODE:'production',INTAKE_DB:clickDb});
+assert.equal(tracked.status,302);
+const checkout=new URL(tracked.headers.get('location'));
+assert.equal(checkout.origin,'https://shows.map-dynamics.com');
+assert.equal(checkout.pathname,'/infusedlv2027/');
+assert.ok(checkout.searchParams.has('register'));
+assert.equal(checkout.searchParams.has('catalyst_click_id'),false);
+assert.equal(recorded.length,1);
+assert.equal(recorded[0][1],'LV27');
+assert.equal(recorded[0][2],'infused.show');
+assert.equal(recorded[0][3],'/lander/');
+assert.equal(recorded[0][4],'navigation');
+assert.equal(recorded[0][6],'qa');
+assert.equal(recorded[0][8],'single-worker');
+
+const noDb=await call('infused.show','/go/booth',{SITE_MODE:'production'});
+assert.equal(noDb.status,302);
+assert.equal(new URL(noDb.headers.get('location')).origin,'https://shows.map-dynamics.com');
+
+const previewClick=await call('dark.infused.show','/go/booth?utm_campaign=preview',{SITE_MODE:'canary',INTAKE_DB:clickDb});
+assert.equal(previewClick.status,302);
+assert.equal(recorded.length,1);
+
 const intakeUnavailable=await worker.fetch(new Request('https://dark.infused.show/api/intake',{method:'POST',headers:{Origin:'https://dark.infused.show','Content-Type':'application/json'},body:'{}'}),{
- SITE_BASE_PATH:'/',SITE_MODE:'canary',SITE_ALLOWED_HOSTS:'dark.infused.show',ASSETS:assets
+ SITE_BASE_PATH:'/',SITE_MODE:'canary',SITE_ALLOWED_HOSTS:allowed,ASSETS:assets
 });
-assert.equal(intakeUnavailable.status,503,'Root intake route must resolve and fail closed when not provisioned');
+assert.equal(intakeUnavailable.status,503);
 const ticketStatus=await call('dark.infused.show','/tickets/api/status',{TICKET_NOTIFY_ENABLED:'false'});
 assert.deepEqual(await ticketStatus.json(),{enabled:false});
+
 const preview=await worker.fetch(new Request('https://infused.show/dropjourneytest/'),{
- SITE_BASE_PATH:'/dropjourneytest/',SITE_MODE:'preview',SITE_ALLOWED_HOSTS:'infused.show',ASSETS:assets
+ SITE_BASE_PATH:'/dropjourneytest/',SITE_MODE:'preview',SITE_ALLOWED_HOSTS:allowed,ASSETS:assets
 });
 assert.equal(preview.status,200);
 assert.equal(preview.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
-const previewIntake=await worker.fetch(new Request('https://infused.show/dropjourneytest/api/intake',{method:'POST',headers:{Origin:'https://infused.show','Content-Type':'application/json'},body:'{}'}),{
- SITE_BASE_PATH:'/dropjourneytest/',SITE_MODE:'preview',SITE_ALLOWED_HOSTS:'infused.show',ASSETS:assets
+const previewLander=await worker.fetch(new Request('https://infused.show/dropjourneytest/lander/'),{
+ SITE_BASE_PATH:'/dropjourneytest/',SITE_MODE:'preview',SITE_ALLOWED_HOSTS:allowed,ASSETS:assets
 });
-assert.equal(previewIntake.status,503);
-console.log('PASS INFUSED dark Worker: root/canary host policy, robots/canonical, legacy redirects, same-origin intake path, disabled ticket notices and booth attribution service binding');
+assert.equal(previewLander.status,200);
+assert.equal(previewLander.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
+
+console.log('PASS INFUSED single Worker: dark root, embedded light /lander, shared assets, direct D1 booth attribution, canonical host redirects, intake and disabled ticket notices');

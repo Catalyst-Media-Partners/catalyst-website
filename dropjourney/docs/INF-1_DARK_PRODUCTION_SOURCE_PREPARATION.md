@@ -1,3 +1,5 @@
+**Historical record only (superseded 2026-10-31): the split-worker architecture below has been replaced by one public infused-dark Worker serving both the dark root and light /lander/ page. Do not recreate infused-show, separate intake D1 databases, or Worker-to-Worker service bindings.**
+
 # INF-1: Dark production source preparation
 
 **Status:** INF-1 accepted; INF-2 canary deployed and isolated on 2026-10-30. Manual real-browser Turnstile form acceptance remains open.  

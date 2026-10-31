@@ -1,14 +1,22 @@
-# infused.show standalone hosting cutover | verified 2026-10-14
+# infused.show standalone hosting cutover | current architecture verified 2026-10-31
 
-## Deployment source of truth
+## Current deployment source of truth
 
-- GitHub: `Catalyst-Media-Partners/catalyst-website`, independent branch `infused-show`. Do NOT merge this into Catalyst `main` or deploy to Catalyst's Worker.
-- Infused release: v1b.2 migration hardening, preserving all 14 approved v1b.1 pages and their public content, images and links.
-- Build: `npm run build` regenerates ignored `public/`; `npm run check`; `node scripts/verify-cloudflare.mjs`.
-- GitHub Actions: `.github/workflows/deploy-infused.yml`; push to `infused-show` with authorized repository actor deploys ONLY Worker `infused-show` in Cloudflare account `Catalyst_Media_Partners`.
-- Cloudflare Worker: `infused-show` with Workers static assets, `keep_vars = true`, and unchanged account binding.
-- Preview: `https://infused-show.cannacon-org-s-account.workers.dev/`. Preview host disallows indexing.
-- Production hostnames already assigned as custom Worker domains: `infused.show` and `www.infused.show`; www issues a 308 redirect to the apex. The Worker serves production-only canonical links, a 14-URL sitemap, and allow-indexing robots metadata upon receiving the production hostname.
+- GitHub: Catalyst-Media-Partners/catalyst-website, source branch infused-show.
+- Public INFUSED website Worker: infused-dark only.
+- Shared backend: catalyst-revenue, also used by CannaCon. It is not a second website Worker.
+- Root config: wrangler.toml; static assets: dropjourney/dist/production/.
+- Canonical production D1: catalyst-audience-prod, ID 4fc7440c-c340-47c4-a75f-96f4e7ad7441. The site binds it once as INTAKE_DB.
+- Private email service: INTAKE_SES -> catalyst-revenue / InfusedIntakeSESBridge.
+- infused.show/: dark Drop Journey.
+- infused.show/lander/: original light landing page, embedded in the same Worker asset bundle. It shares the root /assets/ directory and has its own canonical URL.
+- www.infused.show: 308 redirect to apex.
+- dark.infused.show: noindex alias to the dark experience.
+- light.infused.show: redirect-only alias to https://infused.show/lander/.
+- Booth attribution runs inside the site Worker and writes to the canonical D1 table web_acquisition_clicks_v1. No service binding to another website Worker exists.
+- The old infused-show Worker and its independent deployment workflow are retired. The root wrangler.toml is the only deployment configuration for the public site.
+
+Build order: npm run build, npm run check, npm run test:w02, then INFUSED_MODE=production node dropjourney/build.mjs. The single production deployment is performed by .github/workflows/deploy-infused-dark-production.yml after QA. Ticket notifications remain disabled. No DNS records or registrar nameservers are changed by this Worker consolidation.
 
 ## GoDaddy DNS cutover
 

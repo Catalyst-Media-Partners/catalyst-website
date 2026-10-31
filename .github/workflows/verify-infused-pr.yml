@@ -1,4 +1,4 @@
-name: INFUSED website pull-request validation
+name: INFUSED single-site pull-request validation
 
 on:
   pull_request:
@@ -11,24 +11,51 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out candidate site source
+      - name: Check out candidate source
         uses: actions/checkout@v4
       - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Build all INFUSED site pages
-        run: npm run build
-      - name: Validate navigation, pricing, event details and assets
-        run: npm run check
-      - name: Test INFUSED ticket notification, verification and unsubscribe with mock email
-        run: npm run test:w02
-      - name: Verify responsive layout at 320px through 2560px in Chromium
+      - name: Set up Python for visual QA
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and validate the original light site source
         run: |
+          npm run build
+          npm run check
+          npm run test:w02
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx playwright install chromium
+          node scripts/verify-click-links.mjs
+      - name: Build and validate the unified production Worker assets
+        env:
+          INFUSED_MODE: production
+          TURNSTILE_SITEKEY: '0x4AAAAAAFthzCYCdmh8aVv8'
+        run: |
+          node --check dropjourney/build.mjs
+          node --check dropjourney/worker.mjs
+          node --check dropjourney/booth-attribution.mjs
+          node --check dropjourney/intake.mjs
+          node --check dropjourney/ticket-notify.mjs
+          node dropjourney/build.mjs
+          node dropjourney/scripts/qa.mjs
+          SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=production INTAKE_TEST_MODE=true node dropjourney/scripts/qa_native_intake.mjs
+          node dropjourney/scripts/qa_ticket_notify.mjs
+          node dropjourney/scripts/qa_dark_worker.mjs
+          node scripts/verify-cloudflare.mjs
+      - name: Verify responsive layout of the original light site
+        run: |
+          npx playwright install chromium
           node scripts/verify-responsive.mjs
-      - name: Browser-test campaign-to-CTA handoff without cookies
-        run: node scripts/verify-click-links.mjs
-      - name: Verify INFUSED-only Worker and routing contract
-        run: node scripts/verify-cloudflare.mjs
+      - name: Verify responsive and interaction layout of the Drop Journey
+        env:
+          INFUSED_MODE: production
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          python dropjourney/scripts/visual_qa.py
+
+# Validation only. This workflow does not deploy Workers, change domains, provision D1, or write secrets.

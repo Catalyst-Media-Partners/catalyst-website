@@ -38,21 +38,30 @@ The source's market sizing, program statements, external exhibitor inquiry desti
 
 The v1b.1 ZIP is a complete self-contained source baseline with `public/` excluded; the build regenerates it. **Do not overlay it on v1.x**. Extract into a fresh directory or archive/remove the old `infused_site` folder first. Production deployment, domain routing, and forms are out of scope.
 
-## Independent Cloudflare deployment preparation
+## Current Cloudflare deployment architecture (October 31, 2026)
 
-The approved v1b.0 copy, imagery and source-derived pages are unchanged. For
-standalone deployment, `wrangler.toml` configures the separate Cloudflare Worker
-`infused-show`. Only the exact future hostnames `infused.show` and
-`www.infused.show` will receive production indexable metadata. Workers.dev and
-any other preview host remain `noindex` and disallow web crawlers.
+INFUSED uses **one public website Worker**, matching CannaCon's single-public-Worker pattern.
 
-- Build: `npm run build`
-- Structural checks: `npm run check`
-- Worker/hostname contract test: `node scripts/verify-cloudflare.mjs`
-- Deployment (authorized): `npx wrangler@4.102.0 deploy --name infused-show`
-- Registrar and DNS steps: `docs/DOMAIN_CUTOVER.md`
-- Do not add a custom domain until the Cloudflare zone is active and DNS is
-  reconciled. No existing Catalyst or CannaCon Workers or DNS are changed.
+- infused.show/: dark Drop Journey homepage.
+- infused.show/lander/: original light landing page, built into the same static asset bundle.
+- www.infused.show: 308 redirect to the apex.
+- dark.infused.show: noindex alias to the dark site.
+- light.infused.show: redirect-only alias to /lander/; it does not serve a separate site.
+- dropjourney/booth-attribution.mjs: first-party Map Dynamics handoff and anonymous click logging, using the same canonical D1 binding as the website.
+- catalyst-revenue: shared Catalyst backend for SES and operational services. It is not a second INFUSED website Worker.
+
+The retired infused-show Worker, its separate deployment workflow, and the light/booth service bindings have been removed. The single site Worker binds catalyst-audience-prod once and the existing catalyst-revenue / InfusedIntakeSESBridge service once. Ticket notifications remain disabled.
+
+Build and validate from the repository root:
+
+1. npm run build
+2. npm run check
+3. npm run test:w02
+4. INFUSED_MODE=production node dropjourney/build.mjs
+5. node dropjourney/scripts/qa_dark_worker.mjs
+6. node scripts/verify-cloudflare.mjs
+
+The only production deployment config is the root wrangler.toml. GitHub Actions deploys infused-dark after QA. No separate preview Worker is required.
 
 ## v1b.1 quality release
 

@@ -1,5 +1,24 @@
 # INF-3: INFUSED production cutover package
 
+**Current status (2026-10-31): Superseded by the single-Worker consolidation. Do not execute the historical split-worker, separate-D1 or separate-SES-binding steps below.**
+
+## Current production architecture
+
+- One public website Worker: infused-dark.
+- infused.show/ serves the dark Drop Journey.
+- infused.show/lander/ serves the original light landing page from the same static asset bundle.
+- www.infused.show redirects to apex; dark.infused.show is a noindex alias; light.infused.show redirects to /lander/.
+- One production D1: catalyst-audience-prod / 4fc7440c-bacd-4ef2-8902-265eda67e4d1, bound once as INTAKE_DB.
+- One shared private email service: catalyst-revenue / InfusedIntakeSESBridge, bound as INTAKE_SES.
+- Booth attribution is implemented directly in dropjourney/booth-attribution.mjs; no Worker-to-Worker proxy remains.
+- The former infused-show Worker is retired after the light.infused.show custom domain is moved to infused-dark.
+- Ticket notifications remain disabled.
+
+The original cutover plan below is retained as a historical audit trail. Its separate infused-intake-production database, duplicate D1 bindings, LIGHT_SITE and BOOTH_ATTRIBUTION service bindings, and two-Worker deployment steps are obsolete.
+
+---
+
+
 **Status:** Prepared for review. No production D1, production SES routing, light-host publication, apex/www reassignment or production deployment has been performed.  
 **Date:** 2026-10-30  
 **Prerequisite:** Complete the manual INF-2 Turnstile and system-notes acceptance in `INF-2_CANARY_ACCEPTANCE.md`. The synthetic SES outbox delivery is complete; the normal-browser form challenge remains open.  
