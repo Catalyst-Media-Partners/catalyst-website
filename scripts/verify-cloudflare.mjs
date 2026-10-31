@@ -139,9 +139,9 @@ const safeDefault = await worker.fetch(new Request(
 assert.equal(safeDefault.status,302);
 assert.equal(recorded.length,3);
 const lightTracked = await worker.fetch(new Request('https://light.infused.show/go/booth?position=navigation&page=%2Fopportunities%2F'),{AUDIENCE_DB:clickDb,LIGHT_HOST_PUBLISHED:'true'});
-assert.equal(lightTracked.status,302);
-assert.equal(recorded.length,4);
-assert.equal(recorded[3][2],'light.infused.show','Light-site clicks retain their actual site hostname');
+assert.equal(lightTracked.status,308,'The retired light hostname must never serve a separate booth route');
+assert.equal(lightTracked.headers.get('location'),'https://infused.show/lander/?position=navigation&page=%2Fopportunities%2F');
+assert.equal(recorded.length,3,'Redirecting the retired light hostname must not create an extra booth click');
 const originalMapd = new URL(safeDefault.headers.get('location'));
 assert.equal(originalMapd.origin,'https://shows.map-dynamics.com');
 assert.ok(originalMapd.searchParams.has('register'));
