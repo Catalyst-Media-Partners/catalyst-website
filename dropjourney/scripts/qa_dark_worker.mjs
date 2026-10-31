@@ -24,12 +24,16 @@ assert.ok(productionHtml.includes('<meta name="robots" content="index, follow">'
 assert.ok(productionHtml.includes('<link rel="canonical" href="https://infused.show/">'));
 const subpage=await call('infused.show','/market/',{SITE_MODE:'production'});
 assert.ok((await subpage.text()).includes('https://infused.show/market/'));
-const lightPage='<!doctype html><html lang="en"><head><meta name="robots" content="index, follow"><link rel="canonical" href="https://infused.show/"><link rel="stylesheet" href="./assets/site.css"></head><body><a href="./market/">Light page link</a><img src="./assets/light.webp"></body></html>';
+const lightPage='<!doctype html><html lang="en"><head><meta name="robots" content="index, follow"><link rel="canonical" href="https://infused.show/"><link rel="stylesheet" href="/assets/css/site.css"></head><body><a href="/market/">Light page link</a><img src="/assets/images/light.webp"></body></html>';
 let lightRequestUrl='';
-let lightAssetRequestUrl='';
+const lightAssetRequestUrls=[];
 const lightSite={async fetch(request){
  const u=new URL(request.url);
- if(u.pathname.startsWith('/assets/')){lightAssetRequestUrl=request.url;return new Response('light asset',{status:200,headers:{'Content-Type':'image/webp'}});}
+ if(u.pathname.startsWith('/assets/')){
+  lightAssetRequestUrls.push(u.pathname);
+  const type=u.pathname.endsWith('.css')?'text/css':'image/webp';
+  return new Response('light asset',{status:200,headers:{'Content-Type':type}});
+ }
  lightRequestUrl=request.url;
  return new Response(lightPage,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','ETag':'light-synthetic'}});
 }};
@@ -38,15 +42,19 @@ const lightLanderHtml=await lightLander.text();
 assert.equal(lightLander.status,200);
 assert.equal(lightRequestUrl,'https://infused.show/?utm_source=route-test','Light service must receive the existing homepage asset with query parameters');
 assert.ok(lightLanderHtml.includes('<base href="/">'),'Light page navigation must resolve from the dark site root');
-assert.ok(lightLanderHtml.includes('<link rel="stylesheet" href="/lander/assets/site.css">'),'Light page styles must remain isolated under /lander/assets');
-assert.ok(lightLanderHtml.includes('<img src="/lander/assets/light.webp">'),'Light page images must remain isolated under /lander/assets');
-assert.ok(lightLanderHtml.includes('<a href="./market/">Light page link</a>'),'Light page navigation must continue into the dark site');
+assert.ok(lightLanderHtml.includes('<link rel="stylesheet" href="/lander/assets/css/site.css">'),'Absolute light CSS paths must be isolated under /lander/assets');
+assert.ok(lightLanderHtml.includes('<img src="/lander/assets/images/light.webp">'),'Absolute light image paths must be isolated under /lander/assets');
+assert.ok(lightLanderHtml.includes('<a href="/market/">Light page link</a>'),'Light page navigation must continue into the dark site');
 assert.ok(lightLanderHtml.includes('<link rel="canonical" href="https://infused.show/lander/">'),'Light page canonical must be the single /lander path');
 assert.ok(lightLanderHtml.includes('<meta name="robots" content="index, follow">'));
 assert.equal(lightLander.headers.get('x-robots-tag'),'index, follow');
-const lightAsset=await call('infused.show','/lander/assets/light.webp',{SITE_MODE:'production',LIGHT_SITE:lightSite});
+const lightCss=await call('infused.show','/lander/assets/css/site.css',{SITE_MODE:'production',LIGHT_SITE:lightSite});
+assert.equal(lightCss.status,200);
+assert.equal(lightCss.headers.get('Content-Type'),'text/css');
+assert.equal(lightAssetRequestUrls.at(-1),'/assets/css/site.css','Light stylesheet must be fetched from the original light Worker');
+const lightAsset=await call('infused.show','/lander/assets/images/light.webp',{SITE_MODE:'production',LIGHT_SITE:lightSite});
 assert.equal(lightAsset.status,200);
-assert.equal(lightAssetRequestUrl,'https://infused.show/assets/light.webp','Light assets must be fetched from the original light Worker under the /lander/assets prefix');
+assert.equal(lightAssetRequestUrls.at(-1),'/assets/images/light.webp','Light images must be fetched from the original light Worker');
 const lightNoSlash=await call('infused.show','/lander?utm_source=route-test',{SITE_MODE:'production',LIGHT_SITE:lightSite});
 assert.equal(lightNoSlash.status,308);
 assert.equal(lightNoSlash.headers.get('location'),'https://infused.show/lander/?utm_source=route-test');

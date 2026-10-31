@@ -209,7 +209,7 @@ jobs:
             grep -q '<base href="/">' /tmp/lander.html
             grep -q 'https://infused.show/lander/' /tmp/lander.html
             grep -qi '^X-Robots-Tag: index, follow' /tmp/lander-headers
-            curl --fail --silent --show-error --max-time 30 -D /tmp/lander-css-headers -o /dev/null https://infused.show/lander/assets/site.css
+            curl --fail --silent --show-error --max-time 30 -D /tmp/lander-css-headers -o /dev/null https://infused.show/lander/assets/css/site.css
             grep -qi '^content-type: text/css' /tmp/lander-css-headers
 
             www_status="$(curl --silent --show-error --max-time 15 -D /tmp/www-headers -o /dev/null -w '%{http_code}' https://www.infused.show/)"
