@@ -1,3 +1,5 @@
+**Historical record only (superseded 2026-10-31): the two-Worker canary/production architecture below is retired. The current production site uses one public infused-dark Worker, one canonical D1, and the shared catalyst-revenue backend. Do not recreate infused-show, infused-dropjourneytest, or the old canary D1 bindings.**
+
 # INF-2: INFUSED dark canary deployment and acceptance
 
 **Status:** Canary deployed and hostname attached; automated browser acceptance and synthetic SES outbox delivery passed. One real-human Turnstile form submission remains unverified because the headless browser did not receive a token.  
