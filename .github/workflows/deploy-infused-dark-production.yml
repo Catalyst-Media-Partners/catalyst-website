@@ -131,7 +131,8 @@ jobs:
 
       - name: Smoke-test dark root, embedded light landing page, and shared assets
         run: |
-          set -euo pipefail
+          set -euxo pipefail
+          trap 'echo "Smoke test diagnostics"; for f in /tmp/apex-headers /tmp/lander-headers /tmp/lander-css-headers /tmp/lander-js-headers /tmp/dark-headers /tmp/www-headers; do if [[ -f "$f" ]]; then echo "$f"; head -n 20 "$f"; fi; done; if [[ -f /tmp/apex.html ]]; then echo "Homepage preview:"; head -c 200 /tmp/apex.html; fi' ERR
           curl --fail --silent --show-error --max-time 30 -D /tmp/apex-headers -o /tmp/apex.html https://infused.show/
           grep -qi '^X-DropJourney-Version: 2.9.3-single-worker' /tmp/apex-headers
           grep -q 'FROM ROOTS' /tmp/apex.html
