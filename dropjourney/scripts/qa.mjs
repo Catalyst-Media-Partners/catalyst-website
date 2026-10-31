@@ -60,18 +60,18 @@ if(indexable){
  await assert.rejects(()=>readFile(path.join(dist,'sitemap.xml'),'utf8'));
 }
 const code=await readFile(path.join(root,'worker.mjs'),'utf8');
-for(const needle of ['SITE_BASE_PATH','SITE_ALLOWED_HOSTS','SITE_MODE','BOOTH_ATTRIBUTION','intakePath(env)','ticketPrefix(env)','noindex, nofollow, noarchive','env.ASSETS.fetch','X-DropJourney-Version'])assert.ok(code.includes(needle),'Worker missing '+needle);
-assert.ok(!code.includes('AUDIENCE_DB'),'Dark Worker must not duplicate the production audience binding');
-const previewConfig=await readFile(path.join(root,'wrangler.toml'),'utf8');
-assert.ok(previewConfig.includes('name = "infused-dropjourneytest"'),'Existing preview Worker identity must remain unchanged');
-assert.ok(previewConfig.includes('workers_dev = false'),'No workers.dev public preview');
-assert.ok(previewConfig.includes('TICKET_NOTIFY_ENABLED = "false"'),'Ticket notifications must remain disabled');
-const canaryTemplate=await readFile(path.join(root,'wrangler.dark-canary.template.toml'),'utf8');
-for(const needle of ['name = "infused-dark"','SITE_BASE_PATH = "/"','SITE_MODE = "canary"','SITE_ALLOWED_HOSTS = "dark.infused.show"','INTAKE_ENVIRONMENT = "preview"','TICKET_NOTIFY_ENABLED = "false"','binding = "BOOTH_ATTRIBUTION"','database_id = "13188d57-a463-445d-b341-9479ac3a4558"'])assert.ok(canaryTemplate.includes(needle),'Dark canary template missing '+needle);
-const productionTemplate=await readFile(path.join(root,'wrangler.dark-production.template.toml'),'utf8');
-for(const needle of ['name = "infused-dark"','SITE_MODE = "production"','SITE_ALLOWED_HOSTS = "infused.show,dark.infused.show,www.infused.show"','INTAKE_ENVIRONMENT = "production"','INTAKE_TEST_MODE = "false"','database_id = "2082f84e-bacd-4ef2-8902-265eda67e4d1"','TICKET_NOTIFY_ENABLED = "false"'])assert.ok(productionTemplate.includes(needle),'Dark production template missing '+needle);
-const productionAcceptanceTemplate=await readFile(path.join(root,'wrangler.dark-production-acceptance.template.toml'),'utf8');
-for(const needle of ['SITE_MODE = "canary"','SITE_ALLOWED_HOSTS = "dark.infused.show"','INTAKE_ENVIRONMENT = "production"','INTAKE_TEST_MODE = "true"','database_id = "2082f84e-bacd-4ef2-8902-265eda67e4d1"','TICKET_NOTIFY_ENABLED = "false"'])assert.ok(productionAcceptanceTemplate.includes(needle),'Dark production acceptance template missing '+needle);
+for(const needle of ['SITE_BASE_PATH','SITE_ALLOWED_HOSTS','SITE_MODE','intakePath(env)','ticketPrefix(env)','noindex, nofollow, noarchive','env.ASSETS.fetch','X-DropJourney-Version','boothClick']){
+ assert.ok(code.includes(needle),'Worker missing '+needle);
+}
+assert.ok(!code.includes('env.BOOTH_ATTRIBUTION'),'No dependency on retired booth Worker binding');
+assert.ok(!code.includes('env.LIGHT_SITE'),'No dependency on retired light Worker binding');
+assert.ok(!code.includes('AUDIENCE_DB'),'Production Worker must use its canonical intake binding');
+const productionConfig=await readFile(path.join(root,'../wrangler.toml'),'utf8');
+for(const needle of ['name = "infused-dark"','workers_dev = false','SITE_MODE = "production"','INTAKE_ENVIRONMENT = "production"','INTAKE_TEST_MODE = "false"','TICKET_NOTIFY_ENABLED = "false"','binding = "INTAKE_DB"','database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"','binding = "INTAKE_SES"','service = "catalyst-revenue"']){
+ assert.ok(productionConfig.includes(needle),'Unified production config missing '+needle);
+}
+assert.ok(!productionConfig.includes('binding = "BOOTH_ATTRIBUTION"'),'Retired attribution service still bound');
+assert.ok(!productionConfig.includes('binding = "LIGHT_SITE"'),'Retired light service still bound');
 assert.equal((await readdir(path.join(dist,'assets','images'))).filter(x=>x.endsWith('.webp')).length,21,'expected 21 optimized source images');
 if(indexable){
  const campaign=JSON.parse(await readFile(path.join(root,'content/landers.json'),'utf8'));
