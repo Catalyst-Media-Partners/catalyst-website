@@ -1,20 +1,35 @@
-name = "infused-show"
-compatibility_date = "2026-10-13"
-workers_dev = true
+name = "infused-dark"
+main = "./dropjourney/worker.mjs"
+compatibility_date = "2026-10-26"
+workers_dev = false
+preview_urls = false
 keep_vars = true
-main = "./src/worker.mjs"
+account_id = "7fe07bc649cd7366b14ba607c115e895"
 
 [assets]
-directory = "./public"
+directory = "./dropjourney/dist/production"
 binding = "ASSETS"
 run_worker_first = true
 not_found_handling = "404-page"
 
-# Only the /go/booth handler may write anonymous CTA telemetry.
 [[d1_databases]]
-binding = "AUDIENCE_DB"
+binding = "INTAKE_DB"
 database_name = "catalyst-audience-prod"
 database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"
 
+[[services]]
+binding = "INTAKE_SES"
+service = "catalyst-revenue"
+entrypoint = "InfusedIntakeSESBridge"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
 [vars]
-LIGHT_HOST_PUBLISHED = "true"
+SITE_BASE_PATH = "/"
+SITE_MODE = "production"
+SITE_ALLOWED_HOSTS = "infused.show,www.infused.show,dark.infused.show,light.infused.show"
+INTAKE_ENVIRONMENT = "production"
+INTAKE_TEST_MODE = "false"
+INTAKE_CONSENT_VERSION = "infused-intake-2026-10-28-v1"
+TICKET_NOTIFY_ENABLED = "false"
