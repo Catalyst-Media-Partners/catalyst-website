@@ -234,4 +234,18 @@ if(INDEXABLE){
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+pages.map(p=>'  <url><loc>https://infused.show'+p+'</loc></url>').join('\n')+'\n</urlset>\n';
  await write('sitemap.xml',xml);
 }
+// Embed the original light landing page in this same static asset bundle.
+const lightPublic=path.resolve(root,'../public');
+const lightHome=await readFile(path.join(lightPublic,'index.html'),'utf8');
+let lightHtml=lightHome.replaceAll('./assets/',BASE+'assets/');
+if(!/<base\b/i.test(lightHtml)){
+ lightHtml=lightHtml.replace(/<head(?:\s[^>]*)?>/i,match=>match+'\n<base href="'+BASE+'">');
+}
+if(lightHtml.includes('./assets/')||!lightHtml.includes('<base href="'+BASE+'">'))throw Error('Single-worker light landing asset/base rewrite failed');
+await write('lander/index.html',lightHtml);
+await mkdir(path.join(output,'assets','css'),{recursive:true});
+await mkdir(path.join(output,'assets','js'),{recursive:true});
+await copyFile(path.join(lightPublic,'assets','css','site.css'),path.join(output,'assets','css','site.css'));
+await copyFile(path.join(lightPublic,'assets','js','cta-attribution.js'),path.join(output,'assets','js','cta-attribution.js'));
+
 console.log('Built '+(catalog.length+2)+' full-site routes and '+(offers.length+1)+' campaign landers in '+mode+' mode under '+BASE+'; exported '+offers.length+' standalone HTML files');
