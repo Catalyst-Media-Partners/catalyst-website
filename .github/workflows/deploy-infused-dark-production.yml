@@ -63,7 +63,7 @@ jobs:
           INFUSED_MODE=production TURNSTILE_SITEKEY="$TURNSTILE_SITEKEY" node dropjourney/build.mjs
           INFUSED_MODE=production node dropjourney/scripts/qa.mjs
           INFUSED_MODE=production SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=production INTAKE_TEST_MODE=true TURNSTILE_SITEKEY="$TURNSTILE_SITEKEY" node dropjourney/scripts/qa_native_intake.mjs
-          node dropjourney/scripts/qa_ticket_notify.mjs
+          INFUSED_MODE=production node dropjourney/scripts/qa_ticket_notify.mjs
           node dropjourney/scripts/qa_dark_worker.mjs
           node scripts/verify-cloudflare.mjs
 
