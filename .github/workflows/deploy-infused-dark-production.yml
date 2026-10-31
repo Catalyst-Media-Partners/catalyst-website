@@ -166,7 +166,7 @@ jobs:
           if [[ "$MODE" == "production" ]]; then
             # The light Worker must be live as a redirect-only hostname before the root moves.
             light_ready=false
-            for attempt in $(seq 1 12); do
+            for attempt in $(seq 1 30); do
               light_status="$(curl --silent --show-error --max-time 15 -D /tmp/light-host-headers -o /dev/null -w '%{http_code}' https://light.infused.show/ || true)"
               light_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/light-host-headers | tail -n 1)"
               if [[ "$light_status" == "308" && "$light_location" == "https://infused.show/lander/" ]]; then light_ready=true; break; fi
