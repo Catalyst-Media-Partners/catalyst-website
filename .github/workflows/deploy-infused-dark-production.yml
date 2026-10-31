@@ -168,7 +168,7 @@ jobs:
             light_ready=false
             for attempt in $(seq 1 12); do
               light_status="$(curl --silent --show-error --max-time 15 -D /tmp/light-host-headers -o /dev/null -w '%{http_code}' https://light.infused.show/ || true)"
-              light_location="$(awk 'tolower($1) == "location:" {gsub("\\r","",$2); print $2}' /tmp/light-host-headers | tail -n 1)"
+              light_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/light-host-headers | tail -n 1)"
               if [[ "$light_status" == "308" && "$light_location" == "https://infused.show/lander/" ]]; then light_ready=true; break; fi
               sleep 10
             done
@@ -187,8 +187,8 @@ jobs:
               [[ "$current_service" == "infused-show" && -n "$domain_id" ]] || { echo "Unexpected Worker owner for $hostname: $current_service"; exit 1; }
               curl --fail --silent --show-error --max-time 30 -X DELETE "${auth[@]}" "$base/workers/domains/$domain_id" > /tmp/domain-detach.json
               jq -e '.success == true' /tmp/domain-detach.json >/dev/null
-              if ! curl --fail --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data "{\\"hostname\\":\\"$hostname\\",\\"service\\":\\"infused-dark\\"}" > /tmp/domain-attach.json; then
-                curl --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data "{\\"hostname\\":\\"$hostname\\",\\"service\\":\\"infused-show\\"}" >/tmp/domain-rollback.json || true
+              if ! curl --fail --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data "{\"hostname\":\"$hostname\",\"service\":\"infused-dark\"}" > /tmp/domain-attach.json; then
+                curl --silent --show-error --max-time 30 -X PUT "${auth[@]}" "$base/workers/domains" -H 'Content-Type: application/json' --data "{\"hostname\":\"$hostname\",\"service\":\"infused-show\"}" >/tmp/domain-rollback.json || true
                 echo "Failed to attach $hostname to infused-dark; attempted to restore infused-show"
                 exit 1
               fi
@@ -213,7 +213,7 @@ jobs:
             grep -qi '^X-Robots-Tag: index, follow' /tmp/lander-headers
 
             www_status="$(curl --silent --show-error --max-time 15 -D /tmp/www-headers -o /dev/null -w '%{http_code}' https://www.infused.show/)"
-            www_location="$(awk 'tolower($1) == "location:" {gsub("\\r","",$2); print $2}' /tmp/www-headers | tail -n 1)"
+            www_location="$(awk 'tolower($1) == "location:" {gsub("\r","",$2); print $2}' /tmp/www-headers | tail -n 1)"
             [[ "$www_status" == "308" && "$www_location" == "https://infused.show/" ]] || { echo "www canonical redirect failed"; exit 1; }
           else
             jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-after.json >/dev/null
