@@ -476,3 +476,21 @@ test('bad frames do not leave a disconnected current player permanently occupyin
   assert.notEqual(room.game.turn.order[0].disconnectedAt,null);
   assert.notEqual(await ctx.storage.getAlarm(),null);
 });
+
+test('a transient disconnect-save failure schedules recovery instead of permanently stalling the turn', async () => {
+  const originalNow = Date.now; let now = 200_000; Date.now = () => now;
+  try {
+    const ctx = roomContext(); const room = new HangmanRoom(ctx,{}); await room.ready;
+    ctx.storage.put = async () => { throw new Error('transient disconnect write failure'); };
+    await room.webSocketClose(ctx.sockets[0],1000);
+    assert.equal(activeId(room.game),IDS[0]);
+    assert.equal(await ctx.storage.getAlarm(),now + 1000);
+    ctx.storage.put = async (key,value) => { ctx.stored.set(key,clone(value)); };
+    now += 1000; await room.alarm();
+    assert.equal(await ctx.storage.getAlarm(),now + RECONNECT_GRACE_MS);
+    now += RECONNECT_GRACE_MS; await room.alarm();
+    assert.equal(activeId(room.game),IDS[1]);
+    assert.equal(await ctx.storage.getAlarm(),null);
+    assert.equal(room.game.guesses.length,0);
+  } finally { Date.now = originalNow; }
+});

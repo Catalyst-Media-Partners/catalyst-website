@@ -132,6 +132,12 @@ export class HangmanRoom {
     return result.changed;
   }
 
+  async ensureRecoveryAlarm() {
+    const retryAt = Date.now() + 1000;
+    const existing = await this.ctx.storage.getAlarm();
+    if (existing === null || existing > retryAt) await this.ctx.storage.setAlarm(retryAt);
+  }
+
   envelope() {
     const players = new Map();
     for (const socket of this.sockets()) {
@@ -150,7 +156,8 @@ export class HangmanRoom {
       try { socket.close(1011, 'Please reconnect'); } catch {}
       // A send failure may precede its close event. Reconcile it even if the
       // platform does not deliver a separate close callback promptly.
-      if (this.ctx.waitUntil) this.ctx.waitUntil(this.serial(() => this.refreshConnections()));
+      if (this.ctx.waitUntil) this.ctx.waitUntil(this.serial(() => this.refreshConnections())
+        .catch(() => this.ensureRecoveryAlarm()));
     }
   }
 
@@ -294,24 +301,33 @@ export class HangmanRoom {
         this.broadcast();
       });
     } catch {
+      if (socket.deserializeAttachment()?.closed) await this.ensureRecoveryAlarm();
       this.error(socket, 'save_failed');
     }
   }
 
   async webSocketClose(socket, code) {
-    await this.serial(async () => {
-      this.markClosed(socket);
-      try { socket.close(code === 1000 || code === 1001 ? code : 1000, 'Disconnected'); } catch {}
-      await this.refreshConnections();
-    });
+    try {
+      await this.serial(async () => {
+        this.markClosed(socket);
+        try { socket.close(code === 1000 || code === 1001 ? code : 1000, 'Disconnected'); } catch {}
+        await this.refreshConnections();
+      });
+    } catch {
+      await this.ensureRecoveryAlarm();
+    }
   }
 
   async webSocketError(socket) {
-    await this.serial(async () => {
-      this.markClosed(socket);
-      try { socket.close(1011, 'Please reconnect'); } catch {}
-      await this.refreshConnections();
-    });
+    try {
+      await this.serial(async () => {
+        this.markClosed(socket);
+        try { socket.close(1011, 'Please reconnect'); } catch {}
+        await this.refreshConnections();
+      });
+    } catch {
+      await this.ensureRecoveryAlarm();
+    }
   }
 
   async alarm() {
