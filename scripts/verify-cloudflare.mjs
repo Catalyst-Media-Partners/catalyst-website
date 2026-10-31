@@ -12,10 +12,12 @@ assert.match(config, /binding = "AUDIENCE_DB"/);
 assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
 assert.match(config, /LIGHT_HOST_PUBLISHED = "true"/,'Light host is prepared but remains unpublished until its Worker domain is attached');
 const orig = readFileSync('public/index.html', 'utf8');
+const assetPaths = [];
 const sample = async (hostname, pathname = '/', extra = {}) => worker.fetch(
   new Request(`https://${hostname}${pathname}`),
   { ASSETS: { fetch: async request => {
     const u = new URL(request.url);
+    assetPaths.push({hostname:u.hostname,pathname:u.pathname});
     if (u.pathname.endsWith('/sitemap.xml')) {
       const canonicalHost = u.hostname === 'light.infused.show' ? 'light.infused.show' : 'infused.show';
       const urls = Array.from({length:15},(_,i)=>`<url><loc>https://${canonicalHost}${i===0?'/':'/market/'}</loc></url>`).join('');
@@ -33,10 +35,18 @@ const rootRobots = await sample('infused-show.cannacon-org-s-account.workers.dev
 assert.ok((await rootRobots.text()).includes('Disallow: /'));
 const lightDisabled = await sample('light.infused.show');
 assert.equal(lightDisabled.status,404,'Light hostname must remain unpublished until explicitly enabled');
-const light = await sample('light.infused.show','/',{LIGHT_HOST_PUBLISHED:'true'});
+const lightRoot = await sample('light.infused.show','/?utm_source=route-test',{LIGHT_HOST_PUBLISHED:'true'});
+assert.equal(lightRoot.status,308,'Light hostname root must route to /lander/');
+assert.equal(lightRoot.headers.get('location'),'https://light.infused.show/lander/?utm_source=route-test');
+const lightNoSlash = await sample('light.infused.show','/lander',{LIGHT_HOST_PUBLISHED:'true'});
+assert.equal(lightNoSlash.status,308,'Light landing route must normalize its trailing slash');
+assert.equal(lightNoSlash.headers.get('location'),'https://light.infused.show/lander/');
+const light = await sample('light.infused.show','/lander/',{LIGHT_HOST_PUBLISHED:'true'});
 const lightHTML = await light.text();
 assert.equal(light.headers.get('x-robots-tag'),null);
-assert.ok(lightHTML.includes('<link rel="canonical" href="https://light.infused.show/">'));
+assert.ok(lightHTML.includes('<base href="/">'),'Light /lander/ must resolve existing site assets from the root');
+assert.ok(lightHTML.includes('<link rel="canonical" href="https://light.infused.show/lander/">'));
+assert.deepEqual(assetPaths.at(-1),{hostname:'light.infused.show',pathname:'/'},'Light /lander/ must reuse the existing homepage asset');
 const lightRobots = await sample('light.infused.show','/robots.txt',{LIGHT_HOST_PUBLISHED:'true'});
 assert.ok((await lightRobots.text()).includes('Sitemap: https://light.infused.show/sitemap.xml'));
 const lightSitemap = await sample('light.infused.show','/sitemap.xml',{LIGHT_HOST_PUBLISHED:'true'});
