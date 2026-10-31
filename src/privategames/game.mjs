@@ -229,7 +229,7 @@ export function assertStoredGame(state) {
   if (typeof state.clueEnabled !== 'boolean' || state.clueEnabled && !state.clueShown || !validTurns(state.turn) ||
     !settings || Object.keys(settings).some(key => settings[key] !== (key === 'puzzleMode' && state.settings[key] === undefined ? 'word' : state.settings[key])) ||
     !Array.isArray(state.recentWords) || state.recentWords.length > RECENT_WORD_LIMIT ||
-    !state.recentWords.every(word)) {
+    !state.recentWords.every(value => typeof value === 'string' && (/^[a-z]{1,15}$/.test(value) || /^[a-z]+(?: [a-z]+)+$/.test(value) && value.replace(/ /g, '').length <= 60))) {
     throw new Error('Unsupported or damaged privategames turn state; refusing to overwrite it.');
   }
   return state;
