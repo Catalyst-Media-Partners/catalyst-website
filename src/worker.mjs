@@ -121,7 +121,15 @@ export default {
     if (isLightHost && !lightHostEnabled) {
       return new Response('Not found', {status:404,headers:headersFor(false,{'Content-Type':'text/plain; charset=utf-8'})});
     }
-    const isProduction = host === HOST || host === WWW || (isLightHost && lightHostEnabled);
+    // Retire the light hostname as a content host. The light design lives only
+    // at https://infused.show/lander/; keep the old hostname as a redirect.
+    if (isLightHost) {
+      const next = new URL(request.url);
+      next.hostname = HOST;
+      next.pathname = '/lander/';
+      return Response.redirect(next.toString(), 308);
+    }
+    const isProduction = host === HOST || host === WWW;
     const canonicalHost = isLightHost ? LIGHT_HOST : HOST;
     if (url.pathname === '/go/booth' || url.pathname === '/go/booth/') {
       return boothClick(request, env, url, isProduction, canonicalHost);
