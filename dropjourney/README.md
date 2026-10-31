@@ -1,16 +1,18 @@
 # INFUSED Drop Journey | Production candidate
 
-The Drop Journey is the planned primary INFUSED brand experience. The existing light experience remains a separate marketing journey. INF-1 prepares the dark production source and release configuration without changing production DNS or deploying a Worker.
+The Drop Journey is the primary INFUSED brand experience. The original light experience is retained as one standalone landing page, not as a second site. The production routing contract is deliberately simple: dark at the root, light only at `/lander/`.
 
 ## Domain architecture
 
-| Hostname | Intended experience | INF-1 status |
+| Hostname / path | Intended experience | Routing |
 |---|---|---|
-| infused.show | Dark-green Drop Journey, canonical brand site | Source/build candidate prepared; root unchanged |
-| dark.infused.show | Dark experience canary/alias | Configuration prepared; no DNS or custom domain assigned |
-| light.infused.show | Existing light marketing experience | Existing Worker source now supports the alias behind LIGHT_HOST_PUBLISHED=true; flag remains false and domain is not assigned |
+| `infused.show/` | Dark-green Drop Journey, canonical brand site | Primary production homepage on `infused-dark` |
+| `infused.show/lander/` | Original light landing page | Served by the dark Worker through the `LIGHT_SITE` service binding |
+| `www.infused.show` | Canonical hostname alias | 308 redirect to `infused.show` |
+| `dark.infused.show` | Dark experience canary/alias | Dark Worker alias; noindex and canonicalized to the root |
+| `light.infused.show` | Retired hostname alias | 308 redirect to `https://infused.show/lander/`; never serves a separate copy |
 
-The root hostname remains on the existing infused-show Worker until INF-3. The dark canary must be noindex. The production root is indexable only when SITE_MODE=production and the request hostname is infused.show. dark.infused.show always canonicalizes to the root and remains noindex.
+The dark Worker owns the root homepage and all normal site routes. Only `/lander/` invokes the existing `infused-show` Worker to render the original light homepage asset; a root base URL keeps its existing assets working, and its canonical URL is rewritten to `https://infused.show/lander/`. The light Worker remains available internally for this page and the existing booth-attribution handoff. It does not own the public root after INF-3. The production root is indexable only when SITE_MODE=production and the request hostname is infused.show. dark.infused.show remains noindex.
 
 ## Source of truth and branch boundaries
 
@@ -71,7 +73,7 @@ INF-1 is source preparation and automated QA only. It does not:
 - activate ticket notifications;
 - change event facts, pricing, booth checkout, or Map Dynamics configuration.
 
-INF-2 will provision the isolated canary's Turnstile secret/hostname allowlist and run real-browser canary tests. INF-3 will complete production D1/SES separation, then perform the root-domain cutover with light.infused.show assigned to the existing light Worker.
+INF-2 will provision the isolated canary's Turnstile secret/hostname allowlist and run real-browser canary tests. INF-3 deploys the production dark Worker, transfers `infused.show` and `www.infused.show` to `infused-dark`, and retains `light.infused.show` only as a redirect. The dark Worker serves the single light page at `/lander/` through its service binding to `infused-show`.
 
 ## Visual/interaction QA
 - Structural: all 16 pages, 21 images, no doubled route prefixes, one H1, privacy and Worker isolation checks.
