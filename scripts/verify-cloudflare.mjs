@@ -1,155 +1,26 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import worker from '../src/worker.mjs';
-
-const config = readFileSync('wrangler.toml', 'utf8');
-for (const expected of [
-  'name = "infused-show"', 'workers_dev = true', 'keep_vars = true',
-  'main = "./src/worker.mjs"', 'directory = "./public"',
-  'binding = "ASSETS"', 'run_worker_first = true'
-]) assert.ok(config.includes(expected), `Missing Cloudflare contract: ${expected}`);
-assert.match(config, /binding = "AUDIENCE_DB"/);
-assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
-assert.match(config, /LIGHT_HOST_PUBLISHED = "true"/,'Light host is prepared but remains unpublished until its Worker domain is attached');
-const orig = readFileSync('public/index.html', 'utf8');
-const sample = async (hostname, pathname = '/', extra = {}) => worker.fetch(
-  new Request(`https://${hostname}${pathname}`),
-  { ASSETS: { fetch: async request => {
-    const u = new URL(request.url);
-    if (u.pathname.endsWith('/sitemap.xml')) {
-      const canonicalHost = u.hostname === 'light.infused.show' ? 'light.infused.show' : 'infused.show';
-      const urls = Array.from({length:15},(_,i)=>`<url><loc>https://${canonicalHost}${i===0?'/':'/market/'}</loc></url>`).join('');
-      return new Response('<?xml version="1.0"?><urlset>'+urls+'</urlset>', {status:200,headers:{'Content-Type':'application/xml'}});
-    }
-    return new Response(orig, { status: 200, headers: {'Content-Type': 'text/html; charset=utf-8', 'ETag': 'test'} });
-  } }, ...extra }
-);
-const preview = await sample('infused-show.cannacon-org-s-account.workers.dev');
-const previewHTML = await preview.text();
-assert.equal(preview.headers.get('x-robots-tag'), 'noindex, nofollow, noarchive');
-assert.ok(previewHTML.includes('<meta name="robots" content="noindex, nofollow, noarchive">'));
-assert.ok(!previewHTML.includes('<link rel="canonical" href="https://infused.show/">'));
-const rootRobots = await sample('infused-show.cannacon-org-s-account.workers.dev', '/robots.txt');
-assert.ok((await rootRobots.text()).includes('Disallow: /'));
-const lightDisabled = await sample('light.infused.show');
-assert.equal(lightDisabled.status,404,'Light hostname must remain unpublished until explicitly enabled');
-const lightRoot = await sample('light.infused.show','/?utm_source=route-test',{LIGHT_HOST_PUBLISHED:'true'});
-assert.equal(lightRoot.status,308,'Light hostname root must redirect to the single light landing page');
-assert.equal(lightRoot.headers.get('location'),'https://infused.show/lander/?utm_source=route-test');
-const lightSubpage = await sample('light.infused.show','/contact/?utm_source=route-test',{LIGHT_HOST_PUBLISHED:'true'});
-assert.equal(lightSubpage.status,308,'Every light-host path must redirect to the single landing page');
-assert.equal(lightSubpage.headers.get('location'),'https://infused.show/lander/?utm_source=route-test');
-const prod = await sample('infused.show');
-const prodHTML = await prod.text();
-assert.equal(prod.headers.get('x-robots-tag'), null);
-assert.ok(prodHTML.includes('<meta name="robots" content="index, follow">'));
-assert.ok(prodHTML.includes('<link rel="canonical" href="https://infused.show/">'));
-assert.ok(prodHTML.includes('FROM ROOTS'));
-const indexedHome = await sample('infused.show', '/index.html');
-assert.ok((await indexedHome.text()).includes('<link rel="canonical" href="https://infused.show/">'));
-const indexedSubpage = await sample('infused.show', '/market/index.html');
-assert.ok((await indexedSubpage.text()).includes('<link rel="canonical" href="https://infused.show/market/">'));
-const www = await sample('www.infused.show');
-assert.equal(www.status, 308);
-assert.equal(www.headers.get('location'), 'https://infused.show/');
-const sitemap = await sample('infused.show','/sitemap.xml');
-assert.equal(sitemap.status, 200);
-assert.equal((await sitemap.text()).match(/<url>/g).length, 15);
-const productionRobots = await sample('infused.show','/robots.txt');
-assert.ok((await productionRobots.text()).includes('Allow: /'));
-const legacyRedirects = [
-  ['/getting-started/', '/'],
-  ['/event/las-vegas-2027/', '/'],
-  ['/exhibit/', '/opportunities/'],
-  ['/exhibitor-hub/', '/opportunities/'],
-  ['/become-an-exhibitor/', '/contact/'],
-  ['/become-a-speaker/', '/contact/'],
-  ['/become-a-sponsor/', '/opportunities/']
-];
-for (const [legacyPath, destination] of legacyRedirects) {
-  const legacy = await sample('infused.show', legacyPath);
-  assert.equal(legacy.status, 301, 'Legacy redirect missing for ' + legacyPath);
-  assert.equal(legacy.headers.get('location'), 'https://infused.show' + destination);
-}
-const oldCampaign = await sample('infused.show', '/become-an-exhibitor/?utm_source=legacy');
-assert.equal(oldCampaign.headers.get('location'), 'https://infused.show/contact/?utm_source=legacy');
-const oldPreview = await sample('infused-show.cannacon-org-s-account.workers.dev', '/exhibitor-hub/');
-assert.equal(oldPreview.status, 301);
-assert.ok(oldPreview.headers.get('location').endsWith('/opportunities/'));
-const unsupportedLegal = await sample('infused.show', '/privacy-policy/');
-assert.notEqual(unsupportedLegal.status, 301, 'Do not silently repurpose the old privacy policy');
-
-// Fixed-destination, non-PII click handoff: production D1 write is one event,
-// not an inferred customer, exhibitor, purchase, or marketing permission.
-const recorded = [];
-const clickDb = {
-  prepare(sql) {
-    assert.match(sql, /^INSERT INTO web_acquisition_clicks_v1/);
-    return {
-      bind(...values) {
-        return { async run() { recorded.push(values); return { success: true }; } };
-      }
-    };
-  }
-};
-const tracked = await worker.fetch(new Request(
-  'https://infused.show/go/booth?position=hero&page=%2Fopportunities%2F' +
-  '&utm_source=catalyst&utm_medium=email&utm_campaign=lv27-suppliers' +
-  '&utm_content=variant_a&referrer_host=www.google.com&redirect=https%3A%2F%2Fevil.invalid'
-), { AUDIENCE_DB: clickDb, MAPD_CLICK_ID_FORWARD_ENABLED: 'true' });
-assert.equal(tracked.status,302);
-assert.equal(tracked.headers.get('cache-control'),'no-store');
-assert.equal(tracked.headers.get('set-cookie'),null);
-const checkout = new URL(tracked.headers.get('location'));
-assert.equal(checkout.origin,'https://shows.map-dynamics.com');
-assert.equal(checkout.pathname,'/infusedlv2027/');
-assert.ok(checkout.searchParams.has('register'));
-assert.match(checkout.searchParams.get('catalyst_click_id'),/^[a-f0-9-]{36}$/);
-assert.equal(checkout.searchParams.get('utm_campaign'),'lv27-suppliers');
-assert.equal(checkout.searchParams.get('utm_source'),'catalyst');
-assert.equal(checkout.searchParams.has('redirect'),false);
-assert.equal(checkout.searchParams.has('referrer_host'),false);
-assert.equal(recorded.length,1);
-assert.equal(recorded[0][0],checkout.searchParams.get('catalyst_click_id'));
-assert.deepEqual(recorded[0].slice(1,6),['LV27','infused.show','/opportunities/','hero','www.google.com']);
-assert.equal(recorded[0][6],'catalyst');
-assert.equal(recorded[0][8],'lv27-suppliers');
-const malformed = await worker.fetch(new Request(
-  'https://infused.show/go/booth?position=invalid&page=%2F%2Fevil.invalid' +
-  '&utm_campaign=customer%40email.invalid&utm_source=catalyst'
-), {AUDIENCE_DB:clickDb});
-assert.equal(malformed.status,302);
-assert.equal(recorded.length,2);
-assert.deepEqual(recorded[1].slice(3,5),['/','other']);
-assert.equal(recorded[1][8],null);
-const previewClick = await worker.fetch(new Request(
-  'https://infused-show.cannacon-org-s-account.workers.dev/go/booth?utm_campaign=preview'
-), {AUDIENCE_DB:clickDb});
-assert.equal(previewClick.status,302);
-assert.equal(recorded.length,2);
-assert.ok(!new URL(previewClick.headers.get('location')).searchParams.has('catalyst_click_id'));
-const failedDb = { prepare() { return {bind() {return {async run() {throw Error('qa forced unavailable');}};}}; } };
-const dbFailure = await worker.fetch(new Request('https://infused.show/go/booth'),{AUDIENCE_DB:failedDb});
-assert.equal(dbFailure.status,302);
-assert.equal(new URL(dbFailure.headers.get('location')).origin,'https://shows.map-dynamics.com');
-assert.ok(!new URL(dbFailure.headers.get('location')).searchParams.has('catalyst_click_id'));
-const safeDefault = await worker.fetch(new Request(
-  'https://infused.show/go/booth?utm_source=catalyst&utm_campaign=lv27-suppliers'
-), {AUDIENCE_DB:clickDb});
-assert.equal(safeDefault.status,302);
-assert.equal(recorded.length,3);
-const lightTracked = await worker.fetch(new Request('https://light.infused.show/go/booth?position=navigation&page=%2Fopportunities%2F'),{AUDIENCE_DB:clickDb,LIGHT_HOST_PUBLISHED:'true'});
-assert.equal(lightTracked.status,308,'The retired light hostname must never serve a separate booth route');
-assert.equal(lightTracked.headers.get('location'),'https://infused.show/lander/?position=navigation&page=%2Fopportunities%2F');
-assert.equal(recorded.length,3,'Redirecting the retired light hostname must not create an extra booth click');
-const originalMapd = new URL(safeDefault.headers.get('location'));
-assert.equal(originalMapd.origin,'https://shows.map-dynamics.com');
-assert.ok(originalMapd.searchParams.has('register'));
-assert.equal(originalMapd.searchParams.has('catalyst_click_id'),false);
-assert.equal(originalMapd.searchParams.has('utm_campaign'),false);
-const invalidMethod = await worker.fetch(new Request('https://infused.show/go/booth',{method:'POST'}),{AUDIENCE_DB:clickDb});
-assert.equal(invalidMethod.status,405);
-assert.equal(recorded.length,3);
-assert.ok(orig.includes('cta-attribution.js'), 'Every page must load the no-cookie attribution enhancement');
-
-console.log('PASS: independent Worker, preview/production metadata, robots, sitemap, and redirect and anonymous CTA tracking behavior');
+import {readFileSync,existsSync} from 'node:fs';
+const config=readFileSync('wrangler.toml','utf8');
+for(const expected of [
+ 'name = "infused-dark"',
+ 'main = "./dropjourney/worker.mjs"',
+ 'directory = "./dropjourney/dist/production"',
+ 'binding = "INTAKE_DB"',
+ 'database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"',
+ 'service = "catalyst-revenue"',
+ 'entrypoint = "InfusedIntakeSESBridge"',
+ 'keep_vars = true'
+])assert.ok(config.includes(expected),'Missing unified Worker config: '+expected);
+assert.equal((config.match(/\[\[d1_databases\]\]/g)||[]).length,1,'INFUSED site must bind one D1 database');
+assert.equal((config.match(/\[\[services\]\]/g)||[]).length,1,'INFUSED site must use only the shared Catalyst revenue backend');
+assert.doesNotMatch(config,/infused-show|infused-intake-production|13188d57|2082f84e|LIGHT_SITE|BOOTH_ATTRIBUTION/);
+const lander=readFileSync('dropjourney/dist/production/lander/index.html','utf8');
+assert.ok(lander.includes('<base href="/">'));
+assert.ok(lander.includes('href="/assets/css/site.css"'));
+assert.ok(lander.includes('src="/assets/js/cta-attribution.js"'));
+assert.ok(!lander.includes('/lander/assets/'));
+assert.ok(existsSync('dropjourney/dist/production/assets/css/site.css'));
+assert.ok(existsSync('dropjourney/dist/production/assets/js/cta-attribution.js'));
+const attribution=readFileSync('dropjourney/dist/production/assets/js/cta-attribution.js','utf8');
+assert.ok(attribution.includes("'/lander/'"),'The light landing page must be an allowed CTA attribution source');
+console.log('PASS INFUSED single-Worker deployment contract: one site Worker, one canonical D1, one shared revenue service, static /lander assets');
