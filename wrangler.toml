@@ -15,3 +15,6 @@ not_found_handling = "404-page"
 binding = "AUDIENCE_DB"
 database_name = "catalyst-audience-prod"
 database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"
+
+[vars]
+LIGHT_HOST_PUBLISHED = "true"
