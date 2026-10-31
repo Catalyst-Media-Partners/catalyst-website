@@ -42,7 +42,7 @@ async function serveLightLander(request,env,url,indexable){
  // Keep the light page's navigation rooted at the dark site, but isolate its
  // own CSS, scripts and images under /lander/assets/. The production light
  // build emits absolute /assets/... URLs because its own base path is /.
- html=html.replace(/(["'=(])(?:\.\/|\/)??assets\//g, '$1/lander/assets/');
+ html=html.replace(/(["'=(])(?:\.\/|\/)?assets\//g, '$1/lander/assets/');
  const robots=indexable?'index, follow':NOINDEX;
  if(!/<base\b/i.test(html))html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'\n<base href="/">');
  if(/<meta name="robots" content="[^"]*">/i.test(html))html=html.replace(/<meta name="robots" content="[^"]*">/i,'<meta name="robots" content="'+robots+'">');
