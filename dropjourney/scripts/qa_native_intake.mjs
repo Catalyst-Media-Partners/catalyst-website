@@ -11,6 +11,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const BASE=process.env.SITE_BASE_PATH||'/dropjourneytest/';
 const SITE_HOST=process.env.SITE_HOST||'infused.show';
 const ENVIRONMENT=process.env.INTAKE_ENVIRONMENT||'preview';
+const TURNSTILE_SITEKEY=process.env.TURNSTILE_SITEKEY||'0x4AAAAAAFtS3fhXx5j6zfT8';
 const DIST=process.env.INFUSED_MODE==='production'?'production':'dropjourneytest';
 const sql=await readFile(path.join(root,'migrations/0001_infused_native_intake.sql'),'utf8');
 const store=new DatabaseSync(':memory:');
@@ -31,8 +32,9 @@ const db={
 let gatewayCalls=0;
 const env={
  INTAKE_DB:db,
- TURNSTILE_SECRET:'SYNTHETIC-UNIT-TEST-ONLY-NOT-A-REAL-SECRET',
- INTAKE_SES:{async sendRequest(){gatewayCalls++;return {status:'accepted',messageId:'mock-only-no-email-sent'};}},
+ TURNSTILE_SECRET:'SYNTHETIC-CANARY-UNIT-TEST-ONLY-NOT-A-REAL-SECRET',
+ TURNSTILE_SECRET_PRODUCTION:'SYNTHETIC-PRODUCTION-UNIT-TEST-ONLY-NOT-A-REAL-SECRET',
+ INTAKE_SES:{async sendRequest(input){gatewayCalls++;assert.equal(input.environment,ENVIRONMENT,'SES bridge must receive the selected environment');return {status:'accepted',messageId:'mock-only-no-email-sent'};}},
  SITE_BASE_PATH:BASE,SITE_ALLOWED_HOSTS:SITE_HOST,INTAKE_ENVIRONMENT:ENVIRONMENT
 };
 const siteOK=async()=>new Response(JSON.stringify({success:true,hostname:SITE_HOST,action:'infused-intake'}),{status:200});
@@ -179,7 +181,7 @@ for(const id of pages){
  const html=await readFile(path.join(root,'dist',DIST,id,'index.html'),'utf8');
  assert.match(html,/cf-turnstile/);
  assert.match(html,/class="dj-intake-form"/);
- assert.ok(html.includes('data-sitekey="0x4AAAAAAFtS3fhXx5j6zfT8"'),'canary form must use the dedicated Turnstile widget');
+ assert.ok(html.includes('data-sitekey="'+TURNSTILE_SITEKEY+'"'),'native form must use the selected environment Turnstile widget');
  assert.ok(html.includes('action="'+BASE+'api/intake"'),'form action must match selected build base');
  assert.doesNotMatch(html,/jotform/i);
 }
