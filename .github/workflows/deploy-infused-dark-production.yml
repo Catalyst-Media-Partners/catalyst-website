@@ -1,0 +1,169 @@
+name: Deploy INFUSED production data plane
+
+on:
+  push:
+    branches:
+      - release/infused-dark-production-inf1-20261030
+    paths:
+      - .github/workflows/deploy-infused-dark-production.yml
+      - dropjourney/deploy-mode
+      - dropjourney/intake.mjs
+      - dropjourney/worker.mjs
+      - dropjourney/build.mjs
+      - dropjourney/src/**
+      - dropjourney/content/**
+      - dropjourney/scripts/qa.mjs
+      - dropjourney/scripts/qa_native_intake.mjs
+      - dropjourney/scripts/visual_qa.py
+      - dropjourney/wrangler.dark-production-acceptance.template.toml
+      - dropjourney/wrangler.dark-production.template.toml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infused-dark-production-rollout
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/release/infused-dark-production-inf1-20261030' && github.actor == 'PASS-LH'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out reviewed production candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Read explicit rollout mode
+        id: mode
+        run: |
+          set -euo pipefail
+          mode="$(tr -d '[:space:]' < dropjourney/deploy-mode)"
+          [[ "$mode" == "acceptance" || "$mode" == "production" ]] || { echo "Invalid deploy-mode: $mode"; exit 1; }
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "INFUSED rollout mode: $mode"
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python for visual QA
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build and validate production-root assets
+        working-directory: dropjourney
+        env:
+          TURNSTILE_SITEKEY: '0x4AAAAAAFthzCYCdmh8aVv8'
+        run: |
+          set -euo pipefail
+          node --check build.mjs
+          node --check worker.mjs
+          node --check intake.mjs
+          node --check ticket-notify.mjs
+          node --check src/intake-form.mjs
+          node --check src/intake.js
+          node --check src/ticket-notify.js
+          INFUSED_MODE=production node build.mjs
+          INFUSED_MODE=production node scripts/qa.mjs
+          INFUSED_MODE=production SITE_BASE_PATH=/ SITE_HOST=dark.infused.show INTAKE_ENVIRONMENT=production INTAKE_TEST_MODE=true TURNSTILE_SITEKEY="$TURNSTILE_SITEKEY" node scripts/qa_native_intake.mjs
+          node scripts/qa_dark_worker.mjs
+
+      - name: Run responsive and interaction browser QA
+        working-directory: dropjourney
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+          INFUSED_MODE=production python scripts/visual_qa.py
+
+      - name: Verify production D1, SES bridge, Turnstile and domain isolation before deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          set -euo pipefail
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo 'Missing Cloudflare API token'; exit 1; }
+          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/catalyst-revenue/settings" > /tmp/revenue-settings.json
+          jq -e '.success == true' /tmp/revenue-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INFUSED_INTAKE_DB" and .database_id == "13188d57-a463-445d-b341-9479ac3a4558")] | length) == 1' /tmp/revenue-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INFUSED_INTAKE_DB_PRODUCTION" and .database_id == "2082f84e-bacd-4ef2-8902-265eda67e4d1")] | length) == 1' /tmp/revenue-settings.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/secrets" > /tmp/dark-secrets.json
+          jq -e '.success == true and any(.result[]?; .name == "TURNSTILE_SECRET") and any(.result[]?; .name == "TURNSTILE_SECRET_PRODUCTION")' /tmp/dark-secrets.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/challenges/widgets/0x4AAAAAAFthzCYCdmh8aVv8" > /tmp/production-turnstile.json
+          jq -e '.success == true and (.result.domains | index("dark.infused.show") != null) and (.result.domains | index("infused.show") != null)' /tmp/production-turnstile.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-before.json
+          jq -e '.success == true' /tmp/domains-before.json >/dev/null
+          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-before.json >/dev/null
+          jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-before.json >/dev/null
+          if [[ "$MODE" == "production" ]]; then
+            jq -e '([.result[]? | select(.hostname == "light.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-before.json >/dev/null
+          fi
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/d1/database/2082f84e-bacd-4ef2-8902-265eda67e4d1/query" -H 'Content-Type: application/json' --data '{"sql":"SELECT COUNT(*) AS total, SUM(CASE WHEN test_record=0 THEN 1 ELSE 0 END) AS non_test FROM intake_submissions_v1"}' > /tmp/production-intake-count.json
+          jq -e '.success == true and .result[0].results[0].non_test == 0' /tmp/production-intake-count.json >/dev/null
+          if [[ "$MODE" == "acceptance" ]]; then
+            jq -e '.result[0].results[0].total == 0' /tmp/production-intake-count.json >/dev/null
+          fi
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-show/deployments?per_page=1" > /tmp/light-worker-before.json
+          jq -e '.success == true and (.result.deployments[0].versions | any(.percentage == 100))' /tmp/light-worker-before.json >/dev/null
+          jq -r '.result.deployments[0].id' /tmp/light-worker-before.json > /tmp/light-worker-id
+
+      - name: Deploy synthetic production-data acceptance version
+        if: steps.mode.outputs.mode == 'acceptance'
+        working-directory: dropjourney
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx --yes wrangler@4.102.0 deploy --config wrangler.dark-production-acceptance.template.toml
+
+      - name: Deploy final production version
+        if: steps.mode.outputs.mode == 'production'
+        working-directory: dropjourney
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx --yes wrangler@4.102.0 deploy --config wrangler.dark-production.template.toml
+
+      - name: Verify production Worker configuration and preserve public domains
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: '7fe07bc649cd7366b14ba607c115e895'
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/settings" > /tmp/dark-settings.json
+          jq -e '.success == true' /tmp/dark-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_DB" and .database_id == "2082f84e-bacd-4ef2-8902-265eda67e4d1")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_SES" and .service == "catalyst-revenue" and .entrypoint == "InfusedIntakeSESBridge")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "BOOTH_ATTRIBUTION" and .service == "infused-show")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "INTAKE_ENVIRONMENT" and .text == "production")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          jq -e '([.result.bindings[]? | select(.name == "TICKET_NOTIFY_ENABLED" and .text == "false")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          if [[ "$MODE" == "acceptance" ]]; then
+            jq -e '([.result.bindings[]? | select(.name == "SITE_MODE" and .text == "canary")] | length) == 1' /tmp/dark-settings.json >/dev/null
+            jq -e '([.result.bindings[]? | select(.name == "INTAKE_TEST_MODE" and .text == "true")] | length) == 1' /tmp/dark-settings.json >/dev/null
+            jq -e '([.result.bindings[]? | select(.name == "SITE_ALLOWED_HOSTS" and .text == "dark.infused.show")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          else
+            jq -e '([.result.bindings[]? | select(.name == "SITE_MODE" and .text == "production")] | length) == 1' /tmp/dark-settings.json >/dev/null
+            jq -e '([.result.bindings[]? | select(.name == "INTAKE_TEST_MODE" and .text == "false")] | length) == 1' /tmp/dark-settings.json >/dev/null
+            jq -e '([.result.bindings[]? | select(.name == "SITE_ALLOWED_HOSTS" and .text == "infused.show,dark.infused.show,www.infused.show")] | length) == 1' /tmp/dark-settings.json >/dev/null
+          fi
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/domains" > /tmp/domains-after.json
+          jq -e '.success == true' /tmp/domains-after.json >/dev/null
+          jq -e '([.result[]? | select(.hostname == "dark.infused.show" and .service == "infused-dark")] | length) == 1' /tmp/domains-after.json >/dev/null
+          jq -e '([.result[]? | select(.hostname == "infused.show" and .service == "infused-show")] | length) == 1 and ([.result[]? | select(.hostname == "www.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-after.json >/dev/null
+          if [[ "$MODE" == "production" ]]; then
+            jq -e '([.result[]? | select(.hostname == "light.infused.show" and .service == "infused-show")] | length) == 1' /tmp/domains-after.json >/dev/null
+          fi
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-show/deployments?per_page=1" > /tmp/light-worker-after.json
+          jq -e --slurpfile before /tmp/light-worker-id '.success == true and .result.deployments[0].id == ($before[0] | tostring) and (.result.deployments[0].versions | any(.percentage == 100))' /tmp/light-worker-after.json >/dev/null
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}" "$base/workers/scripts/infused-dark/deployments?per_page=1" > /tmp/dark-deployments.json
+          jq -e '.success == true and (.result.deployments[0].versions | any(.percentage == 100))' /tmp/dark-deployments.json >/dev/null
+          echo "INFUSED dark ${MODE} deployment verified; root/www remain on the original light Worker."
