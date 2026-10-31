@@ -106,7 +106,7 @@ export default {
     next.pathname='/lander/';
     return Response.redirect(next.toString(),308);
    }
-   return serveLightLander(request,env,landerRoot+'index.html',indexable);
+   return serveLightLander(request,env,landerRoot,indexable);
   }
   if(p.startsWith(landerRoot))return new Response('Not found',{status:404,headers:headersFor(false,{'Content-Type':'text/plain; charset=utf-8'})});
 
