@@ -1,5 +1,6 @@
 import { WORD_BANK } from './words.mjs';
 import { normalizeWordSettings, pickWord } from './dictionary.mjs';
+import { pickPhrase, getPhrasePool } from './phrases.mjs';
 import { advanceTurns, createTurns, joinTurn, migrateTurns, publicTurns, reconcileTurns,
   removePlayer, renewTurn, setPushPreference, syncTurnRuntime, validTurns } from './turns.mjs';
 
@@ -7,7 +8,7 @@ export const MAX_STRIKES = 10;
 export const SCHEMA_VERSION = 3;
 export const RECENT_WORD_LIMIT = 100;
 export const DEFAULT_SETTINGS = Object.freeze({ vocabulary: 'middle', minLength: 3, maxLength: 15,
-  turnMode: 'vote', turnSeconds: 90 });
+  turnMode: 'vote', turnSeconds: 90, puzzleMode: 'word' });
 export { WORD_BANK };
 
 const nextId = () => globalThis.crypto.randomUUID();
@@ -22,20 +23,24 @@ export function normalizeGameSettings(input = {}) {
   const settings = { ...DEFAULT_SETTINGS, ...input };
   const words = normalizeWordSettings({ vocabulary: settings.vocabulary,
     minLength: settings.minLength, maxLength: settings.maxLength });
-  if (!['vote', 'timer'].includes(settings.turnMode) || ![60, 90, 120].includes(settings.turnSeconds)) {
+  if (!['word', 'phrase', 'mixed'].includes(settings.puzzleMode) ||
+       !['vote', 'timer'].includes(settings.turnMode) || ![60, 90, 120].includes(settings.turnSeconds)) {
     throw new RangeError('Invalid turn settings');
   }
-  return { ...words, turnMode: settings.turnMode, turnSeconds: settings.turnSeconds };
+  if (settings.puzzleMode === 'phrase' && !getPhrasePool(settings.vocabulary).length) throw new RangeError('No matching phrases');
+  return { ...words, turnMode: settings.turnMode, turnSeconds: settings.turnSeconds, puzzleMode: settings.puzzleMode };
 }
 
 function nextRound(previous, { now, random, makeRoundId, makeTurnToken, connectedIds, settings = previous.settings }) {
-  const entry = pickWord(settings, { random, excludeWords: previous.recentWords || [] });
+  const phrase = settings.puzzleMode === 'phrase' || (settings.puzzleMode === 'mixed' && random() < 0.5);
+  const entry = phrase ? pickPhrase(settings.vocabulary, { random, excludeWords: previous.recentWords || [] })
+    : pickWord(settings, { random, excludeWords: previous.recentWords || [] });
   const next = {
     ...previous, schemaVersion: SCHEMA_VERSION,
     roundId: makeRoundId(), revision: previous.revision + 1, roundNumber: previous.roundNumber + 1,
     word: entry.word, clue: entry.clue, bag: [],
     recentWords: [...(previous.recentWords || []), entry.word].slice(-RECENT_WORD_LIMIT), settings,
-    guesses: [], strikes: 0, status: 'playing', clueShown: previous.clueEnabled,
+    guesses: [], strikes: 0, status: 'playing', clueShown: false, clueEnabled: false,
     turn: renewTurn(previous.turn, makeTurnToken),
     wins: previous.wins, losses: previous.losses, updatedAt: Math.max(now, previous.updatedAt),
   };
@@ -154,7 +159,7 @@ export function applyAction(state, action, {
     return { state: touch(state, { turn }, now), changed: true };
   }
   if (action.type === 'hint') {
-    if (state.clueEnabled) return noChange(state);
+    if (state.clueShown) return noChange(state);
     const turn = syncTurnRuntime(state.turn, connectedIds, state.settings, now, { activity: true });
     return { state: touch(state, { clueShown: true, clueEnabled: true, turn }, now), changed: true };
   }
@@ -165,7 +170,7 @@ export function applyAction(state, action, {
   const correct = state.word.toUpperCase().includes(letter);
   const guesses = [...state.guesses, { letter, correct, player: player.name, at: now }];
   const strikes = state.strikes + (correct ? 0 : 1);
-  const solved = [...state.word.toUpperCase()].every(char => guesses.some(guess => guess.letter === char));
+  const solved = [...state.word.toUpperCase()].every(char => char === ' ' || guesses.some(guess => guess.letter === char));
   const status = solved ? 'won' : strikes === MAX_STRIKES ? 'lost' : 'playing';
   const turn = syncTurnRuntime(advanceTurns(state.turn, makeTurnToken), connectedIds, state.settings, now, { activity: true });
   return {
@@ -180,7 +185,7 @@ export function publicState(state, connectedIds = new Set()) {
   const finished = state.status !== 'playing';
   return {
     roundId: state.roundId, revision: state.revision, roundNumber: state.roundNumber,
-    mask: [...state.word.toUpperCase()].map(letter => finished || guessed.has(letter) ? letter : null),
+    mask: [...state.word.toUpperCase()].map(letter => letter === ' ' || finished || guessed.has(letter) ? letter : null),
     length: state.word.length, strikes: state.strikes, maxStrikes: MAX_STRIKES, status: state.status,
     answer: finished ? state.word.toUpperCase() : null,
     guesses: state.guesses.map(guess => ({ letter: guess.letter, correct: guess.correct, player: guess.player, at: guess.at })),
@@ -193,7 +198,9 @@ export function publicState(state, connectedIds = new Set()) {
 // A future or damaged record must fail visibly, never silently reset the room.
 function assertGameFields(state, schemaVersion) {
   const integer = value => Number.isSafeInteger(value) && value >= 0;
-  const word = value => typeof value === 'string' && /^[a-z]{1,15}$/.test(value);
+  const word = value => typeof value === 'string' && (/^[a-z]{1,15}$/.test(value) ||
+    /^[a-z]+(?: [a-z]+)+$/.test(value) && value.replace(/ /g, '').length <= 60 &&
+    value.split(' ').every(part => part.length <= 15));
   const valid = state && state.schemaVersion === schemaVersion &&
     typeof state.roundId === 'string' && state.roundId.length > 0 && state.roundId.length <= 100 &&
     integer(state.revision) && state.revision >= 1 && integer(state.roundNumber) && state.roundNumber >= 1 &&
@@ -201,13 +208,13 @@ function assertGameFields(state, schemaVersion) {
     Array.isArray(state.bag) && state.bag.length <= WORD_BANK.length && state.bag.every(word) && new Set(state.bag).size === state.bag.length &&
     Array.isArray(state.guesses) && state.guesses.length <= 26 &&
     state.guesses.every(guess => /^[A-Z]$/.test(guess.letter) && typeof guess.correct === 'boolean' &&
-      typeof guess.player === 'string' && [...guess.player].length <= 24 && integer(guess.at)) &&
+      typeof guess.player === 'string' && [...guess.player].length <= 64 && integer(guess.at)) &&
     new Set(state.guesses.map(guess => guess.letter)).size === state.guesses.length &&
     integer(state.strikes) && state.strikes <= MAX_STRIKES && state.strikes === state.guesses.filter(guess => !guess.correct).length &&
     ['playing', 'won', 'lost'].includes(state.status) && typeof state.clueShown === 'boolean' &&
     integer(state.wins) && integer(state.losses) && integer(state.updatedAt);
   const guessLetters = valid ? new Set(state.guesses.map(guess => guess.letter)) : new Set();
-  const solved = valid && [...state.word.toUpperCase()].every(letter => guessLetters.has(letter));
+  const solved = valid && [...state.word.toUpperCase()].every(letter => letter === ' ' || guessLetters.has(letter));
   const expectedStatus = solved ? 'won' : state?.strikes === MAX_STRIKES ? 'lost' : 'playing';
   if (!valid || state.status !== expectedStatus ||
     state.guesses.some(guess => guess.correct !== state.word.toUpperCase().includes(guess.letter)) ||
@@ -220,9 +227,9 @@ export function assertStoredGame(state) {
   let settings;
   try { settings = normalizeGameSettings(state.settings); } catch {}
   if (typeof state.clueEnabled !== 'boolean' || state.clueEnabled && !state.clueShown || !validTurns(state.turn) ||
-    !settings || Object.keys(settings).some(key => settings[key] !== state.settings[key]) ||
+    !settings || Object.keys(settings).some(key => settings[key] !== (key === 'puzzleMode' && state.settings[key] === undefined ? 'word' : state.settings[key])) ||
     !Array.isArray(state.recentWords) || state.recentWords.length > RECENT_WORD_LIMIT ||
-    !state.recentWords.every(word => typeof word === 'string' && /^[a-z]{1,15}$/.test(word))) {
+    !state.recentWords.every(word)) {
     throw new Error('Unsupported or damaged privategames turn state; refusing to overwrite it.');
   }
   return state;
