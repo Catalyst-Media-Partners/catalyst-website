@@ -65,3 +65,19 @@ test('same-origin WebSocket request is passed unchanged to the durable room',asy
   await worker.fetch(request,env);
   assert.deepEqual(calls,[['room','catalyst-hangman-v1'],['backend','/privategames/api/socket']]);
 });
+
+test('notification service worker is restricted to the game path and never cached',async () => {
+  const {env,calls}=fixture();
+  const response=await worker.fetch(new Request('https://catalystmediapartners.com/privategames/sw.js?v=3'),env);
+  assert.equal(response.headers.get('Service-Worker-Allowed'),'/privategames/');
+  assert.equal(response.headers.get('Cache-Control'),'no-store');
+  assert.match(response.headers.get('Content-Security-Policy'),/worker-src 'self'/);
+  assert.deepEqual(calls,[['asset','/privategames/sw.js']]);
+});
+
+test('installable manifest is served with the expected type without opening game state',async () => {
+  const {env,calls}=fixture();
+  const response=await worker.fetch(new Request('https://catalystmediapartners.com/privategames/manifest.webmanifest'),env);
+  assert.equal(response.headers.get('Content-Type'),'application/manifest+json; charset=utf-8');
+  assert.deepEqual(calls,[['asset','/privategames/manifest.webmanifest']]);
+});

@@ -1,0 +1,306 @@
+{
+  "version": "wordnet30-wordfreq32-1",
+  "entries": 62368,
+  "packedSha256": "4fd6bd0469138e55472b9cac9ed84c5e5f304b5c1c027816b5833a3054ba07a1",
+  "moduleSha256": "0829cd7bbaab77465fd0d7c0266a14ba469c9644b99682f476d7421ad03b6ec5",
+  "moduleBytes": 8385,
+  "moduleGzipBytes": 3340,
+  "packaging": "split-esm-v1",
+  "partCount": 26,
+  "partMaximumBytes": 180000,
+  "parts": [
+    {
+      "file": "src/privategames/dictionary-parts/part-000.mjs",
+      "sha256": "1a15a6e0d2a3a3e97e150ace4a47238fe228ed28d575ad498454475cbcca5a41",
+      "bytes": 179996,
+      "records": 2403
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-001.mjs",
+      "sha256": "e48fcbe794cbcbb8361fb6327f38788e3d2f7d3740ca81a406235e246280ff56",
+      "bytes": 179981,
+      "records": 2366
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-002.mjs",
+      "sha256": "68bbfcf319e8f7c04ae0abc73543495ca8a0b349c526dd686e080d4f95bc8183",
+      "bytes": 179949,
+      "records": 2524
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-003.mjs",
+      "sha256": "3b9135e22fbd5810cea4ab64828b7421c9e9e29ef6a2a701d9df1e50e8dfcdf1",
+      "bytes": 179885,
+      "records": 2270
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-004.mjs",
+      "sha256": "c8249118ee3f9c3539707665daddb7b466f2cf39e509a62446b4dbd15c3bb937",
+      "bytes": 179931,
+      "records": 2392
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-005.mjs",
+      "sha256": "3292cb8fc5a491cc715031f71cddcb08e679d32f6e2e7027d66a9d723365268d",
+      "bytes": 179919,
+      "records": 2394
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-006.mjs",
+      "sha256": "f355166935a7766316dcd44af268c1c180872ec7bf0460f56b046a0fbe96179b",
+      "bytes": 179983,
+      "records": 2536
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-007.mjs",
+      "sha256": "087001a0bc121742f2a6f8fdf33aed0f3c86c6775b9d0994345a59d192d9f226",
+      "bytes": 179986,
+      "records": 2416
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-008.mjs",
+      "sha256": "b64ebc82c0abed12de828ea6a0d2d9af198a7f0c407bf43e4b7a0a6ad4d11225",
+      "bytes": 179995,
+      "records": 2450
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-009.mjs",
+      "sha256": "c893a6f0267b5b998a1a5561e216143c1cbd5cc11efc4c19622bc2bd8ff34c74",
+      "bytes": 179990,
+      "records": 2435
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-010.mjs",
+      "sha256": "4ebb0c2b938f7d39eaa74bb91bd6d0667c37e41c9b3c9fafc25f232d37205631",
+      "bytes": 179972,
+      "records": 2316
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-011.mjs",
+      "sha256": "bc2553598b2dee7977d6287ed62179dad769123062f6209903e3bdd2c750cec3",
+      "bytes": 179998,
+      "records": 2539
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-012.mjs",
+      "sha256": "966cb594f5807b4a0b8579ce149e0b14e5c760f814739e41ec442c8e88fa9956",
+      "bytes": 179972,
+      "records": 2333
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-013.mjs",
+      "sha256": "1bafecb86d3227e3dc567894679e2468f97101ed7cda5c4b7e015463e7225feb",
+      "bytes": 179987,
+      "records": 2315
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-014.mjs",
+      "sha256": "c5823631ad991339847c2a8369ec26fde68679d72d21ea06aac7490a617af141",
+      "bytes": 179982,
+      "records": 2337
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-015.mjs",
+      "sha256": "cb63a484bdca20db9c320e897cf50fd9ba6cfecbf26c267a3479ca297ff28e27",
+      "bytes": 179988,
+      "records": 2425
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-016.mjs",
+      "sha256": "f13218beed0ff349f3b819c05b975014c596efd92bef612b593a26cdfa123ab5",
+      "bytes": 179958,
+      "records": 2392
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-017.mjs",
+      "sha256": "0e842bd1cdb8662413aa4d358eca3ec20b56e795a8d256a87b81925c8558d004",
+      "bytes": 180000,
+      "records": 2316
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-018.mjs",
+      "sha256": "6800be889889fea37bb8a70640d229388e419784618132ae344cb577f7122c2d",
+      "bytes": 179981,
+      "records": 2368
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-019.mjs",
+      "sha256": "cd07feb74bf8524bc12335ff3a5e42becbf798dcbe408cc95276bd5841a835d7",
+      "bytes": 179983,
+      "records": 2489
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-020.mjs",
+      "sha256": "8d4dc87dc05c61ab716d628c9cbc64d2f1a2e7a83a11afc99ce3a37db1bc24e1",
+      "bytes": 179935,
+      "records": 2465
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-021.mjs",
+      "sha256": "ed10c201c5a24413faa010ef026fddd37a88045a515c050504588abfea9e8f35",
+      "bytes": 179972,
+      "records": 2412
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-022.mjs",
+      "sha256": "17c4ee97f0ecf5a5eae34cabf8c61878c1e1ce3ee673076e42c53cfd2c5312f1",
+      "bytes": 179906,
+      "records": 2326
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-023.mjs",
+      "sha256": "495f583357bde5f1a00ce36da6a78979600a87025a73d0de10db012ccd29299e",
+      "bytes": 179978,
+      "records": 2389
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-024.mjs",
+      "sha256": "ae954a01a20b7834770fb6c8e24c739875158f1bc8fa392188dc8c1ebf80c56d",
+      "bytes": 179966,
+      "records": 2864
+    },
+    {
+      "file": "src/privategames/dictionary-parts/part-025.mjs",
+      "sha256": "7efd424d64a3f5fa87e819e9e99c6d38537fa80d40c8ec9349731466ed40514a",
+      "bytes": 140448,
+      "records": 1896
+    }
+  ],
+  "totalSourceBytes": 4648026,
+  "totalSourceGzipBytes": 1527831,
+  "sources": [
+    {
+      "file": "WNdb-3.0.tar.gz",
+      "url": "https://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz",
+      "sha256": "658b1ba191f5f98c2e9bae3e25c186013158f30ef779f191d2a44e5d25046dc8",
+      "bytes": 10518425
+    },
+    {
+      "file": "wordnet-LICENSE.txt",
+      "url": "https://wordnetcode.princeton.edu/3.0/LICENSE",
+      "sha256": "7731175a77952e259390b496fab905e57118b8d19ad3a8383c67eee724ff443f",
+      "bytes": 1625
+    },
+    {
+      "file": "large_en.msgpack.gz",
+      "url": "https://raw.githubusercontent.com/rspeer/wordfreq/42233e6c36ce792031bcccfa17cdd0cec9af5fa7/wordfreq/data/large_en.msgpack.gz",
+      "sha256": "dffae8066b78dce0a6667cf5f58e567054f902674667090a7ac8a8a44628b05c",
+      "bytes": 1494836
+    },
+    {
+      "file": "wordfreq-NOTICE.md",
+      "url": "https://raw.githubusercontent.com/rspeer/wordfreq/42233e6c36ce792031bcccfa17cdd0cec9af5fa7/NOTICE.md",
+      "sha256": "d9b104dafe63886af55e7cea7484824e32e12d4e1f57f319923dd643b36d6b15",
+      "bytes": 2891
+    },
+    {
+      "file": "wordfreq-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/rspeer/wordfreq/42233e6c36ce792031bcccfa17cdd0cec9af5fa7/LICENSE.txt",
+      "sha256": "8990c551671a51765c4dfe9428f3e1d58dc327f49aca346a32d28cc0fcc7aa88",
+      "bytes": 675
+    }
+  ],
+  "wordfreqCommit": "42233e6c36ce792031bcccfa17cdd0cec9af5fa7",
+  "filters": {
+    "filtered_senses": 368,
+    "named_instance_senses_removed": 7730,
+    "filtered_headword_occurrences": 212,
+    "legacy_curated_entries": 50
+  },
+  "metadata": {
+    "source": "Princeton WordNet 3.0 + wordfreq 3.2",
+    "label": "Playable English dictionary",
+    "total": 62368,
+    "levels": [
+      {
+        "id": "easy",
+        "label": "Easy",
+        "description": "Estimated common vocabulary (wordfreq Zipf frequency 4.5 or higher).",
+        "count": 2222,
+        "countsByLength": {
+          "3": 146,
+          "4": 415,
+          "5": 414,
+          "6": 379,
+          "7": 347,
+          "8": 230,
+          "9": 129,
+          "10": 93,
+          "11": 36,
+          "12": 16,
+          "13": 12,
+          "14": 5,
+          "15": 0
+        }
+      },
+      {
+        "id": "middle",
+        "label": "Middle school",
+        "description": "Estimated moderate vocabulary (Zipf 3.5–4.49), plus the original 50 curated words; not a certified grade list.",
+        "count": 6997,
+        "countsByLength": {
+          "3": 232,
+          "4": 633,
+          "5": 855,
+          "6": 1066,
+          "7": 1095,
+          "8": 1033,
+          "9": 799,
+          "10": 585,
+          "11": 365,
+          "12": 191,
+          "13": 105,
+          "14": 33,
+          "15": 5
+        }
+      },
+      {
+        "id": "advanced",
+        "label": "Advanced",
+        "description": "Estimated less-common vocabulary (Zipf 2.0–3.49); includes technical terms.",
+        "count": 22965,
+        "countsByLength": {
+          "3": 306,
+          "4": 1000,
+          "5": 1827,
+          "6": 2846,
+          "7": 3303,
+          "8": 3497,
+          "9": 3270,
+          "10": 2593,
+          "11": 1806,
+          "12": 1186,
+          "13": 755,
+          "14": 369,
+          "15": 207
+        }
+      },
+      {
+        "id": "dictionary",
+        "label": "Full dictionary",
+        "description": "All playable entries in the bundled dictionary, including rare and technical words; names, nonalphabetic entries and filtered senses are excluded.",
+        "count": 62368,
+        "countsByLength": {
+          "3": 713,
+          "4": 2363,
+          "5": 4101,
+          "6": 6554,
+          "7": 8099,
+          "8": 9162,
+          "9": 9201,
+          "10": 7658,
+          "11": 5763,
+          "12": 3914,
+          "13": 2543,
+          "14": 1464,
+          "15": 833
+        }
+      }
+    ],
+    "minLength": 3,
+    "maxLength": 15,
+    "attribution": "Definitions adapted from Princeton WordNet 3.0 (Copyright 2006 Princeton University; WordNet License). Familiarity estimates derived from wordfreq 3.2 by Robyn Speer (Copyright 2022; data CC BY-SA 4.0). The adapted dictionary data is available under CC BY-SA 4.0 with the original WordNet notice preserved. The original 50 game clues are retained. Difficulty is estimated, not a certified reading grade.",
+    "estimatedDifficulty": true,
+    "version": "wordnet30-wordfreq32-1"
+  }
+}
