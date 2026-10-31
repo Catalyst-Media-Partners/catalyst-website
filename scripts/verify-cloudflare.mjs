@@ -10,6 +10,7 @@ for (const expected of [
 ]) assert.ok(config.includes(expected), `Missing Cloudflare contract: ${expected}`);
 assert.match(config, /binding = "AUDIENCE_DB"/);
 assert.match(config, /database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"/);
+assert.match(config, /LIGHT_HOST_PUBLISHED = "true"/,'Light host is prepared but remains unpublished until its Worker domain is attached');
 const orig = readFileSync('public/index.html', 'utf8');
 const sample = async (hostname, pathname = '/', extra = {}) => worker.fetch(
   new Request(`https://${hostname}${pathname}`),
