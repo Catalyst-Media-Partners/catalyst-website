@@ -1,5 +1,6 @@
 import { applyAction, createGame, joinPlayer, migrateGame, publicState, refreshPlayers, reserveEntry, updatePushPreference } from './game.mjs';
 import { getVocabularyMetadata } from './dictionary.mjs';
+import { getPhraseMetadata } from './phrases.mjs';
 import { nextAlarmAt } from './turns.mjs';
 import { ensurePushAuthorization, ensurePushKeys, sendWebPush } from './push.mjs';
 import { claimDevice, claimDueTasks, completeTask, loadPushStore, nextRetryAt, pruneTurnJobs,
@@ -15,7 +16,7 @@ const ERROR_MESSAGES = {
   invalid_action: 'Choose a letter, pass, vote, reveal a clue, or start another word.',
   invalid_letter: 'Choose one letter from A to Z.',
   invalid_message: 'That game message could not be read.',
-  invalid_join: 'Please use a name of up to 24 characters.',
+  invalid_join: 'Please use a name of up to 64 characters.',
   invalid_settings: 'Choose an available vocabulary and a length range from 3 to 15 letters.',
   round_in_progress: 'Finish the current word or confirm skipping it for everyone.',
   stale_round: 'The room has moved to a new word. Your screen has been refreshed.',
@@ -45,7 +46,7 @@ function cleanName(value) {
   const name = value.normalize('NFC')
     .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '')
     .replace(/\s+/g, ' ').trim();
-  if ([...name].length > 24) return null;
+  if ([...name].length > 64) return null;
   return name || 'Guest';
 }
 
@@ -227,7 +228,7 @@ export class HangmanRoom {
       if (attachment?.joined) players.set(attachment.clientId, { id: attachment.clientId, name: attachment.name });
     }
     return { type: 'state', state: publicState(this.game, this.connectedIds()), players: [...players.values()],
-      catalog: getVocabularyMetadata(), serverTime: Date.now() };
+      catalog: { ...getVocabularyMetadata(), phrases: getPhraseMetadata() }, serverTime: Date.now() };
   }
 
   send(socket, value) {
