@@ -30,12 +30,12 @@ async function serveLightLander(request,env,url,indexable){
  if(!light.ok||!light.headers.get('Content-Type')?.includes('text/html'))return light;
  let html=await light.text();
  const robots=indexable?'index, follow':NOINDEX;
- if(!/<base\\b/i.test(html))html=html.replace(/<head(?:\\s[^>]*)?>/i,match=>match+'\\n<base href="/">');
+ if(!/<base\b/i.test(html))html=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+'\n<base href="/">');
  if(/<meta name="robots" content="[^"]*">/i.test(html))html=html.replace(/<meta name="robots" content="[^"]*">/i,'<meta name="robots" content="'+robots+'">');
- else html=html.replace('</head>','<meta name="robots" content="'+robots+'">\\n</head>');
+ else html=html.replace('</head>','<meta name="robots" content="'+robots+'">\n</head>');
  const canonical='https://infused.show/lander/';
  if(/<link rel="canonical" href="[^"]*">/i.test(html))html=html.replace(/<link rel="canonical" href="[^"]*">/i,'<link rel="canonical" href="'+canonical+'">');
- else html=html.replace('</head>','<link rel="canonical" href="'+canonical+'">\\n</head>');
+ else html=html.replace('</head>','<link rel="canonical" href="'+canonical+'">\n</head>');
  const headers=new Headers(light.headers);
  headers.set('X-Robots-Tag',robots);
  if(!indexable)headers.set('Cache-Control','no-store');
