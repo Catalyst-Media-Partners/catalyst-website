@@ -1,7 +1,19 @@
 name = "catalyst-website"
+main = "src/worker.js"
 compatibility_date = "2026-10-11"
 workers_dev = true
 keep_vars = true
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/privategames", "/privategames/*"]
+
+[[durable_objects.bindings]]
+name = "HANGMAN_ROOMS"
+class_name = "HangmanRoom"
+
+[[migrations]]
+tag = "privategames-v1"
+new_sqlite_classes = ["HangmanRoom"]
+

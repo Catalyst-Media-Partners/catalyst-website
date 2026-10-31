@@ -17,7 +17,8 @@ for(const [label,re] of [
  ['preserve existing bindings', /keep_vars = true/],
  ['auth secret', /secrets\.CLOUDFLARE_API_TOKEN/],
  ['Cloudflare deployment 100%', /percentage == 100/],
- ['static-only settings response', /\.result\.bindings \| type == "array"/],
+ ['settings response', /\.result\.bindings \| type == "array"/],
+ ['durable game binding verification', /HANGMAN_ROOMS.*durable_object_namespace.*HangmanRoom/],
  ['works.dev smoke', /catalyst-website\.cannacon-org-s-account\.workers\.dev/],
 ]) assert.match(source,re,'Missing '+label);
 assert.doesNotMatch(source,/wrangler deploy --name cannacon-prod/, 'Never deploy CannaCon from Catalyst');
@@ -34,3 +35,4 @@ for(const chunk of chunks){
 }
 assert.ok(inspected>=6, 'Expected release authorization and pre/post-deploy shell checks');
 console.log('Catalyst owner-gated deployment workflow verified; '+inspected+' Bash steps parse cleanly.');
+

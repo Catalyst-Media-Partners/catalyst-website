@@ -5,6 +5,7 @@
   "scripts": {
     "verify": "node scripts/verify-merchant-page.mjs",
     "build": "node build.mjs",
-    "check": "npm run verify && node scripts/verify-deployment-workflow.mjs && npm run build && node scripts/verify-output.mjs && node scripts/verify-infused-preview.mjs"
+    "check": "npm run verify && npm run test:privategames && node scripts/verify-deployment-workflow.mjs && npm run build && node scripts/verify-output.mjs && node scripts/verify-infused-preview.mjs && node scripts/verify-privategames-output.mjs",
+    "test:privategames": "node tests/privategames.mjs && node tests/route-handler.test.mjs"
   }
 }
