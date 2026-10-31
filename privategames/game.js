@@ -17,7 +17,7 @@ import { createTurnNotifications } from './notifications.js?v=3';
     clientId = crypto.randomUUID();
     writeStored('privategames.clientId', clientId);
   }
-  let playerName = (readStored('privategames.name') || '').slice(0,24);
+  let playerName = (readStored('privategames.name') || '').slice(0,64);
   let ownerSecret = readStored('privategames.pushOwnerSecret');
   if (!ownerSecret || !/^[A-Za-z0-9_-]{43}$/.test(ownerSecret)) {
     ownerSecret = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -41,23 +41,25 @@ import { createTurnNotifications } from './notifications.js?v=3';
 
   function selectedSettings() {
     const [mode,seconds] = el('turn-rule').value.split(':');
-    return {vocabulary:el('vocabulary').value,minLength:Number(el('min-length').value),maxLength:Number(el('max-length').value),turnMode:mode,turnSeconds:mode === 'timer' ? Number(seconds) : 90};
+    return {puzzleMode:el('puzzle-mode').value,vocabulary:el('vocabulary').value,minLength:Number(el('min-length').value),maxLength:Number(el('max-length').value),turnMode:mode,turnSeconds:mode === 'timer' ? Number(seconds) : 90};
   }
 
   function selectedWordCount() {
     if (!catalog?.levels) return null;
     const selected = selectedSettings();
     const level = catalog.levels.find(item => item.id === selected.vocabulary);
+    if (selected.puzzleMode === 'phrase') return catalog.phrases?.levels?.find(item => item.id === selected.vocabulary)?.count ?? 0;
     if (!level || selected.minLength > selected.maxLength) return 0;
     let count = 0;
     for (let n=selected.minLength;n<=selected.maxLength;n++) count += Number(level.countsByLength?.[n] || 0);
-    return count;
+    return selected.puzzleMode === 'mixed' ? count + (catalog.phrases?.levels?.find(item => item.id === selected.vocabulary)?.count || 0) : count;
   }
 
   function renderSettings() {
-    const current = state?.settings || {vocabulary:'middle',minLength:3,maxLength:15,turnMode:'vote',turnSeconds:90};
+    const current = state?.settings || {puzzleMode:'word',vocabulary:'middle',minLength:3,maxLength:15,turnMode:'vote',turnSeconds:90};
     if (state && settingsRound !== state.roundId) {
       el('vocabulary').value = current.vocabulary;
+      el('puzzle-mode').value = current.puzzleMode || 'word';
       el('min-length').value = current.minLength;
       el('max-length').value = current.maxLength;
       el('turn-rule').value = current.turnMode === 'timer' ? 'timer:' + current.turnSeconds : 'vote';
@@ -66,10 +68,11 @@ import { createTurnNotifications } from './notifications.js?v=3';
     const labels = {easy:'Easy',middle:'Middle school',advanced:'Advanced',dictionary:'Full dictionary'};
     const selected = selectedSettings();
     const lengthLabel = selected.minLength === selected.maxLength ? selected.minLength + ' letters' : selected.minLength + '–' + selected.maxLength + ' letters';
-    el('settings-summary').textContent = labels[selected.vocabulary] + ' · ' + lengthLabel;
+    el('settings-summary').textContent = (selected.puzzleMode === 'phrase' ? 'Phrases' : selected.puzzleMode === 'mixed' ? 'Words + phrases' : 'Words') + ' · ' + labels[selected.vocabulary] + (selected.puzzleMode === 'phrase' ? '' : ' · ' + lengthLabel);
     el('level-label').textContent = 'Shared room · ' + labels[current.vocabulary];
     const count = selectedWordCount();
-    el('pool-count').textContent = count === null ? 'Loading dictionary…' : count === 0 ? 'No words match. Choose another length or vocabulary level.' : count.toLocaleString() + ' matching words. ' + (myTurn() ? 'Your choices apply when you start the next word.' : 'The current player can apply settings to the next word.');
+    el('min-length').disabled = el('max-length').disabled = selected.puzzleMode === 'phrase';
+    el('pool-count').textContent = count === null ? 'Loading dictionary…' : count === 0 ? 'No words match. Choose another length or vocabulary level.' : count.toLocaleString() + ' matching puzzles. ' + (myTurn() ? 'Your choices apply when you start the next word.' : 'The current player can apply settings to the next word.');
     if (catalog?.total) el('dictionary-footer').textContent = catalog.total.toLocaleString() + ' dictionary words · 10 strikes';
   }
 
@@ -98,6 +101,9 @@ import { createTurnNotifications } from './notifications.js?v=3';
     const queued = waitingIndex();
     const reconnecting = !!active && active.connected === false;
     el('turn-notice').classList.toggle('is-mine',mine && live && !reconnecting);
+    el('floating-turn').classList.toggle('is-mine',mine && live && !reconnecting);
+    el('floating-turn').hidden = !turn?.activePlayerId;
+    el('floating-turn').textContent = (mine ? 'YOUR TURN · ' : 'CURRENT PLAYER · ') + (turn?.activePlayerName || 'Waiting');
     el('turn-notice').classList.toggle('is-waiting',queued >= 0);
     el('turn-cycle').textContent = turn ? 'PLAYER CYCLE ' + turn.cycle : 'PLAYER CYCLE';
     el('turn-label').textContent = leftRoom ? 'YOU LEFT THE GAME' : !live ? 'CONNECTING' : reconnecting ? 'WAITING FOR PLAYER' : mine ? 'YOUR TURN' : state?.status !== 'playing' ? 'NEXT WORD' : 'CURRENT TURN';
@@ -193,17 +199,23 @@ import { createTurnNotifications } from './notifications.js?v=3';
   function renderState() {
     if (!state) { updateControls(); return; }
     const word = el('word');
-    word.replaceChildren(); word.style.setProperty('--letters', state.length);
+    word.replaceChildren(); word.style.setProperty('--letters', Math.min(state.length,15));
+    word.classList.toggle('phrase', state.mask.includes(' '));
     word.classList.toggle('long', state.length > 11);
     const guesses = new Set(state.guesses.map(g => g.letter));
     const visible = state.answer ? [...state.answer] : state.mask;
-    for (const letter of visible) {
+    let group = word;
+    for (const [index, letter] of visible.entries()) {
+      if (state.mask[index] === ' ') { group = word; continue; }
+      if (state.mask.includes(' ') && (index === 0 || state.mask[index - 1] === ' ')) {
+        group = document.createElement('span'); group.className = 'phrase-group'; word.appendChild(group);
+      }
       const tile = document.createElement('span');
       tile.className = 'letter' + (letter && guesses.has(letter) ? ' revealed' : letter && state.status === 'lost' ? ' missed' : '');
-      tile.textContent = letter || '\u00a0'; word.appendChild(tile);
+      tile.textContent = letter || '\u00a0'; group.appendChild(tile);
     }
-    el('accessible-word').textContent = 'Word: ' + visible.map(l => l || 'blank').join(', ') + '.';
-    el('word-length').textContent = state.length + ' letters';
+    el('accessible-word').textContent = 'Puzzle: ' + visible.map(l => l === ' ' ? 'space' : l || 'blank').join(', ') + '.';
+    el('word-length').textContent = state.mask.filter(ch => ch !== ' ').length + ' letters' + (state.mask.includes(' ') ? ' · ' + state.mask.join('').split(' ').length + ' words' : '');
     parts.forEach((part,i) => part.classList.toggle('visible', i < state.strikes));
     el('drawing-title').textContent = 'Hangman: ' + state.strikes + ' of 10 pieces drawn';
     el('idle-note').hidden = state.strikes > 0 || state.status !== 'playing';
@@ -243,7 +255,7 @@ import { createTurnNotifications } from './notifications.js?v=3';
   function applySnapshot(envelope, fromSocket) {
     if (envelope?.type !== 'state' || !envelope.state) return;
     const next = envelope.state;
-    if (!Array.isArray(next.mask) || !Array.isArray(next.guesses) || next.length < 1 || next.length > 15) return;
+    if (!Array.isArray(next.mask) || !Array.isArray(next.guesses) || next.length < 1 || next.length > 70) return;
     if (fromSocket) {
       pending = false; clearTimeout(pendingTimer);
       connectedPlayers = Array.isArray(envelope.players) ? envelope.players : [];
@@ -326,7 +338,7 @@ import { createTurnNotifications } from './notifications.js?v=3';
 
   el('name-form').addEventListener('submit',event => {
     event.preventDefault();
-    playerName = el('player-name').value.trim().replace(/\s+/g,' ').slice(0,24);
+    playerName = el('player-name').value.trim().replace(/\s+/g,' ').slice(0,64);
     el('player-name').value = playerName; writeStored('privategames.name',playerName);
     if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({type:'join',clientId,name:playerName,ownerSecret,protocol:3}));
   });
@@ -346,7 +358,7 @@ import { createTurnNotifications } from './notifications.js?v=3';
   el('rejoin-room').addEventListener('click',() => {
     leftRoom = false; stopped = false; writeStored('privategames.leftRoom','0'); connect();
   });
-  for (const id of ['vocabulary','min-length','max-length','turn-rule']) el(id).addEventListener('change',() => {
+  for (const id of ['puzzle-mode','vocabulary','min-length','max-length','turn-rule']) el(id).addEventListener('change',() => {
     if (Number(el('min-length').value) > Number(el('max-length').value)) {
       if (id === 'min-length') el('max-length').value = el('min-length').value;
       else el('min-length').value = el('max-length').value;
