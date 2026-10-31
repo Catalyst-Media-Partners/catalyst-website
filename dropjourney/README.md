@@ -12,7 +12,7 @@ The Drop Journey is the primary INFUSED brand experience. The original light exp
 | `dark.infused.show` | Dark experience canary/alias | Dark Worker alias; noindex and canonicalized to the root |
 | `light.infused.show` | Retired hostname alias | 308 redirect to `https://infused.show/lander/`; never serves a separate copy |
 
-The dark Worker owns the root homepage and all normal site routes. Only `/lander/` invokes the existing `infused-show` Worker to render the original light homepage asset; a root base URL keeps its existing assets working, and its canonical URL is rewritten to `https://infused.show/lander/`. The light Worker remains available internally for this page and the existing booth-attribution handoff. It does not own the public root after INF-3. The production root is indexable only when SITE_MODE=production and the request hostname is infused.show. dark.infused.show remains noindex.
+The dark Worker owns the root homepage and all normal site routes. Only `/lander/` invokes the existing `infused-show` Worker to render the original light homepage asset. The page base keeps normal navigation pointed at the dark site; its CSS, scripts and images are rewritten and proxied beneath `/lander/assets/`, so the light design does not depend on the dark site's asset bundle. Its canonical URL is `https://infused.show/lander/`. The light Worker remains available internally for this page and the existing booth-attribution handoff. It does not own the public root after INF-3. The production root is indexable only when SITE_MODE=production and the request hostname is infused.show. dark.infused.show remains noindex.
 
 ## Source of truth and branch boundaries
 
