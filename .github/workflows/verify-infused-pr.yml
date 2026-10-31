@@ -26,6 +26,7 @@ jobs:
           npm run build
           npm run check
           npm run test:w02
+          npm install --no-save --ignore-scripts playwright@1.56.1
           node scripts/verify-click-links.mjs
       - name: Build and validate the unified production Worker assets
         env:
@@ -45,7 +46,6 @@ jobs:
           node scripts/verify-cloudflare.mjs
       - name: Verify responsive layout of the original light site
         run: |
-          npm install --no-save --ignore-scripts playwright@1.56.1
           npx playwright install chromium
           node scripts/verify-responsive.mjs
       - name: Verify responsive and interaction layout of the Drop Journey
