@@ -26,6 +26,10 @@ entrypoint = "InfusedIntakeSESBridge"
 binding = "BOOTH_ATTRIBUTION"
 service = "infused-show"
 
+[[services]]
+binding = "LIGHT_SITE"
+service = "infused-show"
+
 [triggers]
 crons = ["*/5 * * * *"]
 
