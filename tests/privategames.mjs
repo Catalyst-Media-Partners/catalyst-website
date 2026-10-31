@@ -171,17 +171,17 @@ test('word completion and Next preserve the ongoing player cycle and pending arr
   assert.equal(game.turn.cycle, 3);
 });
 
-test('a clicked clue stays open across words without advancing anyone’s turn', () => {
+test('a clicked clue resets on the next round without advancing anyone’s turn', () => {
   let game = fixture(['Alex','Sam']);
   const turnBefore = clone(game.turn);
   game = applyAction(game, action(game, 'hint'), { playerId: IDS[1], now: 1000 }).state;
   assert.equal(game.clueEnabled, true);
   assert.deepEqual(game.turn, turnBefore);
   game = applyAction(game, action(game, 'next', { skip: true }), { playerId: IDS[0] }).state;
-  assert.equal(game.clueShown, true);
-  assert.equal(publicState(game).clue, game.clue);
+  assert.equal(game.clueShown, false);
+  assert.equal(publicState(game).clue, null);
   assert.equal(game.turn.cursor, 0);
-  assert.equal(applyAction(game, action(game, 'hint'), { playerId: IDS[1] }).changed, false);
+  assert.equal(applyAction(game, action(game, 'hint'), { playerId: IDS[1] }).changed, true);
   game = guess(game, game.word[0]).state;
   game = addPlayer(game, IDS[2], 'Casey');
   assert.equal(applyAction(game, action(game, 'hint'), { playerId: IDS[2] }).code, 'waiting_for_cycle');
@@ -408,7 +408,7 @@ test('hibernation restores current turn, scores, clue preference and player atta
   assert.deepEqual({ ...after, serverTime: 0 },{ ...before, serverTime: 0 });
   assert.equal(after.state.wins,1);
   assert.equal(after.state.roundNumber,2);
-  assert.equal(after.state.clueShown,true);
+  assert.equal(after.state.clueShown,false);
 });
 
 test('unjoined sockets take no slot; duplicate tabs retain one identity and cannot switch to another player', async () => {
@@ -539,14 +539,14 @@ test('only current Next applies valid word and timer settings, without resetting
     assert.equal(result.code,'invalid_settings'); assert.strictEqual(result.state,game);
   }
   game = applyAction(game,request,{playerId:IDS[1],now:10_000}).state;
-  assert.deepEqual(game.settings,settings);
+  assert.deepEqual(game.settings,{...settings,puzzleMode:'word'});
   assert(game.word.length >=12 && game.word.length <=15);
   assert.notEqual(game.word,before.word);
   assert.equal(game.turn.cursor,before.turn.cursor);
   assert.equal(game.turn.cycle,before.turn.cycle);
   assert.equal(game.wins,before.wins); assert.equal(game.losses,before.losses);
   assert.equal(game.turn.deadlineAt,70_000);
-  assert.deepEqual(publicState(game).settings,settings);
+  assert.deepEqual(publicState(game).settings,{...settings,puzzleMode:'word'});
 });
 
 test('a democratic skip needs two distinct eligible peers and never charges a strike', () => {
@@ -860,4 +860,25 @@ test('an additional due notification cannot spin immediate alarms while a delive
     assert.equal(await ctx.storage.getAlarm(),now+1000);
     room.dispatching = false;
   } finally { Date.now = originalNow; }
+});
+
+// Multiword answers ignore spaces, preserve turn gating, and reset clues between rounds.
+test('phrase rounds reveal separators, count only letters and solve with ten-strike rules', () => {
+  let game = addPlayer(createGame({ settings: { ...DEFAULT_SETTINGS, puzzleMode: 'phrase' }, random: () => 0 }), IDS[0], 'wise panda of the enchanted forest');
+  assert.match(game.word, / /); assert(game.word.length > 5);
+  assertStoredGame(game);
+  const snapshot = publicState(game);
+  assert.equal(snapshot.mask.filter(ch => ch === ' ').length, game.word.split(' ').length - 1);
+  assert.equal(snapshot.answer, null);
+  const spaceIndices = [...game.word].flatMap((c,i) => c === ' ' ? [i] : []);
+  for (const i of spaceIndices) assert.equal(snapshot.mask[i], ' ');
+  const hint = applyAction(game,action(game,'hint'),{playerId:IDS[0]});
+  assert.equal(hint.state.clueShown,true);
+  game = hint.state;
+  for (const letter of new Set(game.word.toUpperCase().replaceAll(' ',''))) game = guess(game,letter).state;
+  assert.equal(game.status,'won'); assert.equal(game.wins,1);
+  game = applyAction(game,action(game,'next'),{playerId:IDS[0],random:()=>0}).state;
+  assert.equal(game.clueShown,false);
+  assert.equal(game.clueEnabled,false);
+  assert.equal(publicState(game).clue,null);
 });
