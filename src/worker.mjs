@@ -121,7 +121,15 @@ export default {
     if (isLightHost && !lightHostEnabled) {
       return new Response('Not found', {status:404,headers:headersFor(false,{'Content-Type':'text/plain; charset=utf-8'})});
     }
-    const isProduction = host === HOST || host === WWW || (isLightHost && lightHostEnabled);
+    // Retire the light hostname as a content host. The light design lives only
+    // at https://infused.show/lander/; keep the old hostname as a redirect.
+    if (isLightHost) {
+      const next = new URL(request.url);
+      next.hostname = HOST;
+      next.pathname = '/lander/';
+      return Response.redirect(next.toString(), 308);
+    }
+    const isProduction = host === HOST || host === WWW;
     const canonicalHost = isLightHost ? LIGHT_HOST : HOST;
     if (url.pathname === '/go/booth' || url.pathname === '/go/booth/') {
       return boothClick(request, env, url, isProduction, canonicalHost);
@@ -131,15 +139,6 @@ export default {
       next.hostname = HOST;
       return Response.redirect(next, 308);
     }
-
-    // The light hostname is a dedicated alias for the original light landing page.
-    // Keep the existing root site unchanged and serve its homepage at /lander/.
-    if (isLightHost && (url.pathname === '/' || url.pathname === '/lander')) {
-      const next = new URL(request.url);
-      next.pathname = '/lander/';
-      return Response.redirect(next.toString(), 308);
-    }
-    const serveLightLander = isLightHost && url.pathname === '/lander/';
 
     // W02: ticket interest, confirmation and unsubscribe, isolated from booth checkout.
     if (url.pathname === '/tickets' || url.pathname.startsWith('/tickets/')) {
@@ -190,21 +189,11 @@ export default {
         '\n</urlset>\n';
       return new Response(xml, { headers: headersFor(true, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }) });
     }
-    // /lander/ reuses the existing light homepage asset; the base element below
-    // keeps its relative CSS, images, scripts and navigation rooted at the site root.
-    const assetRequest = serveLightLander
-      ? new Request(new URL('/', url), request)
-      : request;
-    const asset = await env.ASSETS.fetch(assetRequest);
+    const asset = await env.ASSETS.fetch(request);
     const headers = headersFor(isProduction, asset.headers);
     if (!isProduction && headers.get('Content-Type')?.includes('text/html')) headers.set('Cache-Control', 'no-store');
     if (isProduction && asset.ok && headers.get('Content-Type')?.includes('text/html')) {
       let html = await asset.text();
-      // The /lander/ alias serves the existing root HTML, so resolve its relative
-      // assets and links from / while retaining /lander/ as the public canonical URL.
-      if (serveLightLander && !/<base\\b/i.test(html)) {
-        html = html.replace(/<head(?:\\s[^>]*)?>/i, match => match + '\\n<base href="/">');
-      }
       // Content and visual design stay identical. Only deployment metadata changes.
       html = html.replace('<meta name="robots" content="noindex, nofollow, noarchive">', '<meta name="robots" content="index, follow">');
       const cleanPath = url.pathname.replace(/\/index\.html$/, '/');
