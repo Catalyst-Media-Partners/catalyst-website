@@ -142,7 +142,7 @@ function attendanceInterestPage(){
  '<main id="main" tabindex="-1" class="dj-application"><section class="dj-app-head"><div class="dj-app-intro"><span class="dj-kicker">ATTENDANCE / INFUSED LAS VEGAS</span>'+
  '<span class="dj-sector-kicker">'+event.dateLabel+' / '+event.venue+'</span>'+
  '<h1>FIND YOUR PLACE<br><em>IN THE MIX.</em></h1><p>Interested in attending INFUSED? Share what brings you here and our team will follow up.</p>'+
- '<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#attendee-interest-form">Share your interest <span aria-hidden="true">↘</span></a><a class="dj-btn dj-btn-quiet" href="'+href('tickets')+'">Attendance information <span aria-hidden="true">↗</span></a></div>'+
+ '<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#attendee-interest-form">Share your interest <span aria-hidden="true">↘</span></a></div>'+
  '</div></section>'+renderIntakeForm('attendee',{base:BASE})+'</main>'+footer()+'<canvas class="dj-water" aria-hidden="true"></canvas></body></html>');
 }
 function cleanHome(html){

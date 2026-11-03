@@ -161,3 +161,10 @@ body[data-stage=who] a.small-pill{display:inline-flex;align-items:center;justify
 .dj-native-intake .dj-btn-acid{background:#bdfa74;color:#100d19;border-color:#bdfa74}
 .dj-native-intake .dj-btn-acid:hover{background:#dcffae}
 @media(max-width:720px){.dj-native-intake{margin:24px 0;padding:22px;border-radius:16px}.dj-intake-checkgrid label{min-height:40px;align-items:center}}
+
+/* Completed intake is a confirmation, never a disabled editable form. */
+.dj-intake-form.dj-intake-complete{border:1px solid rgba(189,250,116,.6);border-radius:15px;background:#13101b;padding:clamp(24px,3vw,38px);margin-top:10px}
+.dj-intake-form.dj-intake-complete .dj-intake-grid,.dj-intake-form.dj-intake-complete button[type=submit],.dj-intake-form.dj-intake-complete .dj-intake-privacy{display:none}
+.dj-intake-form.dj-intake-complete .dj-intake-status{color:#e7ffd0;font-size:clamp(20px,2.3vw,28px);line-height:1.35;font-weight:800;margin:0;min-height:0;outline:none}
+.dj-intake-form.dj-intake-complete .dj-intake-status::before{content:'✓';display:inline-flex;align-items:center;justify-content:center;background:#bdfa74;color:#100d19;border-radius:100%;height:35px;width:35px;margin-right:14px;font-size:22px;vertical-align:middle}
+.dj-intake-form.dj-intake-complete .dj-intake-status:focus-visible{outline:3px solid #bdfa74;outline-offset:6px}

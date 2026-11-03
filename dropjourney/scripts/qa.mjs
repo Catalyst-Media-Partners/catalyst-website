@@ -56,6 +56,8 @@ if(indexable){
  assert.equal((sitemap.match(/<url>/g)||[]).length,17,'production sitemap should list the 17 published site routes');
  assert.ok(sitemap.includes('https://infused.show/buyers/apply/'));
  assert.ok(sitemap.includes('https://infused.show/attend/interest/'));
+ const interest=await readFile(path.join(dist,'attend/interest/index.html'),'utf8');
+ assert.ok(!interest.includes('Attendance information <span'),'attendance interest must not loop to ticket promotions');
 }else{
  assert.ok(robots.includes('Disallow: /'));
  await assert.rejects(()=>readFile(path.join(dist,'sitemap.xml'),'utf8'));

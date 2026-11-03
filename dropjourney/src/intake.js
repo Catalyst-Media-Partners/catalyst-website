@@ -51,6 +51,9 @@
     tell(payload.kind==='buyer'?"Thank you! We've received your buyer request.":payload.kind==='attendee'?"Thank you! We've received your attendance interest.":"Thank you! We've received your message.",true);
     form.querySelectorAll('input,select,textarea,button').forEach(el=>{el.disabled=true;});
     requestId=null;form.dataset.completed='true';
+    form.classList.add('dj-intake-complete');
+    status.tabIndex=-1;
+    status.focus();
    }catch(err){
     tell(err.name==='AbortError'?'Response timed out. Check your connection and retry.':String(err.message||'Submission failed. Please retry.'),false);
     if(window.turnstile?.reset)try{window.turnstile.reset(form.querySelector('.cf-turnstile'));}catch{}
