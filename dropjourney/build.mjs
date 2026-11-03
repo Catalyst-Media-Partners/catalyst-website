@@ -130,12 +130,20 @@ function applicationPage(){
  return Promise.resolve(head('Hosted Buyer Request','Submit a first-party INFUSED Hosted Buyer inquiry, reviewed by the INFUSED team.',href('buyers/apply'))+
  '<body class="dj-detail dj-apply" data-page="buyers/apply" data-chapter="who">'+header('buyers')+noScriptNav()+introNav({num:'02',chapter:'WHO',label:'Buyer request',next:'buyers'})+
  '<main id="main" class="dj-application"><section class="dj-app-head dj-app-head-visual"><div class="dj-app-intro"><span class="dj-kicker">HOSTED BUYERS / REQUEST CONSIDERATION</span><span class="dj-sector-kicker">'+event.dateLabel+' / '+event.venue+'</span>'+
- '<h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Tell INFUSED what you source and whom you want to meet. A request is not a confirmed hosted-buyer benefit, acceptance or meeting.</p>'+
+ '<h1>THE RIGHT MEETINGS<br><em>START WITH WHAT YOU NEED.</em></h1><p>Tell INFUSED what you source and the partners you want to meet.</p>'+
  '<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#buyer-request-form" data-intake-type="hosted-buyer">Request buyer consideration <span aria-hidden="true">↘</span></a><a class="dj-btn dj-btn-quiet" href="'+href('buyers')+'">Hosted Buyer information <span aria-hidden="true">↗</span></a></div></div>'+
  '<figure class="dj-apply-photo"><img src="'+imagesRoot+'brand-representative-in-a-hosted-buyer-discussion-at-a-booth-18.webp" alt="Business representatives discussing sourcing" width="1400" height="933" decoding="async" loading="eager"><figcaption>Products / partners / conversations</figcaption></figure></section>'+
  renderIntakeForm('buyer',{base:BASE})+
- '<section class="dj-secure-intake" aria-label="Request process"><h2>What happens after submission?</h2><div class="dj-intake-steps"><p><strong>1 · Request received</strong> We save your sourcing priorities securely and provide a receipt.</p><p><strong>2 · Team review</strong> The INFUSED team reviews the request and may contact you.</p><p><strong>3 · No automatic acceptance</strong> Your request is not a confirmed meeting, benefit or ticket.</p></div></section>'+
  '</main>'+footer()+'<canvas class="dj-water" aria-hidden="true"></canvas></body></html>');
+}
+function attendanceInterestPage(){
+ return Promise.resolve(head('Attendance Interest','Let the INFUSED team know you would like to attend.',href('attend/interest'))+
+ '<body class="dj-detail dj-apply dj-attend-interest" data-page="attend/interest" data-chapter="when">'+header('tickets')+noScriptNav()+
+ '<main id="main" tabindex="-1" class="dj-application"><section class="dj-app-head"><div class="dj-app-intro"><span class="dj-kicker">ATTENDANCE / INFUSED LAS VEGAS</span>'+
+ '<span class="dj-sector-kicker">'+event.dateLabel+' / '+event.venue+'</span>'+
+ '<h1>FIND YOUR PLACE<br><em>IN THE MIX.</em></h1><p>Interested in attending INFUSED? Share what brings you here and our team will follow up.</p>'+
+ '<div class="dj-topic-actions"><a class="dj-btn dj-btn-acid" href="#attendee-interest-form">Share your interest <span aria-hidden="true">↘</span></a><a class="dj-btn dj-btn-quiet" href="'+href('tickets')+'">Attendance information <span aria-hidden="true">↗</span></a></div>'+
+ '</div></section>'+renderIntakeForm('attendee',{base:BASE})+'</main>'+footer()+'<canvas class="dj-water" aria-hidden="true"></canvas></body></html>');
 }
 function cleanHome(html){
  if(!html.includes('{{DROP_ART_INTRO}}')||!html.includes('{{DROP_ART_STAGE}}'))throw Error('Missing shared droplet source markers');
@@ -215,6 +223,7 @@ home=home.replaceAll('{{ORIGINAL_CSS}}',()=>styleOriginal)
 await write('index.html',home);
 for(const route of catalog)await write(`${route.id}/index.html`,await detailPage(route));
 await write('buyers/apply/index.html',await applicationPage());
+await write('attend/interest/index.html',await attendanceInterestPage());
 // Standalone HTML campaign output, with inline brand media and no external assets.
 const campaignConfig=JSON.parse(await load('content/landers.json'));
 const exportDir=path.join(root,'exports','landers');
@@ -230,7 +239,7 @@ for(const offer of offers){
 // The only native inquiry endpoint is same-origin and consented.
 await write('robots.txt',INDEXABLE?'User-agent: *\nAllow: /\nSitemap: https://infused.show/sitemap.xml\n':'User-agent: *\nDisallow: /\n');
 if(INDEXABLE){
- const pages=['/',...catalog.map(x=>href(x.id)),href('buyers/apply')];
+ const pages=['/',...catalog.map(x=>href(x.id)),href('buyers/apply'),href('attend/interest')];
  const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+pages.map(p=>'  <url><loc>https://infused.show'+p+'</loc></url>').join('\n')+'\n</urlset>\n';
  await write('sitemap.xml',xml);
 }
@@ -248,4 +257,4 @@ await mkdir(path.join(output,'assets','js'),{recursive:true});
 await copyFile(path.join(lightPublic,'assets','css','site.css'),path.join(output,'assets','css','site.css'));
 await copyFile(path.join(lightPublic,'assets','js','cta-attribution.js'),path.join(output,'assets','js','cta-attribution.js'));
 
-console.log('Built '+(catalog.length+2)+' full-site routes and '+(offers.length+1)+' campaign landers in '+mode+' mode under '+BASE+'; exported '+offers.length+' standalone HTML files');
+console.log('Built '+(catalog.length+3)+' full-site routes and '+(offers.length+1)+' campaign landers in '+mode+' mode under '+BASE+'; exported '+offers.length+' standalone HTML files');
