@@ -75,6 +75,6 @@ export function renderTickets(source,{href,event,base=href('')}){
   </div>
   <figure class="dj-tickets-photo">${photo}<figcaption>Infused product discovery / Las Vegas</figcaption></figure>
  </div>
- <nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Need Hosted Buyer access? <span aria-hidden="true">↗</span></a></nav>
+ <nav class="dj-ticket-next" aria-label="Explore INFUSED"><a href="${href('ecosystem')}">Discover the ecosystem <span aria-hidden="true">↗</span></a><a href="${href('buyers')}">Need Hosted Buyer access? <span aria-hidden="true">↗</span></a><a href="${href('attend/interest')}">Share attendance interest <span aria-hidden="true">↗</span></a></nav>
  </div></section><script src="${base}assets/ticket-notify.js" defer></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
 }
