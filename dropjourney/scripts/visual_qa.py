@@ -51,7 +51,8 @@ cases=[
  ('why-vegas',1440,900),('opportunities',390,844),
  ('buyers/apply',1440,900),('buyers/apply',390,844),
  ('tickets',1024,768),('tickets',390,844),
- ('contact',768,900),('contact',390,844)
+ ('contact',768,900),('contact',390,844),
+ ('attend/interest',1440,900),('attend/interest',1024,768),('attend/interest',768,900),('attend/interest',390,844)
 ]
 records=[]
 with sync_playwright() as p:
@@ -80,11 +81,11 @@ with sync_playwright() as p:
         if not page.locator('#dj-drawer').is_hidden():errors.append('menu failed Escape close')
         target=page.locator('.dj-explore').bounding_box()
         if not target or target['width']<44 or target['height']<44:errors.append('explore tap target below 44px')
-        if route in ('buyers/apply','contact'):
+        if route in ('buyers/apply','contact','attend/interest'):
             form=page.locator('form.dj-intake-form')
             if form.count()!=1:errors.append('native intake form missing')
             elif form.get_attribute('action')!=BASE+'api/intake':errors.append('native intake action has wrong base')
-            if not page.locator('input[name="consentContact"]').count():errors.append('required inquiry consent missing')
+            if page.locator('input[name="consentContact"],input[name="consentMarketing"]').count():errors.append('unnecessary marketing/contact opt-in on inquiry')
         if route=='tickets':
             form=page.locator('form.dj-ticket-notify-form')
             if form.count()!=1:errors.append('ticket notice form missing')
