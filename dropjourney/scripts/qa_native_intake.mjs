@@ -195,3 +195,15 @@ assert.equal(successful,14);
 assert.equal(duplicates,14);
 assert.ok(rejected>=24);
 console.log('PASS DJ-U3 acceptance matrix: '+successful+' valid role variants; '+duplicates+' idempotent replays; '+rejected+' rejected conditions; 1 simulated SES-outage persistence/recovery; 3 native pages');
+
+// Post-submit success and navigation UX: no still-editable form, no misleading ticket promo CTA.
+const clientSource=await readFile(path.join(root,'src/intake.js'),'utf8');
+const cssSource=await readFile(path.join(root,'src/finish.css'),'utf8');
+assert.ok(clientSource.includes("form.classList.add('dj-intake-complete')"));
+assert.ok(clientSource.includes('status.focus()'));
+assert.ok(cssSource.includes('.dj-intake-form.dj-intake-complete .dj-intake-grid'));
+assert.ok(cssSource.includes('.dj-intake-form.dj-intake-complete .dj-intake-status'));
+const interestHTML=await readFile(path.join(root,'dist',DIST,'attend/interest/index.html'),'utf8');
+assert.doesNotMatch(interestHTML,/Attendance information <span/);
+assert.doesNotMatch(interestHTML,/dj-btn-quiet[^>]*>Attendance information/);
+assert.match(interestHTML,/href="#attendee-interest-form">Share your interest/);
