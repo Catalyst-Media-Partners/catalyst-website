@@ -7,7 +7,7 @@ assert.ok(['preview','production'].includes(mode),'INFUSED_MODE must be preview 
 const base=mode==='production'?'/':'/dropjourneytest/';
 const indexable=mode==='production';
 const dist=path.join(root,'dist',indexable?'production':'dropjourneytest');
-const ids=['','market','ecosystem','roots','science','make','package','move','sell','services','buyers','why-vegas','opportunities','contact','tickets','buyers/apply'];
+const ids=['','market','ecosystem','roots','science','make','package','move','sell','services','buyers','why-vegas','opportunities','contact','tickets','buyers/apply','attend/interest'];
 let pages=0,links=0,images=0;
 for(const id of ids){
  const file=path.join(dist,id,'index.html');
@@ -31,7 +31,7 @@ for(const id of ids){
   assert.ok(html.includes('not yet on sale'),'honest ticket-not-on-sale state');
   assert.ok(html.includes('action="'+base+'tickets/api/subscribe"'),'ticket action must use the selected base');
   assert.ok(html.includes(base+'assets/ticket-notify.js'),'ticket script must use the selected base');
- }else if(['buyers/apply','contact'].includes(id)){
+ }else if(['buyers/apply','contact','attend/interest'].includes(id)){
   assert.match(html,/class="dj-intake-form"/,label+': required native inquiry form missing');
   assert.ok(html.includes('action="'+base+'api/intake"'),'intake action must use the selected base');
  }else assert.ok(!html.includes('<form'),label+': unexpected form');
@@ -53,8 +53,9 @@ if(indexable){
  assert.ok(robots.includes('Allow: /'));
  assert.ok(robots.includes('Sitemap: https://infused.show/sitemap.xml'));
  const sitemap=await readFile(path.join(dist,'sitemap.xml'),'utf8');
- assert.equal((sitemap.match(/<url>/g)||[]).length,16,'production sitemap should list the 16 published site routes');
+ assert.equal((sitemap.match(/<url>/g)||[]).length,17,'production sitemap should list the 17 published site routes');
  assert.ok(sitemap.includes('https://infused.show/buyers/apply/'));
+ assert.ok(sitemap.includes('https://infused.show/attend/interest/'));
 }else{
  assert.ok(robots.includes('Disallow: /'));
  await assert.rejects(()=>readFile(path.join(dist,'sitemap.xml'),'utf8'));

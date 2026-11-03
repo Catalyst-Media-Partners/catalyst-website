@@ -143,3 +143,21 @@ body[data-stage=who] a.small-pill{display:inline-flex;align-items:center;justify
 .dj-intake-status[data-state=error]{color:#ffb7cb}
 .dj-intake-privacy{max-width:75ch;margin:10px 0 0}
 @media(max-width:720px){.dj-intake-grid,.dj-intake-checkgrid{grid-template-columns:1fr}.dj-native-intake{padding:20px;margin:26px 0}.dj-intake-field input,.dj-intake-field select,.dj-intake-field textarea{font-size:16px}}
+
+/* INFUSED native intake: approved plum/acid brand, not the prior green-tinted panel. */
+.dj-native-intake{background:#211a2a;border:1px solid rgba(189,250,116,.32);box-shadow:0 20px 65px rgba(0,0,0,.18)}
+.dj-intake-kicker{display:block;font-size:11px;letter-spacing:.17em;color:#bdfa74;font-weight:800;margin-bottom:16px}
+.dj-native-intake h2{color:#f7f5f3;max-width:26ch}
+.dj-intake-description{color:#e4ddea;max-width:65ch}
+.dj-intake-field{color:#f7f5f3;font-weight:650}
+.dj-intake-field input,.dj-intake-field select,.dj-intake-field textarea{background:#100d19;color:#fff;border:1px solid #867b91;font-weight:400}
+.dj-intake-field input:focus-visible,.dj-intake-field select:focus-visible,.dj-intake-field textarea:focus-visible,.dj-intake-checkgrid input:focus-visible{outline:3px solid #bdfa74;outline-offset:3px}
+.dj-intake-categories legend{color:#f7f5f3;font-weight:750}
+.dj-intake-checkgrid label{color:#e4ddea;font-size:14px}
+.dj-intake-checkgrid input{accent-color:#bdfa74}
+.dj-intake-field b,.dj-intake-categories b{color:#bdfa74}
+.dj-intake-privacy{color:#c9c1cf}
+.dj-intake-status:empty{display:none}
+.dj-native-intake .dj-btn-acid{background:#bdfa74;color:#100d19;border-color:#bdfa74}
+.dj-native-intake .dj-btn-acid:hover{background:#dcffae}
+@media(max-width:720px){.dj-native-intake{margin:24px 0;padding:22px;border-radius:16px}.dj-intake-checkgrid label{min-height:40px;align-items:center}}

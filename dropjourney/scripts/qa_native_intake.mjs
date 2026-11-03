@@ -16,6 +16,7 @@ const DIST=process.env.INFUSED_MODE==='production'?'production':'dropjourneytest
 const sql=await readFile(path.join(root,'migrations/0001_infused_native_intake.sql'),'utf8');
 const store=new DatabaseSync(':memory:');
 store.exec(sql);
+store.exec(await readFile(path.join(root,'migrations/0002_infused_intake_ack.sql'),'utf8'));
 const db={
  prepare(q){
   const st=store.prepare(q);
@@ -41,7 +42,7 @@ const siteOK=async()=>new Response(JSON.stringify({success:true,hostname:SITE_HO
 const siteWrongHost=async()=>new Response(JSON.stringify({success:true,hostname:'evil.example',action:'infused-intake'}),{status:200});
 const siteWrongAction=async()=>new Response(JSON.stringify({success:true,hostname:SITE_HOST,action:'other'}),{status:200});
 const siteFail=async()=>new Response(JSON.stringify({success:false}),{status:200});
-const pathFor={buyer:BASE+'buyers/apply/',attendee:BASE+'tickets/',contact:BASE+'contact/'};
+const pathFor={buyer:BASE+'buyers/apply/',attendee:BASE+'attend/interest/',contact:BASE+'contact/'};
 let serial=0;
 function payload(kind,role,marketing=false){
  serial++;
@@ -75,7 +76,7 @@ const roles={
 let successful=0,duplicates=0;
 for(const [kind,options] of Object.entries(roles)){
  for(let i=0;i<options.length;i++){
-  const p=payload(kind,options[i],i===options.length-1);
+  const p=payload(kind,options[i],false);
   const before=count('intake_submissions_v1');
   const result=await handleIntake(request(p),env,siteOK);
   assert.equal(result.status,200,kind+' '+options[i]+' must be accepted');
@@ -85,13 +86,14 @@ for(const [kind,options] of Object.entries(roles)){
   assert.ok(row,'D1 mock readback must find request');
   assert.equal(row.id,body.receiptId);
   assert.equal(row.kind,kind);
-  assert.equal(row.consent_marketing,p.consentMarketing?1:0,'marketing consent must be independent');
+  assert.equal(row.consent_marketing,0,'ordinary inquiry may not subscribe to marketing');
   assert.equal(row.source_page,pathFor[kind]);
   assert.equal(row.environment,ENVIRONMENT,'preview/canary submissions must remain preview; production submits must be explicit');
   assert.equal(row.buying_role,kind==='contact'?'':options[i]);
   assert.deepEqual(JSON.parse(row.categories_json),p.categories);
   assert.equal(count('intake_submissions_v1'),before+1);
   assert.equal(store.prepare('SELECT COUNT(*) n FROM intake_notification_outbox_v1 WHERE submission_id=?').get(row.id).n,1);
+  assert.equal(store.prepare('SELECT COUNT(*) n FROM intake_ack_outbox_v1 WHERE submission_id=?').get(row.id).n,1);
   successful++;
   // Idempotent replay: the same request key must return the existing receipt.
   const again=await handleIntake(request(p),env,siteOK);
@@ -107,12 +109,13 @@ const negative=payload('buyer','Purchasing decision-maker');
 const bad=[
  ['no required inquiry consent',{...negative,consentContact:false},400,siteOK],
  ['marketing choice must be explicit',{...negative,consentMarketing:null},400,siteOK],
+ ['marketing opt-in is disallowed on inquiries',{...negative,consentMarketing:true},400,siteOK],
  ['invalid email',{...negative,email:'not-an-email'},400,siteOK],
  ['no company',{...negative,company:''},400,siteOK],
  ['missing sourcing category',{...negative,categories:[]},400,siteOK],
  ['unknown sourcing category',{...negative,categories:['UNKNOWN']},400,siteOK],
  ['invalid buying authority',{...negative,buyingRole:'Other Person'},400,siteOK],
- ['missing sourcing objective',{...negative,objective:''},400,siteOK],
+
  ['honeypot filled',{...negative,websiteConfirm:'automated-bot'},400,siteOK],
  ['non-https website',{...negative,website:'http://example.com'},400,siteOK],
  ['invalid request receipt',{...negative,requestId:'not-a-uuid'},400,siteOK],
@@ -151,7 +154,8 @@ assert.equal(disabled.status,503);rejected++;
 const huge=await handleIntake(request({...negative,additional:'x'.repeat(17000)}),env,siteOK);
 assert.equal(huge.status,400);rejected++;
 assert.equal(count('intake_submissions_v1'),before,'protocol and size rejections must not write');
-assert.equal(count('intake_notification_outbox_v1'),successful,'one outbox row for each valid submission');
+assert.equal(count('intake_notification_outbox_v1'),successful,'one staff row per valid submission');
+assert.equal(count('intake_ack_outbox_v1'),successful,'one customer acknowledgment per valid submission');
 
 // SES bridge is separately production-tested; this is a same-interface fake,
 // not evidence that real SES sent anything.
@@ -176,7 +180,7 @@ const canaryRow=store.prepare('SELECT environment,test_record FROM intake_submis
 assert.equal(canaryRow.environment,ENVIRONMENT);
 assert.equal(canaryRow.test_record,1,'canary receipt must be marked synthetic');
 
-const pages=['buyers/apply','contact'];
+const pages=['buyers/apply','contact','attend/interest'];
 for(const id of pages){
  const html=await readFile(path.join(root,'dist',DIST,id,'index.html'),'utf8');
  assert.match(html,/cf-turnstile/);
@@ -184,6 +188,8 @@ for(const id of pages){
  assert.ok(html.includes('data-sitekey="'+TURNSTILE_SITEKEY+'"'),'native form must use the selected environment Turnstile widget');
  assert.ok(html.includes('action="'+BASE+'api/intake"'),'form action must match selected build base');
  assert.doesNotMatch(html,/jotform/i);
+ assert.doesNotMatch(html,/name="consentMarketing"/);
+ assert.doesNotMatch(html,/name="consentContact"/);
 }
 assert.equal(successful,14);
 assert.equal(duplicates,14);

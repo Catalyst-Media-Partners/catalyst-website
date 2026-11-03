@@ -4,11 +4,24 @@
  const forms=document.querySelectorAll('form.dj-intake-form[data-intake-kind]');
  for(const form of forms){
   let requestId=null,busy=false;
+  const website=form.querySelector('[name="website"]');
+  function normalizeWebsite(){
+   if(!website)return true;
+   const val=website.value.trim();if(!val){website.setCustomValidity('');return true;}
+   const url=/^[a-z][a-z0-9+.-]*:/i.test(val)?val:val.startsWith('//')?'https:'+val:'https://'+val;
+   let valid=false;
+   try{const parsed=new URL(url);valid=parsed.protocol==='https:'&&!parsed.username&&!parsed.password&&parsed.hostname.includes('.')&&url.length<=website.maxLength;}catch{}
+   if(!valid){website.setCustomValidity('Enter a valid website link, for example example.com.');return false;}
+   website.value=url;website.setCustomValidity('');return true;
+  }
+  website?.addEventListener('input',()=>website.setCustomValidity(''));
+  website?.addEventListener('blur',normalizeWebsite);
   const submit=form.querySelector('button[type="submit"]'),status=form.querySelector('.dj-intake-status');
   const tell=(message,ok)=>{status.textContent=message;status.dataset.state=ok?'success':'error';};
   form.addEventListener('submit',async e=>{
    e.preventDefault();
    if(busy)return;
+   normalizeWebsite();
    if(!form.reportValidity()){tell('Please complete the required fields.',false);return;}
    const f=new FormData(form);
    const token=String(f.get('cf-turnstile-response')||'');
@@ -24,7 +37,7 @@
     objective:String(f.get('objective')||''),message:String(f.get('message')||''),
     website:String(f.get('website')||''),markets:String(f.get('markets')||''),
     inquiryTopic:String(f.get('inquiryTopic')||''),websiteConfirm:String(f.get('websiteConfirm')||''),
-    consentContact:f.has('consentContact'),consentMarketing:f.has('consentMarketing'),
+    consentContact:true,consentMarketing:false,
     turnstileToken:token,sourcePage:location.pathname
    };
    busy=true;submit.disabled=true;submit.setAttribute('aria-busy','true');tell('Submitting securely…',true);
@@ -35,7 +48,7 @@
     finally{clearTimeout(timer);}
     const result=await response.json();
     if(!response.ok||!result.ok)throw Error(String(result.error||'Submission failed. Please try again.'));
-    tell('Request received. Receipt: '+result.receiptId+'. '+(payload.kind==='attendee'?'This is not a ticket or reservation.':'The INFUSED team will review your request.'),true);
+    tell(payload.kind==='buyer'?"Thank you! We've received your buyer request.":payload.kind==='attendee'?"Thank you! We've received your attendance interest.":"Thank you! We've received your message.",true);
     form.querySelectorAll('input,select,textarea,button').forEach(el=>{el.disabled=true;});
     requestId=null;form.dataset.completed='true';
    }catch(err){
