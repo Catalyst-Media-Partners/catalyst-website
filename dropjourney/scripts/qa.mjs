@@ -70,7 +70,7 @@ assert.ok(!code.includes('env.BOOTH_ATTRIBUTION'),'No dependency on retired boot
 assert.ok(!code.includes('env.LIGHT_SITE'),'No dependency on retired light Worker binding');
 assert.ok(!code.includes('AUDIENCE_DB'),'Production Worker must use its canonical intake binding');
 const productionConfig=await readFile(path.join(root,'../wrangler.toml'),'utf8');
-for(const needle of ['name = "infused-dark"','workers_dev = false','SITE_MODE = "production"','INTAKE_ENVIRONMENT = "production"','INTAKE_TEST_MODE = "false"','TICKET_NOTIFY_ENABLED = "false"','binding = "INTAKE_DB"','database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"','binding = "INTAKE_SES"','service = "catalyst-revenue"']){
+for(const needle of ['name = "infused-dark"','workers_dev = false','SITE_MODE = "production"','INTAKE_ENVIRONMENT = "production"','INTAKE_TEST_MODE = "false"','TICKET_NOTIFY_ENABLED = "false"','binding = "INTAKE_DB"','database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"','binding = "INTAKE_SES"','service = "catalyst-ses-bridge"']){
  assert.ok(productionConfig.includes(needle),'Unified production config missing '+needle);
 }
 assert.ok(!productionConfig.includes('binding = "BOOTH_ATTRIBUTION"'),'Retired attribution service still bound');
