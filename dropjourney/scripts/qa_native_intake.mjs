@@ -189,7 +189,9 @@ for(const id of pages){
  assert.ok(html.includes('action="'+BASE+'api/intake"'),'form action must match selected build base');
  assert.doesNotMatch(html,/jotform/i);
  assert.doesNotMatch(html,/name="consentMarketing"/);
- assert.doesNotMatch(html,/name="consentContact"/);
+ assert.match(html,/<input type="checkbox" name="consentContact" value="on" required>/,'contact consent must be a visible required checkbox');
+ assert.match(html,/This permission is only for responding to this request/,'contact consent scope must be explicit');
+ assert.match(html,/assets\/intake\.js\?v=20261105-contact-consent/,'fresh browser script must load on all forms');
 }
 assert.equal(successful,14);
 assert.equal(duplicates,14);
@@ -200,6 +202,8 @@ console.log('PASS DJ-U3 acceptance matrix: '+successful+' valid role variants; '
 const clientSource=await readFile(path.join(root,'src/intake.js'),'utf8');
 const cssSource=await readFile(path.join(root,'src/finish.css'),'utf8');
 assert.ok(clientSource.includes("form.classList.add('dj-intake-complete')"));
+assert.ok(clientSource.includes("consentContact:f.get('consentContact')==='on'"),'client must submit the actual checkbox state');
+assert.doesNotMatch(clientSource,/consentContact:true/,'client must not hardcode contact consent');
 assert.ok(clientSource.includes('status.focus()'));
 assert.ok(cssSource.includes('.dj-intake-form.dj-intake-complete .dj-intake-grid'));
 assert.ok(cssSource.includes('.dj-intake-form.dj-intake-complete .dj-intake-status'));

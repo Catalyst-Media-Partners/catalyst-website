@@ -16,13 +16,14 @@
   }
   website?.addEventListener('input',()=>website.setCustomValidity(''));
   website?.addEventListener('blur',normalizeWebsite);
-  const submit=form.querySelector('button[type="submit"]'),status=form.querySelector('.dj-intake-status');
+  const submit=form.querySelector('button[type="submit"]'),status=form.querySelector('.dj-intake-status'),consent=form.querySelector('input[name="consentContact"]');
   const tell=(message,ok)=>{status.textContent=message;status.dataset.state=ok?'success':'error';};
   form.addEventListener('submit',async e=>{
    e.preventDefault();
    if(busy)return;
    normalizeWebsite();
-   if(!form.reportValidity()){tell('Please complete the required fields.',false);return;}
+   if(!form.reportValidity()){tell(consent&&!consent.checked?'Please agree to contact about this inquiry.':'Please complete the required fields.',false);return;}
+   if(!consent?.checked){tell('Please agree to contact about this inquiry.',false);return;}
    const f=new FormData(form);
    const token=String(f.get('cf-turnstile-response')||'');
    if(token.length<10){tell('Complete the human verification before submitting.',false);return;}
@@ -37,7 +38,7 @@
     objective:String(f.get('objective')||''),message:String(f.get('message')||''),
     website:String(f.get('website')||''),markets:String(f.get('markets')||''),
     inquiryTopic:String(f.get('inquiryTopic')||''),websiteConfirm:String(f.get('websiteConfirm')||''),
-    consentContact:true,consentMarketing:false,
+    consentContact:f.get('consentContact')==='on',consentMarketing:false,
     turnstileToken:token,sourcePage:location.pathname
    };
    busy=true;submit.disabled=true;submit.setAttribute('aria-busy','true');tell('Submitting securely…',true);

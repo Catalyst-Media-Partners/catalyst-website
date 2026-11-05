@@ -38,12 +38,13 @@ export function renderIntakeForm(kind,{base='/dropjourneytest/'}={}){
   fields+=select('inquiryTopic','What can we help with?',['Exhibiting','Sponsorship','Hosted buyers','Partnership','Media / speaking','Tickets / attendance','General'],true);
   fields+=textarea('message','Your message',true,2000);
  }
+ const consent='<fieldset class="dj-intake-consent dj-intake-full" aria-describedby="'+id+'-consent-help"><legend>Contact permission <b aria-label="required">*</b></legend><label><input type="checkbox" name="consentContact" value="on" required> I agree that the INFUSED team may contact me about this request.</label><p class="dj-intake-help" id="'+id+'-consent-help">This permission is only for responding to this request. It does not subscribe you to marketing emails.</p></fieldset>';
  const captcha='<div class="dj-intake-full"><div class="cf-turnstile" data-sitekey="'+SITEKEY+'" data-action="infused-intake" data-theme="dark"></div></div>';
  const honeypot='<div class="dj-intake-trap" aria-hidden="true"><label>Leave this field blank<input name="websiteConfirm" tabindex="-1" autocomplete="off"></label></div>';
  const button={buyer:'Send buyer request',attendee:'Send attendance interest',contact:'Send message'}[kind];
  return '<section class="dj-native-intake" id="'+id+'" aria-labelledby="'+id+'-title"><span class="dj-intake-kicker">INFUSED / LAS VEGAS 2027</span><h2 id="'+id+'-title">'+e(title)+'</h2><p class="dj-intake-description">'+e(lead)+'</p>'+
  '<form class="dj-intake-form" data-intake-kind="'+kind+'" action="'+base+'api/intake" method="post" novalidate>'+
- '<div class="dj-intake-grid">'+fields+captcha+honeypot+'</div><button class="dj-btn dj-btn-acid" type="submit">'+e(button)+'</button>'+
+ '<div class="dj-intake-grid">'+fields+consent+captcha+honeypot+'</div><button class="dj-btn dj-btn-acid" type="submit">'+e(button)+'</button>'+
  '<p class="dj-intake-status" role="status" aria-live="polite" aria-atomic="true"></p>'+
  '<p class="dj-intake-privacy">We use your information to respond to this request.</p></form>'+
  '<noscript><p>This form requires JavaScript for secure submission. Questions? Email info@cannacon.org.</p></noscript>'+
