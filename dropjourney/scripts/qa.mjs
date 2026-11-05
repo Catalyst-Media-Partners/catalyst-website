@@ -37,10 +37,12 @@ for(const id of ids){
  }else assert.ok(!html.includes('<form'),label+': unexpected form');
  for(const m of html.matchAll(/(?:href|src)="([^"]+)"/g)){
   const u=m[1];
-  if(u.startsWith(base+'assets/')){
-   const target=path.join(dist,u.slice(base.length));await stat(target).catch(()=>{throw Error(label+': missing resource '+u)});links++;
-  }else if(u.startsWith('assets/')){
-   const target=path.join(dist,u);await stat(target).catch(()=>{throw Error(label+': missing relative resource '+u)});links++;
+  // URLs may include a cache-busting query; the on-disk file is the pathname only.
+  const resourcePath=u.split(/[?#]/,1)[0];
+  if(resourcePath.startsWith(base+'assets/')){
+   const target=path.join(dist,resourcePath.slice(base.length));await stat(target).catch(()=>{throw Error(label+': missing resource '+u)});links++;
+  }else if(resourcePath.startsWith('assets/')){
+   const target=path.join(dist,resourcePath);await stat(target).catch(()=>{throw Error(label+': missing relative resource '+u)});links++;
   }
  }
  for(const m of html.matchAll(/src="(?:\/)?(?:dropjourneytest\/)?assets\/images\/([^"?#]+\.webp)/g)){
