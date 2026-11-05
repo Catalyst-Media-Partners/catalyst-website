@@ -23,3 +23,9 @@ This release extends the approved INFUSED dark Drop Journey design and existing 
 - Staff reply links address the submitting person with a reference in the subject.
 - Customer acknowledgments contain only relevant fields. No ticket, acceptance, sponsorship, marketing, invoice, or sales entitlement is implied.
 - Personal information remains in canonical D1; no source-page, UUID/UTM/technical log on employee or requestor emails.
+
+## 2026-11-05 contact-consent correction
+- The three first-party inquiry forms now show an explicit, unchecked, required contact permission checkbox immediately before Turnstile.
+- The client submits the actual checkbox state; the server continues to reject missing consent and keeps marketing consent false.
+- A versioned intake JavaScript URL avoids stale client assets after release. Updated acceptance and responsive QA enforce the visible consent field.
+- No changes to D1 schema, SES routing, domains, Stripe, secrets, or the guarded production release workflow.
