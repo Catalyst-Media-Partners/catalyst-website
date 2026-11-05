@@ -32,7 +32,7 @@ def prepare(route):
     else:
         markup=markup.replace('<link rel="stylesheet" href="'+BASE+'assets/site.css">','<style>'+css+'</style>')
         markup=markup.replace('<script src="'+BASE+'assets/site.js" defer></script>','')
-        markup=markup.replace('<script src="'+BASE+'assets/intake.js" defer></script>','')
+        markup=markup.replace('<script src="'+BASE+'assets/intake.js?v=20261105-contact-consent" defer></script>','')
         markup=markup.replace('<script src="'+BASE+'assets/ticket-notify.js" defer></script>','')
         extra='<script>'+js+'</script><script>'+intake_js+'</script>'
         if route=='tickets':extra+='<script>'+ticket_js+'</script>'
@@ -85,7 +85,9 @@ with sync_playwright() as p:
             form=page.locator('form.dj-intake-form')
             if form.count()!=1:errors.append('native intake form missing')
             elif form.get_attribute('action')!=BASE+'api/intake':errors.append('native intake action has wrong base')
-            if page.locator('input[name="consentContact"],input[name="consentMarketing"]').count():errors.append('unnecessary marketing/contact opt-in on inquiry')
+            if page.locator('input[name="consentContact"][type="checkbox"][required]').count()!=1:errors.append('required contact consent checkbox missing')
+            elif page.locator('input[name="consentContact"]').is_checked():errors.append('contact checkbox must default unchecked')
+            if page.locator('input[name="consentMarketing"]').count():errors.append('marketing subscription must not be part of inquiry')
         if route=='tickets':
             form=page.locator('form.dj-ticket-notify-form')
             if form.count()!=1:errors.append('ticket notice form missing')
