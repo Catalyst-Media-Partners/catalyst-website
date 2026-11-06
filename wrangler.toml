@@ -19,7 +19,7 @@ database_id = "4fc7440c-c340-47c4-a75f-96f4e7ad7441"
 
 [[services]]
 binding = "INTAKE_SES"
-service = "catalyst-revenue"
+service = "catalyst-ses-bridge"
 entrypoint = "InfusedIntakeSESBridge"
 
 [triggers]
