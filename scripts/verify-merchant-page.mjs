@@ -4,10 +4,10 @@ import { readFileSync, statSync } from 'node:fs';
 
 const content = readFileSync('index.html');
 const htmlSource = content.toString('utf8');
-const linked = '\\n        <a href="/legal/">Purchase policies</a>';
+const linked = '\n        <a href="/legal/">Purchase policies</a>';
 assert.equal(htmlSource.split(linked).length, 2, 'Expected only the reviewed Purchase policies footer link');
 const original = Buffer.from(htmlSource.replace(linked, ''));
-const blob = createHash('sha1').update(`blob ${original.length}\\0`).update(original).digest('hex');
+const blob = createHash('sha1').update(`blob ${original.length}\0`).update(original).digest('hex');
 assert.equal(blob, '2ae7b9911f9294202ef33d200fff17f95bd657fc', 'Merchant-reviewed page changed: stop release and obtain explicit approval before editing');
 const html = content.toString('utf8');
 const assets = [
