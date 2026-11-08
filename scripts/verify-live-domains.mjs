@@ -10,7 +10,11 @@ const paths = ['/', '/assets/favicon.png', '/assets/catalyst-logo-dark.png', '/a
 const reviewedNewLink = '\n        <a href="/legal/">Purchase policies</a>';
 const staged = readFileSync('index.html','utf8');
 assert.equal(staged.split(reviewedNewLink).length,2,'Unreviewed homepage-link drift');
-const files = new Map(paths.map(path=>[path,path==='/'?Buffer.from(staged.replace(reviewedNewLink,'')):readFileSync(path.slice(1))]));
+const originalRefund=readFileSync('scripts/merchant-refund-original.txt','utf8');
+const start=staged.indexOf('<details id="refund-policy">'),end=staged.indexOf('<details id="fulfillment-policy">',start);
+assert.ok(start>0&&end>start,'Reviewed refund disclosure must remain intact');
+const reviewedHomepage=staged.slice(0,start)+originalRefund+staged.slice(end);
+const files = new Map(paths.map(path=>[path,path==='/'?Buffer.from(reviewedHomepage):readFileSync(path.slice(1))]));
 for (const host of domains) {
   for (const path of paths) {
     const url = 'https://' + host + path;
