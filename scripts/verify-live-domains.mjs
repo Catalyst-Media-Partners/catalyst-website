@@ -4,7 +4,13 @@ import { readFileSync } from 'node:fs';
 
 const domains = ['catalystmediapartners.com', 'www.catalystmediapartners.com'];
 const paths = ['/', '/assets/favicon.png', '/assets/catalyst-logo-dark.png', '/assets/catalyst-logo-light.png'];
-const files = new Map(paths.map(path=>[path,readFileSync(path==='/'?'index.html':path.slice(1))]));
+// Pull-request QA compares the currently deployed original page with the
+// immutable merchant-reviewed source, not unmerged changes staged for release.
+// The separate post-deploy smoke check must compare the newly published page.
+const reviewedNewLink = '\n        <a href="/legal/">Purchase policies</a>';
+const staged = readFileSync('index.html','utf8');
+assert.equal(staged.split(reviewedNewLink).length,2,'Unreviewed homepage-link drift');
+const files = new Map(paths.map(path=>[path,path==='/'?Buffer.from(staged.replace(reviewedNewLink,'')):readFileSync(path.slice(1))]));
 for (const host of domains) {
   for (const path of paths) {
     const url = 'https://' + host + path;

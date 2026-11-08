@@ -6,6 +6,7 @@ rmSync('public', { recursive: true, force: true });
 mkdirSync('public', { recursive: true });
 copyFileSync('index.html', 'public/index.html');
 cpSync('assets', 'public/assets', { recursive: true });
+cpSync('legal', 'public/legal', { recursive: true });
 cpSync('privategames', 'public/privategames', { recursive: true });
 if (!existsSync('public/assets/favicon.png')) throw new Error('Missing deployed favicon');
 execFileSync(process.execPath, ['scripts/stage-infused-preview.mjs'], { stdio: 'inherit' });
